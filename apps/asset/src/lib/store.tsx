@@ -357,7 +357,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
               readyDate: null,
               status: 'DRAFT',
               hasPhoto: false,
-              source: { oaNo: o.oaNo, poNo: o.poNo, grNo: o.grNo, invoiceNo: o.invoiceNo, supplier: o.supplier, purchaseDate: o.invoiceDate },
+              source: {
+                oaNo: o.oaNo, poNo: o.poNo, grNo: o.grNo, invoiceNo: o.invoiceNo, supplier: o.supplier, purchaseDate: o.invoiceDate,
+                // ถ้ามาจาก ONEBOOK (นำเข้าจากบัญชี) เก็บรหัสบัญชี/บริษัทไว้ส่ง journal ค่าเสื่อมกลับ
+                glAccountCode: o.rawFields?.onebookAccountCode ? String(o.rawFields.onebookAccountCode) : undefined,
+                glCompanyId: o.rawFields?.onebookCompanyId ? String(o.rawFields.onebookCompanyId) : undefined,
+              },
               oaId: o.id,
               createdAt: nowIso(),
               createdBy: s.session?.name ?? '',

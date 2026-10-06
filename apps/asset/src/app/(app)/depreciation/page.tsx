@@ -10,6 +10,7 @@ import { addMonths, depIssues, isDepreciable, prorationFor, valuate } from '@/li
 import { exportXlsx } from '@/lib/excel';
 import type { DepPolicy, RunStatus } from '@/lib/types';
 import { RunStatusBadge } from '@/components/badges';
+import { PostDepreciationButton } from '@/components/post-depreciation-button';
 import { Badge, Button, Card, CardHeader, Drawer, FormField, Input, Notice, PageHeader, Select, Table, Tabs, Td, Textarea, Th, Toggle, cx } from '@/components/ui';
 
 type Tab = 'runs' | 'preview' | 'policies';
@@ -175,6 +176,7 @@ function PreviewTab({ period: p, setPeriod }: { period: string; setPeriod: (p: s
         >
           {t('common.exportExcel')}
         </Button>
+        <PostDepreciationButton period={p} rows={c.rows} disabled={!can('runDep')} />
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">

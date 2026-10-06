@@ -112,6 +112,10 @@ export interface SourceRef {
   invoiceNo?: string;
   supplier?: string;
   purchaseDate?: string;
+  /** รหัสบัญชีสินทรัพย์ของ ONEBOOK (เช่น 1230) — ใช้ตอนส่ง journal ค่าเสื่อมกลับ GL */
+  glAccountCode?: string;
+  /** company_id ของ ONEBOOK — ใช้ระบุบริษัทตอนลง GL */
+  glCompanyId?: string;
 }
 
 export interface LegacyFigures {
