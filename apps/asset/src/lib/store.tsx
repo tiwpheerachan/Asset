@@ -101,6 +101,7 @@ interface StoreApi {
   setOAStatus: (id: string, status: OAStatus, extra?: Partial<OARecord>, reason?: string) => void;
   createFromOA: (id: string, opts: { split: boolean; subcategoryId: string }) => string[];
   syncOA: () => Promise<number>;
+  syncOnebook: () => Promise<number>;
   addDocument: (d: Omit<AssetDocument, 'id' | 'uploadedAt' | 'uploadedBy'>) => void;
   setRunStatus: (period: string, status: RunStatus, totals?: { assetCount: number; amount: number }) => void;
   createRun: (period: string) => void;
@@ -436,6 +437,41 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             audit: [
               mkAudit({
                 action: 'OA_IMPORT',
+                entity: 'oa_records',
+                newValue: fresh.map((r) => r.oaNo).join(', '),
+                source: 'OA_SYNC',
+              }),
+              ...s.audit,
+            ],
+          };
+        });
+        return added;
+      },
+      syncOnebook: async () => {
+        // ดึงบิลที่เป็นทรัพย์สิน (ลงบัญชีแล้ว) จากระบบบัญชี ONEBOOK ผ่าน server route
+        const res = await fetch('/api/onebook/sync', { cache: 'no-store' });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: res.statusText }));
+          throw new Error(err.error || `ONEBOOK sync failed (${res.status})`);
+        }
+        const body = (await res.json()) as { records: OARecord[] };
+        const incoming = body.records ?? [];
+
+        let added = 0;
+        commit((s) => {
+          const seen = new Set(s.oa.map((o) => o.docNo ?? o.id));
+          const fresh = incoming.filter((r) => !seen.has(r.docNo ?? r.id));
+          added = fresh.length;
+          if (fresh.length === 0) {
+            return { ...s, oaIntegration: { ...s.oaIntegration, lastSyncAt: nowIso() } };
+          }
+          return {
+            ...s,
+            oa: [...fresh, ...s.oa],
+            oaIntegration: { ...s.oaIntegration, lastSyncAt: nowIso() },
+            audit: [
+              mkAudit({
+                action: 'ONEBOOK_IMPORT',
                 entity: 'oa_records',
                 newValue: fresh.map((r) => r.oaNo).join(', '),
                 source: 'OA_SYNC',

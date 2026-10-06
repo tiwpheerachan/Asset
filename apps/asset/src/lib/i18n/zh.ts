@@ -249,6 +249,7 @@ const zh: Dict = {
     title: 'OA 导入',
     subtitle: '来自 OA 的已审批采购申请 — 审核、分类并转为待登记资产',
     syncNow: '从 OA 同步',
+    fromAccounting: '从会计导入',
     syncing: '同步中…',
     lastSync: '上次同步',
     queue: '导入队列',

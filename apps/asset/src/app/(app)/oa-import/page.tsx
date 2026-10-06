@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
-import { AlertCircle, ArrowRight, Check, CheckCircle2, Copy, FileText, RefreshCw, Split, XCircle } from 'lucide-react';
+import { AlertCircle, ArrowRight, BookOpen, Check, CheckCircle2, Copy, FileText, RefreshCw, Split, XCircle } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { useStore } from '@/lib/store';
 import { useLookups } from '@/lib/hooks';
@@ -16,12 +16,13 @@ const ORDER: OAStatus[] = ['NEW', 'REVIEWING', 'READY_TO_CREATE', 'ERROR', 'DUPL
 
 export default function OAImportPage() {
   const { t, money, date, dateTime } = useI18n();
-  const { state, syncOA, can } = useStore();
+  const { state, syncOA, syncOnebook, can } = useStore();
   const lk = useLookups();
   const [tab, setTab] = useState<'queue' | 'mapping'>('queue');
   const [status, setStatus] = useState<OAStatus | 'ALL' | 'PENDING'>('PENDING');
   const [open, setOpen] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [syncingOb, setSyncingOb] = useState(false);
 
   const counts = useMemo(() => {
     const m: Record<string, number> = {};
@@ -43,6 +44,23 @@ export default function OAImportPage() {
             <span className="text-[12.5px] text-ink-3">
               {t('oa.lastSync')}: {dateTime(state.oaIntegration.lastSyncAt)}
             </span>
+            <Button
+              icon={<BookOpen size={15} className={syncingOb ? 'animate-pulse' : ''} />}
+              disabled={!can('importOa') || syncingOb}
+              onClick={async () => {
+                setSyncingOb(true);
+                try {
+                  await syncOnebook();
+                  setStatus('PENDING');
+                } catch (e) {
+                  console.error('[ONEBOOK sync]', e);
+                } finally {
+                  setSyncingOb(false);
+                }
+              }}
+            >
+              {syncingOb ? t('oa.syncing') : t('oa.fromAccounting')}
+            </Button>
             <Button
               variant="primary"
               icon={<RefreshCw size={15} className={syncing ? 'animate-spin' : ''} />}
