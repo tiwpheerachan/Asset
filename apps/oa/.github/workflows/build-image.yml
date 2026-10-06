@@ -1,0 +1,123 @@
+name: build image
+
+# สร้าง Docker image แล้วเก็บไว้ที่ GitHub Container Registry (GHCR)
+#
+# ที่มา: next build ใช้แรมสูงสุด ~676MB แต่เครื่องที่ Render ใช้ build มีให้น้อยกว่านั้น
+# deploy จึงล้มถี่ขึ้นเรื่อยๆ ตามขนาดโค้ด — ย้ายมา build ที่ Actions ซึ่งเครื่องมีแรม 7GB
+# แล้วส่ง image สำเร็จรูปให้ Render ดึงไปรันแทน ตัดปัญหาแรมออกไปถาวรโดยไม่ต้องอัปแพ็กเกจ
+#
+# ตอนนี้ workflow นี้ "แค่สร้าง image เก็บไว้" ยังไม่ได้สั่ง Render ให้ใช้ —
+# ตั้งใจให้ปลอดภัย ของที่รันอยู่ตอนนี้ไม่กระทบเลย · วิธีสลับดูที่ DEPLOY.md
+
+on:
+  push:
+    branches: [master]
+  # กดสั่งเองได้จากหน้า Actions โดยไม่ต้อง push
+  workflow_dispatch:
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    # เทสต์คุยกับ PostgreSQL จริง ไม่ได้จำลอง — เพราะสิ่งที่ต้องพิสูจน์คือ SQL ทำงาน
+    # กับฐานข้อมูลตัวจริงได้ ไม่ใช่ว่าโค้ดเรียกฟังก์ชันถูกตามที่เราสมมติไว้เอง
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        # รอให้ฐานข้อมูลพร้อมก่อน ไม่งั้นเทสต์วิ่งไปชนตอนมันยังเปิดไม่เสร็จ
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/approve_test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ตรวจให้แน่ใจก่อนว่าโค้ดผ่านเทสต์ ก่อนจะเสียเวลาสร้าง image
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+
+      # bootstrap ของเทสต์ใช้ psql สร้าง schema แยกให้แต่ละไฟล์ (กันไฟล์เทสต์ลบข้อมูลกันเอง)
+      - name: เตรียมฐานข้อมูลสำหรับเทสต์
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends postgresql-client
+          psql "postgresql://postgres:postgres@localhost:5432/postgres" -c 'CREATE DATABASE approve_test'
+
+      - run: npm test
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # เวลาที่ build จริง — repository.updated_at คือเวลาที่ repo ถูกแก้ ไม่ใช่เวลา build
+      - id: stamp
+        run: echo "at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          # latest = ตัวล่าสุดเสมอ · sha = ชี้กลับไปที่คอมมิตได้ตอนต้องย้อนรุ่น
+          tags: |
+            type=raw,value=latest
+            type=sha,format=long
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          build-args: |
+            BUILD_SHA=${{ github.sha }}
+            BUILD_TIME=${{ steps.stamp.outputs.at }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # แคชชั้นของ Docker ไว้ที่ Actions — รอบถัดไปข้าม apt/npm ci ที่ไม่เปลี่ยน
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # สั่ง Render ให้ดึง image ใหม่ไปใช้ — ทำงานเฉพาะเมื่อตั้ง secret ไว้แล้ว
+      # ยังไม่ได้ตั้ง = ข้ามไปเงียบๆ ไม่ทำให้ workflow แดง
+      #
+      # รับ secret ผ่าน env ไม่ใช่แทรกลงใน run โดยตรง — ค่าที่แทรกจะโผล่ในบรรทัดคำสั่ง
+      # ที่ log เก็บไว้ และ secrets ก็ใช้ใน if: ของ step ไม่ได้อยู่แล้ว
+      - name: แจ้ง Render ให้ deploy
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          {
+            echo "### สร้าง image สำเร็จ"
+            echo ""
+            echo '```'
+            echo "$TAGS"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ -n "$HOOK" ]; then
+            curl -fsS "$HOOK" > /dev/null
+            echo "แจ้ง Render ให้ deploy แล้ว" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "> ยังไม่ได้ตั้ง secret \`RENDER_DEPLOY_HOOK\` — image ถูกเก็บไว้แล้ว แต่ยังไม่ได้สั่ง Render ให้ใช้ (ดู DEPLOY.md)" >> "$GITHUB_STEP_SUMMARY"
+          fi

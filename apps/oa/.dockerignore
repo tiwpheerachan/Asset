@@ -1,0 +1,22 @@
+# อย่าส่งเข้า image — จะสร้างใหม่ในคอนเทนเนอร์ หรือเป็นของเฉพาะเครื่อง/ความลับ
+node_modules
+.next
+out
+
+# ข้อมูล + ความลับ (ห้ามเข้า image เด็ดขาด)
+data
+backups
+.env
+.env.local
+data/initial-passwords.txt
+
+# อื่น ๆ
+.git
+.gitignore
+*.log
+.DS_Store
+.claude
+.test-build
+tests
+next-env.d.ts
+tsconfig.tsbuildinfo

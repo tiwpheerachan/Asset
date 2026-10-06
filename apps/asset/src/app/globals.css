@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  background: #f5f6f8;
+  color: #101828;
+  font-feature-settings: 'tnum' 1;
+}
+
+html[lang='zh'] body {
+  font-family: 'IBM Plex Sans', 'Noto Sans SC', 'IBM Plex Sans Thai', system-ui, sans-serif;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: #dce6f4;
+}
+
+/* thin scrollbars for data tables */
+.scroll-thin::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: #d0d5dd;
+  border-radius: 8px;
+}
+
+tbody tr:hover > td {
+  background: #fafbfc;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white;
+  }
+}

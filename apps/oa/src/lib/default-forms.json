@@ -1,0 +1,704 @@
+{
+  "_comment": "แม่แบบฟอร์มเริ่มต้น ใส่ครั้งเดียวตอนสร้างฐานข้อมูล — แก้ต่อได้ที่ /admin/forms. ฟิลด์ 7 ตัวแรกของทุกแม่แบบเป็นชุดเดิมของระบบ memo จึงย้ายข้อมูลเก่ามาได้ครบ",
+  "categories": [
+    {
+      "name": "งานขาย",
+      "sort_order": 1
+    },
+    {
+      "name": "การเงิน",
+      "sort_order": 2
+    },
+    {
+      "name": "จัดซื้อ / คลัง",
+      "sort_order": 3
+    },
+    {
+      "name": "ทั่วไป",
+      "sort_order": 4
+    }
+  ],
+  "base_fields": [
+    {
+      "field_key": "doc_date",
+      "label": "วันที่",
+      "type": "DATE",
+      "field_role": "DATE",
+      "required": 1,
+      "sort_order": 1
+    },
+    {
+      "field_key": "deal_no",
+      "label": "SALES DEAL NO",
+      "type": "TEXT",
+      "sort_order": 2,
+      "help": "เช่น SD-2026-0142"
+    },
+    {
+      "field_key": "subject",
+      "label": "หัวข้อเรื่อง",
+      "type": "TEXT",
+      "field_role": "TITLE",
+      "required": 1,
+      "sort_order": 3
+    },
+    {
+      "field_key": "attention",
+      "label": "เรียนแจ้ง (ATTENTION)",
+      "type": "TEXT",
+      "sort_order": 4
+    },
+    {
+      "field_key": "cc",
+      "label": "สำเนาเรียน (CC)",
+      "type": "TEXT",
+      "sort_order": 5
+    },
+    {
+      "field_key": "amount",
+      "label": "มูลค่า (บาท)",
+      "type": "MONEY",
+      "field_role": "AMOUNT",
+      "sort_order": 6,
+      "help": "วงเงินเป็นตัวกำหนดว่าต้องผ่านผู้อนุมัติถึงระดับไหน"
+    },
+    {
+      "field_key": "body",
+      "label": "รายละเอียด",
+      "type": "TEXTAREA",
+      "sort_order": 7
+    },
+    {
+      "field_key": "files",
+      "label": "เอกสารแนบ",
+      "type": "FILE",
+      "sort_order": 8,
+      "help": "ไฟล์ละไม่เกิน 10 MB"
+    }
+  ],
+  "templates": [
+    {
+      "code": "DISCOUNT",
+      "name": "ส่วนลด / ราคาพิเศษ",
+      "category": "งานขาย",
+      "icon": "ic:tag",
+      "description": "ขออนุมัติส่วนลดหรือราคาพิเศษให้ลูกค้า",
+      "sort_order": 1,
+      "extra_fields": [
+        {
+          "field_key": "customer",
+          "label": "ชื่อลูกค้า",
+          "type": "TEXT",
+          "required": 1,
+          "sort_order": 20
+        },
+        {
+          "field_key": "discount_pct",
+          "label": "ส่วนลดที่ขอ (%)",
+          "type": "NUMBER",
+          "sort_order": 21
+        },
+        {
+          "field_key": "margin_after",
+          "label": "อัตรากำไรหลังส่วนลด (%)",
+          "type": "NUMBER",
+          "sort_order": 22
+        }
+      ],
+      "flow": [
+        {
+          "name": "หัวหน้าฝ่ายขาย",
+          "kind": "APPROVE",
+          "mode": "SEQUENTIAL",
+          "stage": "PRELIM",
+          "sort_order": 1,
+          "members": [
+            {
+              "source": "JOB_ROLE",
+              "job_role": "SALES_MANAGER",
+              "scope": "DEPT"
+            }
+          ]
+        },
+        {
+          "name": "หัวหน้าฝ่ายขาย",
+          "kind": "APPROVE",
+          "mode": "SEQUENTIAL",
+          "stage": "FINAL",
+          "sort_order": 1,
+          "members": [
+            {
+              "source": "JOB_ROLE",
+              "job_role": "SALES_MANAGER",
+              "scope": "DEPT"
+            }
+          ]
+        },
+        {
+          "name": "ผู้จัดการฝ่ายบัญชี",
+          "kind": "APPROVE",
+          "mode": "SEQUENTIAL",
+          "stage": "FINAL",
+          "sort_order": 2,
+          "cond_field": "amount",
+          "cond_op": "GTE",
+          "cond_value": "100000",
+          "members": [
+            {
+              "source": "JOB_ROLE",
+              "job_role": "FINANCE_MANAGER",
+              "scope": "ANY"
+            }
+          ]
+        },
+        {
+          "name": "กรรมการผู้จัดการ",
+          "kind": "APPROVE",
+          "mode": "SEQUENTIAL",
+          "stage": "FINAL",
+          "sort_order": 3,
+          "cond_field": "amount",
+          "cond_op": "GTE",
+          "cond_value": "500000",
+          "members": [
+            {
+              "source": "JOB_ROLE",
+              "job_role": "MD",
+              "scope": "ANY"
+            }
+          ]
+        },
+        {
+          "name": "แจ้งฝ่ายบัญชี",
+          "kind": "CC",
+          "mode": "SEQUENTIAL",
+          "stage": "FINAL",
+          "sort_order": 4,
+          "members": [
+            {
+              "source": "JOB_ROLE",
+              "job_role": "FINANCE",
+              "scope": "ANY"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "PURCHASE",
+      "name": "จัดซื้อ",
+      "category": "จัดซื้อ / คลัง",
+      "icon": "ic:cart",
+      "description": "ขออนุมัติจัดซื้อสินค้าหรือบริการ",
+      "sort_order": 2,
+      "extra_fields": [
+        {
+          "field_key": "vendor",
+          "label": "ผู้ขาย / ผู้รับเหมา",
+          "type": "TEXT",
+          "sort_order": 20
+        },
+        {
+          "field_key": "items",
+          "label": "รายการที่ขอซื้อ",
+          "type": "TABLE",
+          "sort_order": 21,
+          "columns": [
+            {
+              "col_key": "name",
+              "label": "รายการ",
+              "type": "TEXT",
+              "required": 1,
+              "sort_order": 1
+            },
+            {
+              "col_key": "qty",
+              "label": "จำนวน",
+              "type": "NUMBER",
+              "required": 1,
+              "sort_order": 2
+            },
+            {
+              "col_key": "unit_price",
+              "label": "ราคา/หน่วย",
+              "type": "MONEY",
+              "sort_order": 3
+            },
+            {
+              "col_key": "note",
+              "label": "หมายเหตุ",
+              "type": "TEXT",
+              "sort_order": 4
+            }
+          ]
+        }
+      ],
+      "flow": [
+        {
+          "name": "หัวหน้าต้นสังกัด",
+          "kind": "APPROVE",
+          "mode": "SEQUENTIAL",
+          "stage": "PRELIM",
+          "sort_order": 1,
+          "members": [
+            {
+              "source": "JOB_ROLE",
+              "job_role": "SALES_MANAGER",
+              "scope": "DEPT"
+            }
+          ]
+        },
+        {
+          "name": "ฝ่ายจัดซื้อ",
+          "kind": "APPROVE",
+          "mode": "SEQUENTIAL",
+          "stage": "FINAL",
+          "sort_order": 1,
+          "members": [
+            {
+              "source": "JOB_ROLE",
+              "job_role": "PURCHASING",
+              "scope": "ANY"
+            }
+          ]
+        },
+        {
+          "name": "ผู้จัดการฝ่ายบัญชี",
+          "kind": "APPROVE",
+          "mode": "SEQUENTIAL",
+          "stage": "FINAL",
+          "sort_order": 2,
+          "cond_field": "amount",
+          "cond_op": "GTE",
+          "cond_value": "50000",
+          "members": [
+            {
+              "source": "JOB_ROLE",
+              "job_role": "FINANCE_MANAGER",
+              "scope": "ANY"
+            }
+          ]
+        },
+        {
+          "name": "กรรมการผู้จัดการ",
+          "kind": "APPROVE",
+          "mode": "SEQUENTIAL",
+          "stage": "FINAL",
+          "sort_order": 3,
+          "cond_field": "amount",
+          "cond_op": "GTE",
+          "cond_value": "300000",
+          "members": [
+            {
+              "source": "JOB_ROLE",
+              "job_role": "MD",
+              "scope": "ANY"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "MARKETING",
+      "name": "ค่าใช้จ่ายการตลาด",
+      "category": "งานขาย",
+      "icon": "ic:megaphone",
+      "description": "ออกบูธ กิจกรรมส่งเสริมการขาย สื่อโฆษณา",
+      "sort_order": 3,
+      "extra_fields": [
+        {
+          "field_key": "activity",
+          "label": "กิจกรรม / ช่องทาง",
+          "type": "TEXT",
+          "sort_order": 20
+        },
+        {
+          "field_key": "period",
+          "label": "ช่วงเวลาจัดกิจกรรม",
+          "type": "TEXT",
+          "sort_order": 21
+        }
+      ],
+      "flow": [
+        {
+          "name": "หัวหน้าต้นสังกัด",
+          "kind": "APPROVE",
+          "mode": "SEQUENTIAL",
+          "stage": "PRELIM",
+          "sort_order": 1,
+          "members": [
+            {
+              "source": "JOB_ROLE",
+              "job_role": "SALES_MANAGER",
+              "scope": "DEPT"
+            }
+          ]
+        },
+        {
+          "name": "หัวหน้าต้นสังกัด",
+          "kind": "APPROVE",
+          "mode": "SEQUENTIAL",
+          "stage": "FINAL",
+          "sort_order": 1,
+          "members": [
+            {
+              "source": "JOB_ROLE",
+              "job_role": "SALES_MANAGER",
+              "scope": "DEPT"
+            }
+          ]
+        },
+        {
+          "name": "ผู้จัดการฝ่ายบัญชี",
+          "kind": "APPROVE",
+          "mode": "SEQUENTIAL",
+          "stage": "FINAL",
+          "sort_order": 2,
+          "members": [
+            {
+              "source": "JOB_ROLE",
+              "job_role": "FINANCE_MANAGER",
+              "scope": "ANY"
+            }
+          ]
+        },
+        {
+          "name": "กรรมการผู้จัดการ",
+          "kind": "APPROVE",
+          "mode": "SEQUENTIAL",
+          "stage": "FINAL",
+          "sort_order": 3,
+          "cond_field": "amount",
+          "cond_op": "GTE",
+          "cond_value": "100000",
+          "members": [
+            {
+              "source": "JOB_ROLE",
+              "job_role": "MD",
+              "scope": "ANY"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "REIMBURSE",
+      "name": "เบิกจ่าย",
+      "category": "การเงิน",
+      "icon": "ic:money",
+      "description": "เบิกค่าใช้จ่ายที่สำรองจ่ายไปแล้ว",
+      "sort_order": 4,
+      "extra_fields": [
+        {
+          "field_key": "expenses",
+          "label": "รายการค่าใช้จ่าย",
+          "type": "TABLE",
+          "sort_order": 20,
+          "columns": [
+            {
+              "col_key": "item",
+              "label": "รายการ",
+              "type": "TEXT",
+              "required": 1,
+              "sort_order": 1
+            },
+            {
+              "col_key": "spent_on",
+              "label": "วันที่จ่าย",
+              "type": "DATE",
+              "sort_order": 2
+            },
+            {
+              "col_key": "amount",
+              "label": "จำนวนเงิน",
+              "type": "MONEY",
+              "required": 1,
+              "sort_order": 3
+            }
+          ]
+        },
+        {
+          "field_key": "receipts",
+          "label": "ใบเสร็จ",
+          "type": "IMAGE",
+          "sort_order": 21,
+          "help": "แนบรูปใบเสร็จให้ครบทุกรายการ"
+        }
+      ],
+      "flow": [
+        {
+          "name": "หัวหน้าต้นสังกัด",
+          "kind": "APPROVE",
+          "mode": "SEQUENTIAL",
+          "stage": "FINAL",
+          "sort_order": 1,
+          "members": [
+            {
+              "source": "JOB_ROLE",
+              "job_role": "SALES_MANAGER",
+              "scope": "DEPT"
+            }
+          ]
+        },
+        {
+          "name": "ผู้จัดการฝ่ายบัญชี",
+          "kind": "APPROVE",
+          "mode": "SEQUENTIAL",
+          "stage": "FINAL",
+          "sort_order": 2,
+          "cond_field": "amount",
+          "cond_op": "GTE",
+          "cond_value": "20000",
+          "members": [
+            {
+              "source": "JOB_ROLE",
+              "job_role": "FINANCE_MANAGER",
+              "scope": "ANY"
+            }
+          ]
+        },
+        {
+          "name": "กรรมการผู้จัดการ",
+          "kind": "APPROVE",
+          "mode": "SEQUENTIAL",
+          "stage": "FINAL",
+          "sort_order": 3,
+          "cond_field": "amount",
+          "cond_op": "GTE",
+          "cond_value": "100000",
+          "members": [
+            {
+              "source": "JOB_ROLE",
+              "job_role": "MD",
+              "scope": "ANY"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "CREDIT_NOTE",
+      "name": "ใบลดหนี้ (CN)",
+      "category": "การเงิน",
+      "icon": "ic:money",
+      "description": "ขออนุมัติออกใบลดหนี้ให้ลูกค้า",
+      "sort_order": 5,
+      "extra_fields": [
+        {
+          "field_key": "customer",
+          "label": "ชื่อลูกค้า",
+          "type": "TEXT",
+          "required": 1,
+          "sort_order": 20
+        },
+        {
+          "field_key": "invoice_no",
+          "label": "เลขที่ใบกำกับภาษีเดิม",
+          "type": "TEXT",
+          "sort_order": 21
+        },
+        {
+          "field_key": "reason",
+          "label": "สาเหตุ",
+          "type": "SELECT",
+          "required": 1,
+          "sort_order": 22,
+          "options": [
+            "สินค้าชำรุด",
+            "ส่งสินค้าผิด",
+            "คืนสินค้า",
+            "ปรับราคา",
+            "อื่น ๆ"
+          ]
+        }
+      ],
+      "flow": [
+        {
+          "name": "ผู้จัดการฝ่ายบัญชี",
+          "kind": "APPROVE",
+          "mode": "SEQUENTIAL",
+          "stage": "FINAL",
+          "sort_order": 1,
+          "members": [
+            {
+              "source": "JOB_ROLE",
+              "job_role": "FINANCE_MANAGER",
+              "scope": "ANY"
+            }
+          ]
+        },
+        {
+          "name": "กรรมการผู้จัดการ",
+          "kind": "APPROVE",
+          "mode": "SEQUENTIAL",
+          "stage": "FINAL",
+          "sort_order": 2,
+          "cond_field": "amount",
+          "cond_op": "GTE",
+          "cond_value": "50000",
+          "members": [
+            {
+              "source": "JOB_ROLE",
+              "job_role": "MD",
+              "scope": "ANY"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "DEMO_RETURN",
+      "name": "เรียกคืนสินค้าเดโม",
+      "category": "จัดซื้อ / คลัง",
+      "icon": "ic:truck",
+      "description": "ติดตามและเรียกคืนเครื่องตัวอย่างที่เบิกออกไป",
+      "sort_order": 6,
+      "extra_fields": [
+        {
+          "field_key": "borrower",
+          "label": "ผู้ยืม / ผู้รับสินค้า",
+          "type": "USER",
+          "sort_order": 20
+        },
+        {
+          "field_key": "sku",
+          "label": "รายการสินค้า (SKU)",
+          "type": "TABLE",
+          "required": 1,
+          "sort_order": 21,
+          "columns": [
+            {
+              "col_key": "sku",
+              "label": "รหัส/ชื่อสินค้า",
+              "type": "TEXT",
+              "required": 1,
+              "sort_order": 1
+            },
+            {
+              "col_key": "qty",
+              "label": "จำนวน",
+              "type": "NUMBER",
+              "required": 1,
+              "sort_order": 2
+            },
+            {
+              "col_key": "note",
+              "label": "คำอธิบาย",
+              "type": "TEXT",
+              "sort_order": 3
+            },
+            {
+              "col_key": "contact",
+              "label": "ผู้ติดต่อได้",
+              "type": "USER",
+              "sort_order": 4
+            }
+          ]
+        },
+        {
+          "field_key": "product_status",
+          "label": "สถานะสินค้า",
+          "type": "SELECT",
+          "sort_order": 22,
+          "options": [
+            "เครื่องตัวอย่าง",
+            "เครื่องขาย",
+            "อะไหล่"
+          ]
+        },
+        {
+          "field_key": "return_by",
+          "label": "กำหนดคืนภายใน",
+          "type": "DATE",
+          "sort_order": 23
+        },
+        {
+          "field_key": "ship_to",
+          "label": "ที่อยู่จัดส่งคืน",
+          "type": "TEXTAREA",
+          "sort_order": 24
+        },
+        {
+          "field_key": "proof",
+          "label": "หลักฐานการส่งคืน",
+          "type": "IMAGE",
+          "sort_order": 25
+        }
+      ],
+      "flow": [
+        {
+          "name": "หัวหน้าต้นสังกัด",
+          "kind": "APPROVE",
+          "mode": "SEQUENTIAL",
+          "stage": "FINAL",
+          "sort_order": 1,
+          "members": [
+            {
+              "source": "JOB_ROLE",
+              "job_role": "SALES_MANAGER",
+              "scope": "DEPT"
+            }
+          ]
+        },
+        {
+          "name": "ฝ่ายคลัง / จัดซื้อ",
+          "kind": "APPROVE",
+          "mode": "ANY",
+          "stage": "FINAL",
+          "sort_order": 2,
+          "members": [
+            {
+              "source": "JOB_ROLE",
+              "job_role": "PURCHASING",
+              "scope": "ANY"
+            },
+            {
+              "source": "JOB_ROLE",
+              "job_role": "FINANCE",
+              "scope": "ANY"
+            }
+          ]
+        },
+        {
+          "name": "แจ้งบัญชีเพื่อตัดสต๊อก",
+          "kind": "CC",
+          "mode": "SEQUENTIAL",
+          "stage": "FINAL",
+          "sort_order": 3,
+          "members": [
+            {
+              "source": "JOB_ROLE",
+              "job_role": "FINANCE_MANAGER",
+              "scope": "ANY"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "OTHER",
+      "name": "บันทึกข้อความทั่วไป",
+      "category": "ทั่วไป",
+      "icon": "ic:doc",
+      "description": "เรื่องที่ไม่เข้าประเภทอื่น",
+      "sort_order": 9,
+      "extra_fields": [],
+      "flow": [
+        {
+          "name": "หัวหน้าต้นสังกัด",
+          "kind": "APPROVE",
+          "mode": "SEQUENTIAL",
+          "stage": "FINAL",
+          "sort_order": 1,
+          "members": [
+            {
+              "source": "JOB_ROLE",
+              "job_role": "SALES_MANAGER",
+              "scope": "DEPT"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

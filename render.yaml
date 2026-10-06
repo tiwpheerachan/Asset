@@ -1,0 +1,81 @@
+# Render Blueprint — SHD Platform (OA + Asset) แยกเป็น 2 เว็บ ใช้ Postgres ร่วมกันก้อนเดียว
+# วิธีใช้: ดัน monorepo นี้ขึ้น GitHub → Render Dashboard → New → Blueprint → เลือก repo
+# รายละเอียดเต็ม + ขั้นตอนหลัง deploy อยู่ใน DEPLOY.md
+#
+# หมายเหตุ region: singapore ใกล้ไทยสุด · plan free ใช้ลองได้ (DB free หมดอายุ ~30 วัน,
+# เว็บ free หลับเมื่อไม่มีคนเข้าแล้วตื่นช้า ~50 วินาที) — ใช้งานจริงแนะนำ starter
+
+databases:
+  - name: shd-db
+    databaseName: shd_platform
+    plan: free
+    region: singapore
+
+services:
+  # ---------- เว็บที่ 1: OA (ระบบขออนุมัติ) ----------
+  - type: web
+    name: shd-oa
+    runtime: node
+    region: singapore
+    plan: free
+    rootDir: .
+    buildCommand: npm ci && npm run build -w apps/oa
+    startCommand: npm run start -w apps/oa
+    healthCheckPath: /login
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: shd-db
+          property: connectionString
+      - key: TZ
+        value: Asia/Bangkok
+      # เปิดให้ล็อกอินด้วยอีเมล/รหัสผ่านในแอป (ค่า default ของโค้ดคือ false = SSO อย่างเดียว)
+      - key: SSO_ALLOW_LOCAL_LOGIN
+        value: "true"
+      # รหัสผ่านของ user ที่ seed ครั้งแรก (เปลี่ยนเป็นค่าของคุณ)
+      - key: SEED_PASSWORD
+        sync: false
+      # กุญแจให้ Asset มาดึง/ส่ง callback ผ่าน /api/v1/* — Render สุ่มให้ (เอาไปตั้งใน OA ด้วย)
+      - key: API_KEY
+        generateValue: true
+      # URL จริงของเว็บนี้ (ใส่หลัง deploy ครั้งแรก ถ้าชื่อไม่ชนจะเป็นค่านี้)
+      - key: APP_BASE_URL
+        value: https://shd-oa.onrender.com
+
+  # ---------- เว็บที่ 2: Asset (ระบบทรัพย์สินถาวร) ----------
+  - type: web
+    name: shd-asset
+    runtime: node
+    region: singapore
+    plan: free
+    rootDir: .
+    buildCommand: npm ci && npm run build -w apps/asset
+    startCommand: npm run start -w apps/asset
+    healthCheckPath: /login
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      # Postgres ก้อนเดียวกับ OA (Asset ใช้ schema fa — สร้างเองอัตโนมัติตอนรันครั้งแรก)
+      - key: DATABASE_URL
+        fromDatabase:
+          name: shd-db
+          property: connectionString
+      - key: TZ
+        value: Asia/Bangkok
+      # URL ของเว็บ OA (ให้ Asset ยิงไปดึงคำขอ/ส่ง callback)
+      - key: OA_BASE_URL
+        value: https://shd-oa.onrender.com
+      # กุญแจ OA ที่สร้างในหน้า "เชื่อมต่อระบบภายนอก" ของ OA (scope read+write) — ใส่เอง
+      - key: OA_API_KEY
+        sync: false
+      - key: OA_TEMPLATE
+        value: PURCHASE
+      # (ไม่บังคับ) DeepSeek สำหรับคลังความรู้ AI — ไม่ใส่ก็ใช้ระบบได้ แค่สร้างบทความใหม่ไม่ได้
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: DEEPSEEK_BASE_URL
+        value: https://api.deepseek.com
+      - key: DEEPSEEK_MODEL
+        value: deepseek-chat

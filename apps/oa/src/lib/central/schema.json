@@ -1,0 +1,32 @@
+{
+  "_comment": [
+    "สิ่งที่แอปนี้ประกาศให้ Central Login รู้จัก เพื่อให้แอดมินตั้งสิทธิ์รายอย่างได้",
+    "ตราบใดที่ยังไม่ประกาศ หน้าจัดการสิทธิ์ของระบบกลางจะว่างเปล่า ตั้งอะไรไม่ได้เลย",
+    "แก้ไฟล์นี้แล้วรัน `npm run sync-central` เพื่อส่งขึ้นระบบกลาง",
+    "",
+    "resource = ของที่กำหนดระดับได้ (none/view/edit/manage) — หน้าจอหรือชุดข้อมูล",
+    "capability = สิ่งที่บันไดระดับครอบไม่ได้ ต้องติ๊กให้บทบาทเองทีละอัน",
+    "",
+    "การกระทำที่ย้อนคืนไม่ได้ถูกแยกเป็น capability ต่างหากโดยตั้งใจ ไม่ให้มาจากสวิตช์",
+    "ตัวเดียวกับการแก้ไข เพราะแก้ผิดแล้วแก้กลับได้ แต่ยกเลิกเลขเอกสารแล้วเลขนั้นตายถาวร"
+  ],
+  "resources": [
+    { "key": "requests", "name": "คำขออนุมัติ", "rtype": "table" },
+    { "key": "templates", "name": "แม่แบบฟอร์มและสายอนุมัติ", "rtype": "table" },
+    { "key": "documents", "name": "เอกสารที่ออก (ใบแจ้งหนี้/CN/DN)", "rtype": "table" },
+    { "key": "users", "name": "ผู้ใช้งานในแอป", "rtype": "table", "sensitive": true },
+    { "key": "departments", "name": "แผนก", "rtype": "table" },
+    { "key": "delegations", "name": "การมอบหมายอนุมัติแทน", "rtype": "table" },
+    { "key": "analytics", "name": "รายงานประสิทธิภาพการอนุมัติ", "rtype": "page" },
+    { "key": "backup", "name": "สำรองข้อมูล", "rtype": "page", "sensitive": true },
+    { "key": "integrations", "name": "การเชื่อมต่อภายนอก (Lark/ERP/SSO)", "rtype": "page", "sensitive": true }
+  ],
+  "capabilities": [
+    { "key": "request.approve", "name": "อนุมัติคำขอ" },
+    { "key": "request.cancel", "name": "ยกเลิกคำขอ" },
+    { "key": "team.view", "name": "เห็นคำขอทั้งแผนกของตน" },
+    { "key": "document.issue", "name": "ออกเลขที่เอกสาร" },
+    { "key": "document.void", "name": "ยกเลิกเอกสารที่ออกไปแล้ว" },
+    { "key": "backup.run", "name": "สั่งสำรองข้อมูลและดาวน์โหลด" }
+  ]
+}

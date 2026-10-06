@@ -1,0 +1,131 @@
+# Blueprint สำหรับ deploy บน Render (Docker + Disk ถาวร)
+#
+# ⚠️ Disk ต้องใช้แพ็กเกจแบบมีค่าใช้จ่าย (free ไม่มี disk) — ตั้ง plan: starter ขึ้นไป
+# ค่า sync:false = ต้องไปกรอกเองในหน้า Render (ความลับ/ค่าเฉพาะ)
+services:
+  - type: web
+    name: internal-approve
+    runtime: docker
+    region: singapore          # ให้ตรงกับ central-login
+    plan: starter              # ต้องมี disk → ใช้แพ็กเกจเสียเงิน
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /login
+    autoDeploy: true
+
+    # ดิสก์ถาวร — เก็บไฟล์แนบ/ลายเซ็น + ไฟล์สำรอง
+    # (ฐานข้อมูลไม่ได้อยู่ที่นี่แล้ว อยู่บน PostgreSQL ที่ตั้งผ่าน DATABASE_URL)
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1
+
+    envVars:
+      # ---------- ฐานข้อมูล ----------
+      # PostgreSQL — ใส่ connection string ในหน้า Render (มีรหัสผ่านอยู่ข้างใน)
+      #
+      # Supabase: หน้า Project Settings → Database → Connection string → URI
+      #   ต้องใช้ช่อง "Connection pooling" (พอร์ต 6543) ไม่ใช่ต่อตรงพอร์ต 5432 —
+      #   Next.js เปิด connection หลายตัว ถ้าต่อตรงจะเต็มโควตาของโปรเจกต์
+      #   และเลือก region สิงคโปร์ให้ตรงกับ region ของ service นี้ ไม่งั้นทุกคำสั่ง
+      #   ต้องวิ่งข้ามทวีป ซึ่งช้าพอให้รู้สึกได้
+      - key: DATABASE_URL
+        sync: false
+      # จำนวน connection สูงสุดต่อ instance — ตั้งต่ำไว้เพราะ pooler มีเพดาน
+      - key: PGPOOL_MAX
+        value: "8"
+
+      # ---------- ที่เก็บไฟล์แนบ ----------
+      # ไม่ตั้ง = เก็บบนดิสก์ /data เหมือนเดิม (ใช้เป็นทางถอยได้ทันที)
+      # ตั้งครบ = เก็บบน Supabase Storage · หาค่าที่ Storage → S3 Connection
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_REGION
+        value: ap-southeast-1
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+
+      # ---------- พื้นฐาน ----------
+      # ไฟล์แนบ/ลายเซ็นยังอยู่บนดิสก์ ไม่ได้อยู่ในฐานข้อมูล
+      - key: DATA_DIR
+        value: /data
+      # ไฟล์สำรองต้องอยู่บนดิสก์ถาวร ไม่งั้นหายทุกครั้งที่ deploy ใหม่
+      # (ค่าเริ่มต้น ./backups อยู่ในคอนเทนเนอร์ซึ่งถูกสร้างใหม่ทุกรอบ)
+      # สำเนาเป็นไฟล์ .sql ที่กู้คืนด้วย psql ได้ — ดาวน์โหลดเก็บนอกเครื่องเป็นระยะ
+      - key: BACKUP_DIR
+        value: /data/backups
+      # ไม่ตั้ง = คอนเทนเนอร์เป็น UTC → ทวงงานผิดเวลา 7 ชม. · วันที่เอกสารเป็นของเมื่อวาน
+      - key: TZ
+        value: Asia/Bangkok
+      - key: NODE_ENV
+        value: production
+      - key: APP_BASE_URL          # URL production เต็ม เช่น https://approve.shd-technology.co.th
+        sync: false
+      - key: NEXT_PUBLIC_COMPANY_NAME
+        sync: false
+      - key: NEXT_PUBLIC_COMPANY_NAME_EN
+        sync: false
+      - key: SEED_PASSWORD          # ใช้ตอน seed แอดมิน/ผู้ใช้เริ่มต้น (ถ้าใช้ local login)
+        sync: false
+
+      # ---------- Central Login (SSO + ดึงรายชื่อ Lark) ----------
+      - key: SSO_ISSUER
+        value: https://sso.shd-technology.co.th
+      - key: SSO_SCOPES
+        value: openid profile email
+      # ใช้ในองค์กร คุมที่ระบบกลางล้วน → ล็อกอินผ่าน Central Login เท่านั้น (ซ่อนช่องอีเมล/รหัส)
+      - key: SSO_ALLOW_LOCAL_LOGIN
+        value: "false"
+      # แมปบทบาทมาตรฐานของ Central Login → role ในระบบนี้
+      # Editor ของระบบกลางแปลว่า "แก้ข้อมูลได้" ไม่ใช่ "ดูแลระบบได้" — เดิมแมปเป็น ADMIN
+      # ซึ่งให้สิทธิ์แก้ฟอร์ม สายอนุมัติ และสิทธิ์ของคนอื่นเกินกว่าที่บทบาทนั้นหมายถึง
+      # ผู้ดูแลระบบมาจาก owner/admin เท่านั้น
+      - key: SSO_ROLE_MAP
+        value: owner:ADMIN,admin:ADMIN,editor:USER,viewer:USER,manager:MANAGER,user:USER
+      - key: SSO_DEFAULT_ROLE
+        value: USER
+      - key: SSO_CLIENT_ID
+        sync: false
+      - key: SSO_CLIENT_SECRET
+        sync: false
+      # สิทธิ์จากระบบกลาง — ดู .env.example · CENTRAL_AUTHZ เปิดหลังตั้งบทบาทครบแล้วเท่านั้น
+      - key: CENTRAL_API_KEY
+        sync: false
+      - key: CENTRAL_AUTHZ
+        value: "false"
+      - key: CENTRAL_DIRECTORY_URL
+        value: https://sso.shd-technology.co.th
+      - key: DIRECTORY_API_KEY      # API key (scope directory:read:people) จากระบบกลาง
+        sync: false
+
+      # ---------- แจ้งเตือนทางอีเมล (สำรองเมื่อยังไม่ได้ตั้ง Lark) ----------
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+      # ---------- แจ้งเตือน Lark (ดู LARK-SETUP.md) ----------
+      - key: LARK_DOMAIN
+        value: https://open.larksuite.com   # Feishu จีน = https://open.feishu.cn
+      - key: LARK_NOTIFY_LOCALE
+        value: th
+      - key: LARK_APP_ID
+        sync: false
+      - key: LARK_APP_SECRET
+        sync: false
+      - key: LARK_VERIFICATION_TOKEN
+        sync: false
+      - key: LARK_ENCRYPT_KEY
+        sync: false
+
+      # ---------- REST API ภายนอก (ถ้าใช้) ----------
+      - key: API_KEY
+        sync: false

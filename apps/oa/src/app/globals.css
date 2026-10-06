@@ -1,0 +1,765 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   Design tokens — สีทั้งระบบมาจากตัวแปรชุดนี้ชุดเดียว
+   โหมดมืดสลับค่าตัวแปร ไม่ต้องไล่ใส่ dark: ทุกที่
+   ============================================================ */
+@layer base {
+  /* --------------------------------------------------------
+     สี CI — Indigo / Modern SaaS
+     โทนม่วงคราม-น้ำเงิน สะอาด ทันสมัย
+     เปลี่ยนทั้งระบบได้จากตัวแปรชุดนี้ชุดเดียว
+     -------------------------------------------------------- */
+  :root {
+    /* โทน SHD — navy ERP (ตรงกับระบบ Fixed Asset) เปลี่ยนทั้งระบบได้จากชุดนี้ */
+    --c-bg: #f5f6f8;
+    --c-surface: #ffffff;
+    --c-surface-2: #f5f6f8;
+    --c-surface-3: #eceef2;
+
+    --c-border: #e4e7ec;
+    --c-border-strong: #d0d5dd;
+
+    --c-text: #101828;
+    --c-text-soft: #344054;
+    --c-muted: #667085;
+
+    --c-primary: #1f4a85;
+    --c-primary-hover: #183a69;
+    --c-primary-active: #122c50;
+    --c-primary-soft: #eef3fa;
+    --c-primary-soft-hover: #dce6f4;
+    --c-primary-text: #183a69;
+    --c-ring: #b7cbe7;
+
+    /* สถานะเอกสาร */
+    --c-ok: #16a34a;
+    --c-ok-soft: #edf8f0;
+    --c-ok-text: #15803d;
+    --c-wait: #f59e0b;
+    --c-wait-soft: #fef6e9;
+    --c-wait-text: #b45309;
+    --c-no: #ef4444;
+    --c-no-soft: #fdf0f0;
+    --c-no-text: #b91c1c;
+    --c-draft: #687991;
+    --c-draft-soft: #f1f2f7;
+    --c-draft-text: #5b6070;
+    --c-info: #1f4a85;
+    --c-info-soft: #eef3fa;
+    --c-info-text: #183a69;
+
+    --sh-1: 0 1px 2px rgb(26 27 46 / 0.025);
+    --sh-2: 0 1px 3px rgb(26 27 46 / 0.08), 0 4px 12px rgb(26 27 46 / 0.07);
+    --sh-3: 0 2px 6px rgb(26 27 46 / 0.10), 0 14px 30px rgb(26 27 46 / 0.13);
+
+    /* --------------------------------------------------------
+       จานสีเสริม — ให้ของที่ "คนละเรื่องกัน" มีสีคนละสีจริง ๆ
+       เดิม sky/violet ถูกแมปไปที่ indigo และ orange ไปที่ amber
+       ผลคือสถานะ "รออนุมัติ" กับ "ถูกส่งกลับให้แก้" สีเหมือนกันเป๊ะ
+       ทั้งที่อันหนึ่งคือรอเฉย ๆ อีกอันคือมีงานต้องทำ
+       -------------------------------------------------------- */
+    --c-sky: #0284c7;        --c-sky-soft: #eff8ff;      --c-sky-text: #036ba1;
+    --c-violet: #7c3aed;     --c-violet-soft: #f5f1ff;   --c-violet-text: #6127c4;
+    --c-teal: #0d9488;       --c-teal-soft: #eafaf7;     --c-teal-text: #0b7167;
+    --c-orange: #ea580c;     --c-orange-soft: #fff3ec;   --c-orange-text: #c2410c;
+    --c-pink: #db2777;       --c-pink-soft: #fdf0f6;     --c-pink-text: #b01b60;
+
+    --c-canvas: #f5f6f8;
+    --c-canvas-accent: #1f4a85;
+  }
+
+  .dark {
+    --c-bg: #0e0f17;
+    --c-surface: #161826;
+    --c-surface-2: #1d1f30;
+    --c-surface-3: #262941;
+
+    --c-border: #2b2e45;
+    --c-border-strong: #3b3f5c;
+
+    --c-text: #e7e8f2;
+    --c-text-soft: #b4b7cc;
+    --c-muted: #838799;
+
+    --c-primary: #6f9fd6;
+    --c-primary-hover: #8cb6e0;
+    --c-primary-active: #a8cbe9;
+    --c-primary-soft: #152a40;
+    --c-primary-soft-hover: #1c3550;
+    --c-primary-text: #9cc2e6;
+    --c-ring: #35567a;
+
+    --c-ok: #22c55e;
+    --c-ok-soft: #0f2417;
+    --c-ok-text: #4ade80;
+    --c-wait: #fbbf24;
+    --c-wait-soft: #2a1f0d;
+    --c-wait-text: #fcd34d;
+    --c-no: #f87171;
+    --c-no-soft: #2b1414;
+    --c-no-text: #fca5a5;
+    --c-draft: #838799;
+    --c-draft-soft: #1e2030;
+    --c-draft-text: #b4b7cc;
+    --c-info: #6f9fd6;
+    --c-info-soft: #152a40;
+    --c-info-text: #9cc2e6;
+
+    /* โหมดมืด: สีเข้มขึ้นไม่ได้ ต้องสว่างขึ้นแทน — พื้นจึงเป็นสีเข้มที่ผสมเนื้อสีไว้
+       และตัวอักษรเป็นสีอ่อนของเนื้อสีเดียวกัน ไม่ใช่สลับค่าของโหมดสว่างตรง ๆ */
+    --c-sky: #38bdf8;        --c-sky-soft: #0c2436;      --c-sky-text: #7dd3fc;
+    --c-violet: #a78bfa;     --c-violet-soft: #241b3d;   --c-violet-text: #c4b5fd;
+    --c-teal: #2dd4bf;       --c-teal-soft: #0d2b2a;     --c-teal-text: #5eead4;
+    --c-orange: #fb923c;     --c-orange-soft: #2e1a0d;   --c-orange-text: #fdba74;
+    --c-pink: #f472b6;       --c-pink-soft: #2e1424;     --c-pink-text: #f9a8d4;
+
+    --sh-1: 0 1px 2px rgb(0 0 0 / 0.4);
+    --sh-2: 0 1px 3px rgb(0 0 0 / 0.5), 0 4px 12px rgb(0 0 0 / 0.35);
+    --sh-3: 0 2px 6px rgb(0 0 0 / 0.55), 0 12px 28px rgb(0 0 0 / 0.45);
+
+    --c-canvas: #0f1b2a;
+    --c-canvas-accent: #6f9fd6;
+  }
+
+  /* --------------------------------------------------------
+     ตัวหนังสือ — ตั้งค่าสำหรับภาษาไทยเป็นหลัก
+     ไทยมีสระบนล่างและวรรณยุกต์ซ้อนกันได้ถึงสามชั้น
+     จึงต้องการขนาดและระยะบรรทัดมากกว่าอังกฤษที่ขนาดเท่ากัน
+     และห้ามใส่ letter-spacing เด็ดขาด เพราะทำให้สระหลุดจากพยัญชนะที่มันเกาะอยู่
+     -------------------------------------------------------- */
+  body {
+    @apply bg-bg text-text antialiased;
+    font-size: 15px;
+    line-height: 1.6;
+    letter-spacing: 0;
+  }
+
+  * {
+    border-color: var(--c-border);
+    letter-spacing: 0;
+  }
+
+  table td,
+  table th {
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--c-primary);
+    outline-offset: 2px;
+    /* ปุ่มบางตัวอยู่บนพื้นสีเดียวกับเส้นโฟกัส — เงาขาว/ดำคั่นให้เห็นเส้นเสมอ */
+    box-shadow: 0 0 0 4px var(--c-surface);
+  }
+
+  /**
+   * ข้อความสำหรับโปรแกรมอ่านหน้าจอ — ซ่อนจากสายตาแต่ยังอ่านออกเสียงได้
+   * ไม่ใช้ display:none เพราะนั่นทำให้โปรแกรมอ่านข้ามไปด้วย
+   */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+  .sr-only-focusable:focus-visible {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+
+  /**
+   * เคารพการตั้งค่า "ลดการเคลื่อนไหว" ของเครื่องผู้ใช้
+   * คนที่เวียนหัวกับภาพเคลื่อนไหว (vestibular disorder) ตั้งค่านี้ไว้ที่ระบบปฏิบัติการ
+   * — เว็บที่ไม่ฟังก็ทำให้เขาใช้งานไม่ได้จริง ๆ ไม่ใช่แค่รำคาญ
+   */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* ---------- ปุ่ม ----------
+     สูง 36px ตามขนาดที่นิ้วกดได้สบายและตรงกับช่องกรอก
+     ทรงแคปซูล — ขอบโค้งเต็มความสูงทำให้ปุ่มอ่านออกว่าเป็นปุ่มตั้งแต่เหลือบเห็น
+     แยกจากการ์ดและช่องกรอกที่โค้งมนน้อยกว่า · เพิ่มระยะข้างเป็น 18px เพราะทรงโค้ง
+     กินพื้นที่ว่างริมสองข้างไป ถ้าคงไว้ที่ 16px ตัวหนังสือจะดูชิดขอบ */
+  .btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-[18px] py-2
+           text-sm font-medium transition
+           disabled:cursor-not-allowed disabled:opacity-45;
+  }
+  .btn-primary {
+    @apply btn text-white;
+    background: var(--c-primary);
+  }
+  .btn-primary:hover:not(:disabled) { background: var(--c-primary-hover); }
+  .btn-primary:active:not(:disabled) { background: var(--c-primary-active); }
+
+  .btn-success { @apply btn text-white; background: var(--c-ok); }
+  .btn-success:hover:not(:disabled) { filter: brightness(0.93); }
+  .btn-danger  { @apply btn text-white; background: var(--c-no); }
+  .btn-danger:hover:not(:disabled) { filter: brightness(0.93); }
+
+  .btn-ghost {
+    @apply btn bg-surface text-text-soft ring-1 ring-border-strong
+           hover:bg-surface-2 hover:text-text;
+  }
+  .btn-soft {
+    @apply btn text-primary-text;
+    background: var(--c-primary-soft);
+  }
+  .btn-soft:hover:not(:disabled) { background: var(--c-primary-soft-hover); }
+
+  .btn-icon {
+    @apply relative inline-flex h-11 w-11 items-center justify-center rounded-md text-muted
+           ring-1 ring-border transition hover:bg-surface-2 hover:text-text;
+  }
+
+  /**
+   * บนจอสัมผัส ปุ่มไอคอนเล็ก ๆ (28–32px) กดพลาดบ่อยมาก
+   * ขยาย "พื้นที่กดได้" ให้ถึง 44px โดยไม่ขยับหน้าตา — ใช้ pseudo-element ทาบทับ
+   * ไม่ไปแตะขนาดจริงของปุ่ม เลย์เอาต์ที่จัดไว้แล้วจึงไม่เพี้ยน
+   */
+  @media (pointer: coarse) {
+    .btn-icon::after {
+      content: "";
+      position: absolute;
+      inset: 50% auto auto 50%;
+      width: 44px;
+      height: 44px;
+      transform: translate(-50%, -50%);
+    }
+  }
+
+  /* ---------- ฟอร์ม ---------- */
+  .label { @apply mb-1.5 block text-sm font-medium text-text-soft; }
+  .input {
+    @apply h-11 w-full rounded-md border-0 bg-surface px-3 text-sm text-text
+           ring-1 ring-border-strong placeholder:text-muted
+           focus:outline-none focus:ring-2 focus:ring-primary;
+  }
+  /*
+   * textarea ล้นขอบการ์ดบนจอแคบ
+   *
+   * เบราว์เซอร์ให้ textarea มีความกว้างตั้งต้นจากแอตทริบิวต์ cols และเปิดให้ลากขยาย
+   * ได้ทั้งสองแกน — พอจอแคบกว่าความกว้างตั้งต้น มันจึงดันทะลุกรอบการ์ดออกไป
+   * พร้อมมุมลากที่โผล่นอกขอบ
+   *
+   * block + max-w-full บังคับให้อยู่ในกรอบเสมอ · resize-y ให้ลากได้แค่แนวตั้ง
+   * ซึ่งเป็นทิศทางเดียวที่คนต้องการจริง (อยากได้ที่พิมพ์เพิ่ม ไม่ใช่กว้างขึ้น)
+   */
+  textarea.input { @apply block h-auto max-w-full resize-y py-2 leading-relaxed; }
+  select.input { @apply pr-8; }
+
+  /* ---------- ช่องกรอกในตารางรายการ ----------
+     ช่องในตารางไม่มีกรอบเป็นของตัวเอง — เส้นของตารางคือขอบเขตอยู่แล้ว การวาดกล่อง
+     ซ้อนเข้าไปอีกชั้นทำให้หนึ่งแถวมีกรอบซ้อนกันสองชั้นและอ่านยากกว่าเดิม
+
+     ช่องกินพื้นที่เต็มเซลล์ และตอนโฟกัสจะไฮไลต์ทั้งเซลล์แบบกระดาษคำนวณ
+     (ring-inset + ไม่มีมุมมน) ไม่ใช่กล่องมนลอยอยู่กลางเซลล์ */
+  .cell-input {
+    @apply h-10 w-full rounded-none border-0 bg-transparent px-3 text-sm text-text
+           ring-inset ring-primary placeholder:text-muted
+           focus:bg-primary-soft focus:outline-none focus:ring-2;
+  }
+  select.cell-input { @apply pr-7; }
+
+  /* ---------- พื้นผิว ---------- */
+  .card {
+    @apply rounded-lg bg-surface p-5 ring-1 ring-border shadow-e1;
+  }
+  .card-flat { @apply rounded-lg bg-surface ring-1 ring-border; }
+
+  .badge {
+    @apply inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1
+           text-[13px] font-medium leading-normal ring-1 ring-inset;
+  }
+
+  .tone-neutral {
+    background: var(--c-draft-soft); color: var(--c-draft-text);
+    --tw-ring-color: color-mix(in srgb, var(--c-draft) 22%, transparent);
+  }
+  .tone-primary {
+    background: var(--c-primary-soft); color: var(--c-primary-text);
+    --tw-ring-color: var(--c-ring);
+  }
+  .tone-emerald {
+    background: var(--c-ok-soft); color: var(--c-ok-text);
+    --tw-ring-color: color-mix(in srgb, var(--c-ok) 28%, transparent);
+  }
+  .tone-amber {
+    background: var(--c-wait-soft); color: var(--c-wait-text);
+    --tw-ring-color: color-mix(in srgb, var(--c-wait) 28%, transparent);
+  }
+  .tone-orange {
+    background: var(--c-orange-soft); color: var(--c-orange-text);
+    --tw-ring-color: color-mix(in srgb, var(--c-orange) 28%, transparent);
+  }
+  .tone-rose {
+    background: var(--c-no-soft); color: var(--c-no-text);
+    --tw-ring-color: color-mix(in srgb, var(--c-no) 28%, transparent);
+  }
+  .tone-sky {
+    background: var(--c-sky-soft); color: var(--c-sky-text);
+    --tw-ring-color: color-mix(in srgb, var(--c-sky) 28%, transparent);
+  }
+  .tone-violet {
+    background: var(--c-violet-soft); color: var(--c-violet-text);
+    --tw-ring-color: color-mix(in srgb, var(--c-violet) 28%, transparent);
+  }
+  .tone-teal {
+    background: var(--c-teal-soft); color: var(--c-teal-text);
+    --tw-ring-color: color-mix(in srgb, var(--c-teal) 28%, transparent);
+  }
+  .tone-pink {
+    background: var(--c-pink-soft); color: var(--c-pink-text);
+    --tw-ring-color: color-mix(in srgb, var(--c-pink) 28%, transparent);
+  }
+
+  /* หัวข้อสองระดับที่ใช้ซ้ำทั้งระบบ
+     เดิมเขียนเป็น text-[13.5px] / text-[15px] กระจายอยู่ 18 จุด — เลขลอยแบบนั้น
+     ปรับพร้อมกันทั้งระบบไม่ได้ และไม่มีอะไรบอกว่ามันคือ "หัวข้อระดับเดียวกัน" */
+  .h-sect { @apply text-[13.5px] font-semibold text-text; }
+  .h-card { @apply text-[15px] font-semibold text-text; }
+
+  /* ----------------------------------------------------------
+     แถบกรองแถวเดียว — กล่องเดียว ขอบเดียว ไม่มีเส้นคั่นข้างใน
+     ไม่ใช่ช่องกรอกลอย ๆ หลายอันเรียงกัน
+
+     ของกรองชุดนี้ทำงานร่วมกันเป็นชุดเดียว การให้แต่ละอันมีขอบมนของตัวเอง
+     ทำให้เกิดกรอบซ้อนกันเจ็ดชั้นในแถวเดียว ซึ่งอ่านเหมือนของเจ็ดชิ้นที่ไม่เกี่ยวกัน
+     ---------------------------------------------------------- */
+  .bar { @apply flex items-stretch gap-2; }
+  /** แต่ละชิ้นเป็นแคปซูลของตัวเอง สูงเท่ากันทุกอันด้วยค่าที่ตั้งไว้ ไม่ใช่ตามเนื้อหาข้างใน */
+  .bar-field {
+    @apply h-11 min-w-0 rounded-md border-0 bg-surface px-4 text-[13px] text-text
+           ring-1 ring-border placeholder:text-muted
+           focus:outline-none focus:ring-2 focus:ring-primary;
+  }
+  select.bar-field { @apply pr-8; }
+
+  /* ----------------------------------------------------------
+     สีประจำชิ้น — ตั้งสามตัวแปรไว้ที่ตัวการ์ด แล้วลูก ๆ หยิบไปใช้ต่อ
+     ทำให้เปลี่ยนสีการ์ดทั้งใบได้ด้วยการสลับคลาสเดียว และรับประกันว่า
+     แถบสี ไอคอน และตัวเลข ใช้เนื้อสีเดียวกันเสมอ ไม่หลุดกันเอง
+     ---------------------------------------------------------- */
+  .accent-primary { --a: var(--c-primary); --a-soft: var(--c-primary-soft); --a-text: var(--c-primary-text); }
+  .accent-emerald { --a: var(--c-ok);      --a-soft: var(--c-ok-soft);      --a-text: var(--c-ok-text); }
+  .accent-amber   { --a: var(--c-wait);    --a-soft: var(--c-wait-soft);    --a-text: var(--c-wait-text); }
+  .accent-rose    { --a: var(--c-no);      --a-soft: var(--c-no-soft);      --a-text: var(--c-no-text); }
+  .accent-sky     { --a: var(--c-sky);     --a-soft: var(--c-sky-soft);     --a-text: var(--c-sky-text); }
+  .accent-violet  { --a: var(--c-violet);  --a-soft: var(--c-violet-soft);  --a-text: var(--c-violet-text); }
+  .accent-teal    { --a: var(--c-teal);    --a-soft: var(--c-teal-soft);    --a-text: var(--c-teal-text); }
+  .accent-orange  { --a: var(--c-orange);  --a-soft: var(--c-orange-soft);  --a-text: var(--c-orange-text); }
+  .accent-pink    { --a: var(--c-pink);    --a-soft: var(--c-pink-soft);    --a-text: var(--c-pink-text); }
+
+  /** แถบสีบาง ๆ ริมซ้ายของการ์ด — บอกประเภทได้โดยไม่ต้องอ่าน และไม่กินพื้นที่ */
+  .accent-rail::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: var(--a, var(--c-primary));
+  }
+
+  /** ช่องไอคอนสีอ่อนของสีประจำชิ้น */
+  .accent-chip {
+    background: var(--a-soft, var(--c-primary-soft));
+    color: var(--a-text, var(--c-primary-text));
+    @apply inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md;
+  }
+
+  /**
+   * การ์ดฟอร์มในแคตตาล็อก — รับสีประจำฟอร์มมาทาง --a
+   *
+   * ตอนปกติเป็นการ์ดขาวเรียบเหมือนเดิม เพราะแคตตาล็อกมีการ์ดหลายสิบใบเรียงกัน
+   * ถ้าทุกใบมีพื้นสีของตัวเอง หน้าจะกลายเป็นแผงสีที่หาอะไรไม่เจอ
+   * สีจะโผล่ตอนชี้ — ตรงจังหวะที่คนกำลังเล็งใบนั้นอยู่พอดี
+   */
+  .tpl-card:hover {
+    --tw-ring-color: color-mix(in srgb, var(--a) 45%, transparent);
+    background: color-mix(in srgb, var(--a) 6%, var(--c-surface));
+  }
+
+  .badge-dot::before {
+    content: "";
+    width: 6px; height: 6px;
+    border-radius: 999px;
+    background: currentColor;
+    flex: none;
+  }
+
+  /* ---------- กล่องแจ้งเตือน ---------- */
+  .alert {
+    @apply flex items-start gap-2.5 rounded-lg px-4 py-3 text-sm leading-relaxed ring-1 ring-inset;
+  }
+  .alert-warn {
+    background: var(--c-wait-soft); color: var(--c-wait-text);
+    --tw-ring-color: color-mix(in srgb, var(--c-wait) 28%, transparent);
+  }
+  .alert-error {
+    background: var(--c-no-soft); color: var(--c-no-text);
+    --tw-ring-color: color-mix(in srgb, var(--c-no) 28%, transparent);
+  }
+  .alert-info {
+    background: var(--c-info-soft); color: var(--c-info-text);
+    --tw-ring-color: color-mix(in srgb, var(--c-info) 28%, transparent);
+  }
+  .alert-ok {
+    background: var(--c-ok-soft); color: var(--c-ok-text);
+    --tw-ring-color: color-mix(in srgb, var(--c-ok) 28%, transparent);
+  }
+
+  /* ---------- เมนูด้านซ้าย ---------- */
+  .nav-item {
+    @apply relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm
+           font-medium text-text-soft transition hover:bg-surface-2 hover:text-text;
+  }
+  /* ขั้น active: พื้นอ่อน + แถบ accent ซ้าย (inset เพื่อไม่ให้โดน overflow ตัด)
+     ใช้สีประจำเมนูนั้น (--a) ไม่ใช่สีหลักสีเดียวทั้งแถบ — เมนูจึงจำได้ด้วยสี
+     ไม่ใช่ด้วยตำแหน่งอย่างเดียว */
+  .nav-item-active,
+  .nav-item-active:hover {
+    color: var(--a-text, var(--c-primary-text));
+    background: var(--a-soft, var(--c-primary-soft));
+    box-shadow: inset 3px 0 0 0 var(--a, var(--c-primary));
+  }
+  /* ไอคอนมีสีตลอด แม้ตอนยังไม่ถูกเลือก — แถบเมนูที่เป็นสีเทาทั้งแถบทำให้ทุกอย่าง
+     น้ำหนักเท่ากันหมด ตาจึงไม่มีที่ให้เกาะ */
+  .nav-item .nav-ico { color: var(--a, var(--c-muted)); opacity: .85; }
+  .nav-item:hover .nav-ico, .nav-item-active .nav-ico { opacity: 1; }
+  .nav-group {
+    @apply flex w-full items-center gap-2 px-3 pb-1 pt-4 text-[11px] font-semibold text-muted;
+  }
+
+  /* ---------- แท็บ ---------- */
+  .tab {
+    /* shrink-0 สำคัญ: แท็บอยู่ในกล่องที่เลื่อนแนวนอนได้ ถ้ายอมหดมันจะถูกบีบให้แคบลง
+       จนข้อความถูกตัดกลางคำ แทนที่จะคงความกว้างไว้แล้วให้คนเลื่อนดู */
+    @apply -mb-px shrink-0 whitespace-nowrap border-b-2 border-transparent px-4 py-2.5
+           text-sm text-text-soft transition hover:text-text;
+  }
+  .tab-active { @apply border-primary font-medium text-primary-text; }
+
+  /* ---------- ตัวสร้างฟอร์ม ---------- */
+  .gf-canvas { background: var(--c-canvas); }
+  .gf-card { @apply rounded-2xl bg-surface ring-1 ring-border transition; }
+  .gf-card:not(.gf-card-active):hover { box-shadow: var(--sh-2); }
+  .gf-card-active { box-shadow: var(--sh-3); }
+  .gf-card-active::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    border-radius: 12px 0 0 12px;
+    background: var(--c-canvas-accent);
+  }
+  .gf-input {
+    @apply w-full border-0 border-b border-transparent bg-transparent px-3 py-2 text-text
+           outline-none transition placeholder:text-muted
+           hover:border-border-strong focus:border-b-2 focus:border-primary;
+  }
+  /* เหตุผลเดียวกับ textarea.input — กันความกว้างตั้งต้นของ textarea ดันทะลุกรอบ */
+  textarea.gf-input { @apply block max-w-full resize-y; }
+  .gf-input-filled { @apply gf-input rounded-t bg-surface-2; }
+  .gf-switch {
+    @apply relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full
+           bg-border-strong transition;
+  }
+  .gf-switch-on { background: var(--c-canvas-accent); }
+  .gf-switch-knob {
+    @apply pointer-events-none absolute left-0.5 h-4 w-4 rounded-full bg-white transition;
+  }
+  .gf-switch-on .gf-switch-knob { transform: translateX(16px); }
+  .gf-tools {
+    @apply flex flex-col items-center gap-1 rounded-2xl bg-surface p-1.5 ring-1 ring-border;
+  }
+
+  /* ---------- ตาราง ---------- */
+  .table-wrap {
+    @apply overflow-x-auto rounded-lg bg-surface ring-1 ring-border;
+  }
+  .table-head {
+    @apply sticky top-0 z-10 text-left text-xs font-semibold text-text-soft;
+    background: var(--c-surface-2);
+  }
+  .table-head th { @apply whitespace-nowrap px-4 py-3; }
+
+  /* แถวหายใจได้ ไม่ต้องเพ่ง */
+  .row-dense > td { @apply px-4 py-4 align-middle; }
+  .row-hover { @apply transition hover:bg-surface-2; }
+  /*
+   * ทั้งแถวกดได้ โดยยังมีลิงก์จริงเพียงอันเดียวในแถว
+   *
+   * ไม่ได้ใช้ onClick บนแถว เพราะแถวที่กดได้แต่ไม่ใช่ลิงก์จะเปิดแท็บใหม่ไม่ได้
+   * คัดลอกที่อยู่ไม่ได้ และโปรแกรมอ่านหน้าจอไม่รู้ว่ากดแล้วไปไหน
+   * วิธีนี้ยืดพื้นที่กดของลิงก์เลขที่เอกสารให้คลุมทั้งแถวแทน — ได้ทั้งสองอย่าง
+   *
+   * ถ้าเบราว์เซอร์ไหนไม่รองรับ position:relative บน <tr> ก็ยังกดที่เลขที่ได้ตามเดิม
+   */
+  .row-link { @apply relative; }
+  .row-link .row-target::after { content: ""; @apply absolute inset-0; }
+}
+
+/* หัวข้อการ์ดที่มีแถบสีนำหน้า */
+.section-bar::before {
+  content: "";
+  display: inline-block;
+  width: 3px;
+  height: 1.05em;
+  margin-right: 0.6rem;
+  border-radius: 999px;
+  background: var(--c-primary);
+  vertical-align: -0.15em;
+}
+
+/* ---------- ฟอร์มกรอกแบบมินิมอล (โปร่ง อากาศเยอะ ช่องใหญ่ label เบา) ---------- */
+.min-form .label {
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--c-text-soft);
+}
+.min-form .input {
+  height: 2.75rem;
+  border-radius: 0.7rem;
+  font-size: 0.95rem;
+  --tw-ring-color: var(--c-border); /* เส้นขอบอ่อนลง */
+}
+.min-form .input:focus {
+  --tw-ring-color: var(--c-primary);
+}
+.min-form textarea.input {
+  height: auto;
+  min-height: 9.5rem;
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
+}
+
+/* ---------- เอกสารสำหรับพิมพ์ / บันทึกเป็น PDF (A4) ---------- */
+
+/* ขนาดกระดาษ ขอบ และตัวอักษร มาจากตั้งค่าการพิมพ์ของแต่ละฟอร์ม (src/lib/print.ts)
+   หน้าพิมพ์ตั้งตัวแปรพวกนี้เป็น inline style — ค่าที่เขียนไว้ตรงนี้เป็นแค่ตัวสำรอง
+   เผื่อมีที่ไหนใช้ .doc-sheet โดยไม่ได้ส่งค่ามา */
+.doc-sheet {
+  font-family: Sarabun, "Noto Sans Thai", "TH Sarabun New", sans-serif;
+  width: var(--sheet-w, 210mm);
+  min-height: var(--sheet-h, 297mm);
+  padding: var(--sheet-pad, 16mm);
+  margin: 0 auto;
+  background: #fff;
+  color: #000;
+  font-size: var(--sheet-font, 15px);
+  line-height: 1.65;
+}
+
+/* ช่องลงนาม — จำนวนต่อแถวตั้งได้ต่อฟอร์ม กว้างเท่ากันเสมอไม่ว่ากระดาษขนาดไหน */
+.sign-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--sign-cols, 2), minmax(0, 1fr));
+  gap: 8mm 10mm;
+}
+
+.doc-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.doc-table th,
+.doc-table td { border: 1px solid #000; padding: 6px 10px; vertical-align: top; word-break: break-word; }
+.doc-table th { text-align: left; font-weight: 700; white-space: pre-line; }
+
+.doc-body { white-space: pre-wrap; min-height: 120mm; }
+
+@media print {
+  /* ขนาดกระดาษจริงถูกกำหนดโดย <style> ที่หน้าพิมพ์ฉีดตามตั้งค่าของฟอร์ม */
+  @page { margin: 0; }
+  html, body { background: #fff !important; color: #000 !important; }
+  .no-print { display: none !important; }
+  .doc-sheet { width: auto; min-height: auto; margin: 0; box-shadow: none; }
+  .page-break { break-after: page; }
+}
+
+/* Shared workspace chrome follows the selected appearance mode. */
+.app-sidebar { background: var(--c-surface); }
+.app-sidebar .nav-item-active {
+  background: var(--c-primary-soft);
+  box-shadow: none;
+}
+.app-sidebar .nav-group { font-size: 12px; padding-top: 1.5rem; }
+.app-sidebar nav { scrollbar-width: thin; }
+.workspace-hero {
+  border-bottom: 1px solid var(--c-border);
+  padding: .5rem 0 1.75rem;
+}
+.template-card { position: relative; }
+.template-card:hover { background: var(--c-surface-2); }
+.stat-tile { position: relative; }
+.page-heading { padding-bottom: 1.25rem; border-bottom: 1px solid var(--c-border); }
+.login-story {
+  background: var(--c-surface-2);
+  color: var(--c-text);
+  border: 1px solid var(--c-border);
+  border-radius: 1.25rem;
+}
+html { color-scheme: light; }
+html.dark { color-scheme: dark; }
+input[type="checkbox"], input[type="radio"] { accent-color: var(--c-primary); }
+::selection { background: var(--c-primary-soft); color: var(--c-primary-text); }
+.skip-link {
+  position: fixed;
+  top: .75rem;
+  left: 1rem;
+  z-index: 100;
+  transform: translateY(-200%);
+}
+.skip-link:focus { transform: translateY(0); }
+.input { transition: box-shadow 150ms ease, background-color 150ms ease; }
+.input:disabled { cursor: not-allowed; background: var(--c-surface-2); opacity: .7; }
+.table-wrap { scrollbar-width: thin; }
+@media (max-width: 639px) {
+  .input { font-size: 16px; }
+  .min-form .input { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Template editor: three-step header matching the reference. */
+.builder-workspace { --c-canvas: #efeeff; }
+.dark .builder-workspace { --c-canvas: #191a2e; }
+.builder-back, .builder-save {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  min-height: 38px;
+  padding: .5rem 1.1rem;
+  border-radius: 999px;
+  font-size: 14px;
+  line-height: 1.5;
+  transition: background-color 150ms ease;
+}
+.builder-back { background: var(--c-surface); border: 1px solid var(--c-border-strong); color: var(--c-text-soft); }
+.builder-back:hover { background: var(--c-surface-2); }
+.builder-save { background: var(--c-primary); color: white; }
+.builder-save:hover:not(:disabled) { background: var(--c-primary-hover); }
+.builder-save:disabled { opacity: .6; cursor: wait; }
+.builder-step {
+  display: flex;
+  align-items: flex-start;
+  gap: .625rem;
+  /* เตี้ยลงจาก 74px — สามใบนี้เป็นแค่ตัวสลับแท็บ ไม่ใช่เนื้อหาของหน้า
+     กินความสูงเท่าการ์ดคำถามจริงทำให้เนื้อหาที่มาแก้ถูกดันลงไปใต้จอ */
+  min-height: 0;
+  padding: .75rem;
+  border: 1px solid var(--c-border);
+  border-radius: 1rem;
+  background: var(--c-surface);
+  color: var(--c-text);
+  text-align: left;
+}
+.builder-step:hover { border-color: var(--c-border-strong); }
+.builder-step-active, .builder-step-active:hover {
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 1px var(--c-primary);
+  color: var(--c-primary-text);
+}
+.builder-step-number {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--c-surface-2);
+  color: var(--c-muted);
+  font-size: 12px;
+}
+.builder-step-active .builder-step-number { background: var(--c-primary); color: white; }
+
+/* Approval steps use quieter surfaces and clear section boundaries. */
+.flow-node { box-shadow: var(--sh-1); border-radius: 1.5rem; }
+.flow-node-open { --tw-ring-color: var(--c-ring); }
+.flow-node-heading {
+  border-radius: inherit;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .875rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--c-border);
+  background: var(--c-surface);
+}
+.flow-node-index {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  color: var(--c-primary-text);
+  background: var(--c-primary-soft);
+  font-size: 14px;
+  font-weight: 600;
+}
+.flow-condition, .flow-members {
+  border: 1px solid var(--c-border);
+  /* โค้งใกล้เคียงกับช่องกรอกข้างบน — กล่องที่เหลี่ยมกว่าของที่อยู่ข้างในทำให้
+     ดูเหมือนสองชิ้นคนละชุดซ้อนกัน */
+  border-radius: 1.25rem;
+  background: var(--c-surface-2);
+  padding: .75rem;
+}
+/* การ์ดขั้นตอนมีหลายใบเรียงกันในหน้าเดียว ช่องสูง 46px ทำให้ใบเดียวกินจอเกือบหมด
+   — ลดลงมาที่ 40px เท่ากับปุ่มจัดการบนหัวการ์ด อ่านเป็นชุดเดียวกันด้วย */
+.flow-editor .input { min-width: 0; height: 40px; background: var(--c-surface); }
+.flow-editor .label { margin-bottom: .375rem; font-size: 13px; }
+
+/* ============================================================
+   โทนเดียว navy แบบ SHD Fixed Asset — เอา "สีรุ้ง" ของ accent ออก
+   (เมนู/ไอคอนหมวด/ชิป เคยเป็นคนละสี ทำให้ดูเหมือน template สำเร็จรูป)
+   สีสถานะเอกสาร (เขียว/เหลือง/แดง) ยังคงไว้ เพราะเป็นความหมาย ไม่ใช่การตกแต่ง
+   ============================================================ */
+.accent-primary, .accent-emerald, .accent-amber, .accent-rose,
+.accent-sky, .accent-violet, .accent-teal, .accent-orange, .accent-pink {
+  --a: var(--c-primary);
+  --a-soft: var(--c-primary-soft);
+  --a-text: var(--c-primary-text);
+}
+
+/* เอาแถบสีริมซ้ายของการ์ด/สแตททั้งหมดออก (Asset เป็นการ์ดขาวเรียบ ไม่มีแถบ) */
+.accent-rail::before { display: none !important; }
+
+/* เมนูซ้าย: ไอคอนเทากลางตอนปกติ เป็น navy ตอนถูกเลือก (เหมือน Asset) ไม่ใช่สีประจำเมนู */
+.app-sidebar .nav-item .nav-ico { color: var(--c-muted); opacity: 1; }
+.app-sidebar .nav-item:hover .nav-ico { color: var(--c-text-soft); }
+.app-sidebar .nav-item-active .nav-ico,
+.app-sidebar .nav-item-active:hover .nav-ico { color: var(--c-primary-text); }
+
+/* หัวข้อ section ไม่ต้องมีขีดสีนำหน้า — Asset ใช้หัวข้อเปล่า ๆ */
+.section-bar::before { display: none; }

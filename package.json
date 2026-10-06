@@ -1,0 +1,17 @@
+{
+  "name": "shd-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SHD internal platform — OA (Internal Approval) + Fixed Asset, แยกเว็บ ใช้ Postgres ร่วมกัน",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:asset": "npm run dev -w apps/asset -- -p 3001",
+    "dev:oa": "npm run dev -w apps/oa -- -p 3010",
+    "build:asset": "npm run build -w apps/asset",
+    "build:oa": "npm run build -w apps/oa",
+    "seed:oa": "npm run seed -w apps/oa"
+  }
+}
