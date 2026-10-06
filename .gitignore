@@ -2,7 +2,9 @@ node_modules/
 .next/
 out/
 dist/
-data/
+# ไฟล์ข้อมูล runtime ของ OA (attachments/backups) — ไม่ใช่โฟลเดอร์ source code เช่น src/data
+/data/
+/apps/*/data/
 *.log
 .env
 .env.local

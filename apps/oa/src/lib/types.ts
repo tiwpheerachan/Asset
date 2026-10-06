@@ -97,6 +97,8 @@ export type FieldRole = "" | "TITLE" | "AMOUNT" | "DATE" | "EVENT_DATE" | "PERIO
 
 export type ColumnType =
   | "TEXT" | "NUMBER" | "MONEY" | "DATE" | "SELECT" | "USER"
+  /** ตัวเลือกแบบเลื่อนลงในเซลล์ — เหมือน SELECT แต่ยุบไว้ ใช้เมื่อตัวเลือกเยอะ */
+  | "DROPDOWN"
   /** เลือกได้หลายค่าในเซลล์เดียว เก็บเป็น array แสดงเป็นชิป */
   | "MULTISELECT"
   /** ไฟล์แนบของ "แถวนั้น" เช่น ใบเสนอราคาของรายการนั้น ไม่ใช่ของทั้งเอกสาร */
@@ -129,6 +131,7 @@ export const COLUMN_TYPE_LABEL: Record<ColumnType, string> = {
   MONEY: "จำนวนเงิน",
   DATE: "วันที่",
   SELECT: "ตัวเลือก",
+  DROPDOWN: "ดรอปดาวน์",
   MULTISELECT: "ตัวเลือก (หลายค่า)",
   USER: "บุคคล",
   FILE: "ไฟล์แนบ",
