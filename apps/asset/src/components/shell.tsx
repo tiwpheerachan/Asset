@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { LANGS, useI18n } from '@/lib/i18n';
 import { CURRENT_PERIOD, useStore } from '@/lib/store';
+import { AppSwitcher } from './app-switcher';
 import { cx } from './ui';
 
 const NAV = [
@@ -242,6 +243,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="hidden rounded-md border border-line px-2 py-1 text-[12px] text-ink-3 xl:inline">
               {t('common.period')}: <b className="font-semibold text-ink-2">{period(CURRENT_PERIOD)}</b>
             </span>
+            <AppSwitcher />
             <LangSwitch compact />
             <UserMenu />
           </div>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import AppSwitcher from "@/components/AppSwitcher";
 import { useT } from "@/components/I18nProvider";
 import { Avatar } from "@/components/ui";
 import { IconSearch, IconChevron, IconLogout, IconUsers } from "@/components/icons";
@@ -61,6 +62,7 @@ export default function TopBar({ user, onMenu, mobileOpen }: { user: User; onMen
         </form>
 
         <div className="ml-auto flex items-center gap-2">
+          <AppSwitcher />
           <LanguageSwitcher />
           <ThemeToggle />
           <UserMenu user={user} />
