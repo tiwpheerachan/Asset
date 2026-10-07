@@ -21,6 +21,7 @@ import type {
   Department,
   DepPolicy,
   DepRun,
+  DisposalType,
   Location,
   OAIntegration,
   OARecord,
@@ -58,7 +59,7 @@ const KEY = 'fa.session.v3'; // เก็บเฉพาะ session ที่ br
 type PersistKey =
   | 'companies' | 'branches' | 'departments' | 'costCenters' | 'locations'
   | 'categories' | 'policies' | 'users' | 'running' | 'assets' | 'oa'
-  | 'documents' | 'audit' | 'runs' | 'movements';
+  | 'documents' | 'audit' | 'runs' | 'movements' | 'disposals';
 const PERSIST_COLLECTIONS: { key: PersistKey; id: (r: Record<string, unknown>) => string }[] = [
   { key: 'companies', id: (r) => r.id as string },
   { key: 'branches', id: (r) => r.id as string },
@@ -75,6 +76,7 @@ const PERSIST_COLLECTIONS: { key: PersistKey; id: (r: Record<string, unknown>) =
   { key: 'audit', id: (r) => r.id as string },
   { key: 'runs', id: (r) => r.id as string },
   { key: 'movements', id: (r) => r.id as string },
+  { key: 'disposals', id: (r) => r.id as string },
 ];
 
 const PERSIST_ID: Record<string, (r: Record<string, unknown>) => string> = Object.fromEntries(
@@ -208,6 +210,7 @@ function seedState(): State {
     audit: SEED_AUDIT,
     runs: SEED_RUNS,
     movements: [],
+    disposals: [],
     policies: POLICIES,
     categories: CATEGORIES,
     companies: COMPANIES,
@@ -242,6 +245,7 @@ interface StoreApi {
   updateAsset: (id: string, patch: Partial<Asset>, reason?: string) => void;
   setAssetStatus: (id: string, status: AssetStatus, reason?: string) => void;
   transferAsset: (id: string, toLocationId: string, reason: string) => void;
+  disposeAsset: (id: string, input: { disposalType: DisposalType; proceeds: number; nbvAtDisposal: number }, reason: string) => void;
   createAsset: (a: Omit<Asset, 'id' | 'code' | 'createdAt' | 'createdBy' | 'updatedAt' | 'updatedBy'>, reason?: string) => string;
   importAssets: (rows: Asset[]) => number;
   setOAStatus: (id: string, status: OAStatus, extra?: Partial<OARecord>, reason?: string) => void;
@@ -508,6 +512,31 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             assets: s.assets.map((x) => (x.id === id ? { ...x, locationId: toLocationId, branchId: toBranchId, updatedAt: nowIso(), updatedBy: who } : x)),
             movements: [mv, ...s.movements],
             audit: [mkAudit({ action: 'TRANSFER', assetCode: a.code, entity: 'asset_movements', field: 'locationId', oldValue: a.locationId ?? '—', newValue: toLoc?.code ?? toLocationId, reason }), ...s.audit],
+          };
+        }),
+      disposeAsset: (id, input, reason) =>
+        commit((s) => {
+          const a = s.assets.find((x) => x.id === id);
+          if (!a) return s;
+          const who = s.session?.name ?? '';
+          const gainLoss = Math.round((input.proceeds - input.nbvAtDisposal) * 100) / 100;
+          const dp = {
+            id: uid('DP'),
+            assetId: id,
+            disposalType: input.disposalType,
+            disposalDate: TODAY,
+            proceeds: input.proceeds,
+            nbvAtDisposal: input.nbvAtDisposal,
+            gainLoss,
+            reason,
+            by: who,
+            at: nowIso(),
+          };
+          return {
+            ...s,
+            assets: s.assets.map((x) => (x.id === id ? { ...x, status: 'DISPOSED' as const, updatedAt: nowIso(), updatedBy: who } : x)),
+            disposals: [dp, ...s.disposals],
+            audit: [mkAudit({ action: 'DISPOSE', assetCode: a.code, entity: 'asset_disposals', field: 'status', oldValue: a.status, newValue: `DISPOSED (${input.disposalType})`, reason }), ...s.audit],
           };
         }),
       createAsset: (a, reason) => {

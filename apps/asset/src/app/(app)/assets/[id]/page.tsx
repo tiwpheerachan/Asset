@@ -12,7 +12,7 @@ import { CURRENT_PERIOD, useStore } from '@/lib/store';
 import { useLookups, useValuations } from '@/lib/hooks';
 import { buildSchedule, depIssues, prorationFor, totalCost } from '@/lib/depreciation';
 import { exportXlsx } from '@/lib/excel';
-import type { Asset, AssetStatus, DocType } from '@/lib/types';
+import type { Asset, AssetStatus, DisposalType, DocType } from '@/lib/types';
 import { AssetStatusBadge } from '@/components/badges';
 import { Badge, Button, Card, CardHeader, DL, Drawer, Empty, FormField, Input, Modal, Notice, PageHeader, Select, Table, Tabs, Td, Textarea, Th, cx } from '@/components/ui';
 
@@ -40,7 +40,7 @@ export default function AssetDetailPage() {
 
 function Detail({ asset }: { asset: Asset }) {
   const { t, money, period, dateTime } = useI18n();
-  const { state, can, setAssetStatus, transferAsset } = useStore();
+  const { state, can, setAssetStatus, transferAsset, disposeAsset } = useStore();
   const lk = useLookups();
   const vals = useValuations();
   const v = vals.get(asset.id)!;
@@ -48,6 +48,7 @@ function Detail({ asset }: { asset: Asset }) {
   const [editOpen, setEditOpen] = useState(false);
   const [statusModal, setStatusModal] = useState<{ to: AssetStatus; label: string } | null>(null);
   const [transferOpen, setTransferOpen] = useState(false);
+  const [disposalOpen, setDisposalOpen] = useState(false);
   const docs = state.documents.filter((d) => d.assetId === asset.id);
   const history = state.audit.filter((a) => a.assetCode === asset.code);
   const issues = depIssues({ ...asset, status: 'ACTIVE' }, state.policies);
@@ -74,7 +75,7 @@ function Detail({ asset }: { asset: Asset }) {
   }
   if (asset.status === 'DISPOSAL_PENDING' && can('approveAsset')) {
     actions.push(<Button key="canceldisp" icon={<X size={15} />} onClick={() => setStatusModal({ to: 'ACTIVE', label: t('detail.cancelDisposal') })}>{t('detail.cancelDisposal')}</Button>);
-    actions.push(<Button key="confirmdisp" variant="danger" icon={<Trash2 size={15} />} onClick={() => setStatusModal({ to: 'DISPOSED', label: t('detail.confirmDisposal') })}>{t('detail.confirmDisposal')}</Button>);
+    actions.push(<Button key="confirmdisp" variant="danger" icon={<Trash2 size={15} />} onClick={() => setDisposalOpen(true)}>{t('detail.confirmDisposal')}</Button>);
   }
   if (['ACTIVE', 'INACTIVE', 'UNDER_REPAIR', 'TEMPORARILY_UNUSED'].includes(asset.status) && (can('approveAsset') || can('editDraft')))
     actions.push(<Button key="transfer" icon={<MapPin size={15} />} onClick={() => setTransferOpen(true)}>{t('detail.transfer')}</Button>);
@@ -215,7 +216,64 @@ function Detail({ asset }: { asset: Asset }) {
           }}
         />
       )}
+      {disposalOpen && (
+        <DisposalModal
+          nbv={v.nbv}
+          onClose={() => setDisposalOpen(false)}
+          onConfirm={(input, reason) => {
+            disposeAsset(asset.id, { ...input, nbvAtDisposal: v.nbv }, reason);
+            setDisposalOpen(false);
+          }}
+        />
+      )}
     </>
+  );
+}
+
+const DISPOSAL_TYPES: DisposalType[] = ['SALE', 'SCRAP', 'LOST', 'DAMAGE', 'DONATION', 'WRITE_OFF'];
+
+function DisposalModal({ nbv, onClose, onConfirm }: { nbv: number; onClose: () => void; onConfirm: (input: { disposalType: DisposalType; proceeds: number }, reason: string) => void }) {
+  const { t, money } = useI18n();
+  const [disposalType, setDisposalType] = useState<DisposalType>('SALE');
+  const [proceeds, setProceeds] = useState(0);
+  const [reason, setReason] = useState('');
+  const gainLoss = Math.round((proceeds - nbv) * 100) / 100;
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title={t('detail.confirmDisposal')}
+      footer={
+        <>
+          <Button onClick={onClose}>{t('common.cancel')}</Button>
+          <Button variant="danger" disabled={!reason.trim()} onClick={() => onConfirm({ disposalType, proceeds }, reason)}>{t('detail.confirmDisposal')}</Button>
+        </>
+      }
+    >
+      <div className="grid gap-3.5 sm:grid-cols-2">
+        <FormField label={t('disposal.type')} required>
+          <Select value={disposalType} onChange={(e) => setDisposalType(e.target.value as DisposalType)}>
+            {DISPOSAL_TYPES.map((d) => <option key={d} value={d}>{t(`disposal.${d}`)}</option>)}
+          </Select>
+        </FormField>
+        <FormField label={t('disposal.proceeds')}>
+          <Input type="number" value={proceeds} onChange={(e) => setProceeds(Number(e.target.value) || 0)} className="text-right font-mono" />
+        </FormField>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-3 rounded-lg bg-canvas p-3 text-[13px]">
+        <div><span className="text-ink-3">{t('disposal.nbvAtDisposal')}: </span><b className="font-mono">{money(nbv)}</b></div>
+        <div className={gainLoss >= 0 ? 'text-emerald-700' : 'text-rose-700'}>
+          <span className="text-ink-3">{t('disposal.gainLoss')}: </span>
+          <b className="font-mono">{gainLoss >= 0 ? '+' : ''}{money(gainLoss)}</b>
+          <span className="ml-1 text-[12px]">({gainLoss >= 0 ? t('disposal.gain') : t('disposal.loss')})</span>
+        </div>
+      </div>
+      <div className="mt-3">
+        <FormField label={t('common.reason')} required>
+          <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t('common.reasonPlaceholder')} />
+        </FormField>
+      </div>
+    </Modal>
   );
 }
 

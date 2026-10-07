@@ -272,6 +272,22 @@ export interface DepRun {
   postedAt?: string;
 }
 
+export type DisposalType = 'SALE' | 'SCRAP' | 'LOST' | 'DAMAGE' | 'DONATION' | 'WRITE_OFF';
+
+/** บันทึกการจำหน่ายทรัพย์สิน (§25) — เก็บประเภท/รายรับ/NBV ณ วันจำหน่าย/กำไร-ขาดทุน */
+export interface AssetDisposal {
+  id: string;
+  assetId: string;
+  disposalType: DisposalType;
+  disposalDate: string;
+  proceeds: number;
+  nbvAtDisposal: number;
+  gainLoss: number; // proceeds - nbvAtDisposal
+  reason: string;
+  by: string;
+  at: string;
+}
+
 /** บันทึกการเคลื่อนย้าย/โอนย้ายทรัพย์สิน (§24) — เก็บประวัติทุกครั้งที่ย้ายที่/สาขา */
 export interface AssetMovement {
   id: string;
