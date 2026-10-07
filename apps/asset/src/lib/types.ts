@@ -178,6 +178,8 @@ export interface Asset {
   policyId: string | null;
   acquisitionDate: string;
   readyDate: string | null;
+  warrantyStart?: string | null;
+  warrantyEnd?: string | null;
   status: AssetStatus;
   hasPhoto: boolean;
   source: SourceRef;

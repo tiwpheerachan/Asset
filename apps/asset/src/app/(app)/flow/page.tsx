@@ -9,10 +9,10 @@ import {
 import {
   Package, Coins, TrendingDown, Wallet, FileInput, FileText, UserRound, CheckCircle2,
   BarChart3, PackageCheck, AlertTriangle, MapPin, Inbox, Clock, Paperclip, ArrowRight,
-  ChevronRight, CalendarClock,
+  ChevronRight, CalendarClock, ShieldAlert,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
-import { useStore, CURRENT_PERIOD } from '@/lib/store';
+import { useStore, CURRENT_PERIOD, TODAY } from '@/lib/store';
 import { useValuations, useMissingFlags, useLookups } from '@/lib/hooks';
 import { addMonths, buildSchedule, isDepreciable, prorationFor, totalCost } from '@/lib/depreciation';
 import { PageHeader, cx } from '@/components/ui';
@@ -91,8 +91,14 @@ export default function FlowPage() {
     const noLocation = live.filter((a) => miss.get(a.id)?.location).length;
     const noDocument = live.filter((a) => miss.get(a.id)?.document).length;
     const openRuns = state.runs.filter((r) => r.status !== 'LOCKED' && r.status !== 'POSTED').length;
+    const nowMs = new Date(TODAY).getTime();
+    const warrantyExpiring = live.filter((a) => {
+      if (!a.warrantyEnd) return false;
+      const days = Math.ceil((new Date(a.warrantyEnd).getTime() - nowMs) / 86400000);
+      return days >= 0 && days <= 90;
+    }).length;
     return {
-      live: live.length, cost, accum, nbv, periodDep, fullyDep, expiring, depreciating, noLocation, noDocument, openRuns,
+      live: live.length, cost, accum, nbv, periodDep, fullyDep, expiring, depreciating, noLocation, noDocument, openRuns, warrantyExpiring,
       depPct: cost > 0 ? (accum / cost) * 100 : 0, nbvPct: cost > 0 ? (nbv / cost) * 100 : 0,
       oaPending: state.oa.filter((o) => OA_PENDING.includes(o.status)).length,
       draft: byStatus('DRAFT'), pending: byStatus('PENDING_REVIEW'),
@@ -161,6 +167,7 @@ export default function FlowPage() {
 
   const alerts = [
     { label: 'ใกล้หมดอายุค่าเสื่อม (ภายใน 6 เดือน)', n: d.expiring, icon: CalendarClock, color: '#F43F5E', bg: 'bg-rose-50', href: '/assets' },
+    { label: 'ประกันใกล้หมด (ภายใน 90 วัน)', n: d.warrantyExpiring, icon: ShieldAlert, color: '#F59E0B', bg: 'bg-amber-50', href: '/assets' },
     { label: 'ทรัพย์สินขาดเอกสาร', n: d.noDocument, icon: Paperclip, color: '#F59E0B', bg: 'bg-amber-50', href: '/documents' },
     { label: 'ทรัพย์สินไม่มีสถานที่', n: d.noLocation, icon: MapPin, color: '#F59E0B', bg: 'bg-amber-50', href: '/assets' },
     { label: 'รายการ OA รอดำเนินการ', n: d.oaPending, icon: Inbox, color: '#3B82F6', bg: 'bg-blue-50', href: '/oa-import' },

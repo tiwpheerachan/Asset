@@ -8,7 +8,7 @@ import {
   Archive, ArrowLeft, Building2, CheckCircle2, Clock, Download, FileEdit, FileText, ImageIcon, Lock, MapPin, Pencil, Printer, RotateCcw, Send, Split, Trash2, Undo2, Upload, UserCheck, UserRound, X,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
-import { CURRENT_PERIOD, useStore } from '@/lib/store';
+import { CURRENT_PERIOD, TODAY, useStore } from '@/lib/store';
 import { useLookups, useValuations } from '@/lib/hooks';
 import { buildSchedule, depIssues, prorationFor, totalCost } from '@/lib/depreciation';
 import { exportXlsx } from '@/lib/excel';
@@ -343,6 +343,15 @@ function OverviewTab({ asset }: { asset: Asset }) {
   const [origin, setOrigin] = useState('');
   useEffect(() => setOrigin(window.location.origin), []);
 
+  const warranty = (() => {
+    if (!asset.warrantyEnd) return { text: asset.warrantyStart ? `${date(asset.warrantyStart)} — —` : '—' };
+    const range = `${date(asset.warrantyStart)} — ${date(asset.warrantyEnd)}`;
+    const daysLeft = Math.ceil((new Date(asset.warrantyEnd).getTime() - new Date(TODAY).getTime()) / 86400000);
+    if (daysLeft < 0) return { text: `${range} · ${t('field.warrantyExpired')}` };
+    if (daysLeft <= 90) return { text: `${range} · ${t('field.warrantyExpiring')} (${t('field.warrantyDaysLeft').replace('{n}', String(daysLeft))})` };
+    return { text: `${range} · ${t('field.warrantyActive')}` };
+  })();
+
   // ชุด/กลุ่มที่แยกมา — ทรัพย์สินที่สร้างจากรายการ OA เดียวกัน (แยกเป็นรายชิ้น) จะใช้ oaId ร่วมกัน
   const group = useMemo(() => {
     if (!asset.oaId) return null;
@@ -439,6 +448,7 @@ function OverviewTab({ asset }: { asset: Asset }) {
               { label: t('field.purchaseDate'), value: date(asset.source.purchaseDate) },
               { label: t('field.acquisitionDate'), value: date(asset.acquisitionDate) },
               { label: t('field.readyDate'), value: date(asset.readyDate) },
+              { label: t('field.warranty'), value: warranty.text },
             ]}
           />
         </Section>
@@ -887,7 +897,7 @@ function EditDrawer({ asset, onClose }: { asset: Asset; onClose: () => void }) {
   const subs = state.categories.filter((c) => c.parentId);
 
   const save = () => {
-    const keys: (keyof Asset)[] = ['nameTh', 'nameEn', 'description', 'brand', 'model', 'serialNumber', 'subcategoryId', 'categoryId', 'branchId', 'departmentId', 'costCenterId', 'locationId', 'quantity', 'unit', 'originalCost', 'additionalCost', 'residual', 'lifeMonths', 'policyId', 'acquisitionDate', 'readyDate'];
+    const keys: (keyof Asset)[] = ['nameTh', 'nameEn', 'description', 'brand', 'model', 'serialNumber', 'subcategoryId', 'categoryId', 'branchId', 'departmentId', 'costCenterId', 'locationId', 'quantity', 'unit', 'originalCost', 'additionalCost', 'residual', 'lifeMonths', 'policyId', 'acquisitionDate', 'readyDate', 'warrantyStart', 'warrantyEnd'];
     const patch: Partial<Asset> = {};
     for (const k of keys) if (JSON.stringify(f[k]) !== JSON.stringify(asset[k])) (patch as Record<string, unknown>)[k] = f[k];
     updateAsset(asset.id, patch, reason || undefined);
@@ -953,6 +963,8 @@ function EditDrawer({ asset, onClose }: { asset: Asset; onClose: () => void }) {
         </FormField>
         <FormField label={t('field.acquisitionDate')}><Input type="date" value={f.acquisitionDate} disabled={lockedAcc} onChange={(e) => set('acquisitionDate', e.target.value)} /></FormField>
         <FormField label={t('field.readyDate')} required><Input type="date" value={f.readyDate ?? ''} disabled={lockedAcc} onChange={(e) => set('readyDate', e.target.value || null)} /></FormField>
+        <FormField label={t('field.warrantyStart')}><Input type="date" value={f.warrantyStart ?? ''} onChange={(e) => set('warrantyStart', e.target.value || null)} /></FormField>
+        <FormField label={t('field.warrantyEnd')}><Input type="date" value={f.warrantyEnd ?? ''} onChange={(e) => set('warrantyEnd', e.target.value || null)} /></FormField>
         <div className="sm:col-span-2">
           <FormField label={t('field.description')}><Textarea value={f.description} onChange={(e) => set('description', e.target.value)} /></FormField>
         </div>
