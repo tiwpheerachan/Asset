@@ -1,7 +1,7 @@
 import type {
   AppUser, Asset, AssetDocument, AssetDisposal, AssetMaintenance, AssetMovement, AuditLog, Branch, Category, Company,
   CostCenter, Department, DepPolicy, DepRun, Location, OAIntegration,
-  OARecord, Role, RunningNumberConfig,
+  OARecord, Role, RunningNumberConfig, VerifyCampaign, VerifyRecord,
 } from './types';
 
 /** รูปข้อมูลทั้งระบบ (ใช้ร่วมกันทั้ง client store และ server repo) */
@@ -16,6 +16,8 @@ export interface State {
   movements: AssetMovement[];
   disposals: AssetDisposal[];
   maintenance: AssetMaintenance[];
+  verifyCampaigns: VerifyCampaign[];
+  verifyRecords: VerifyRecord[];
   policies: DepPolicy[];
   categories: Category[];
   companies: Company[];

@@ -27,6 +27,8 @@ CREATE TABLE IF NOT EXISTS fa.users          ( id text PRIMARY KEY, data jsonb N
 CREATE TABLE IF NOT EXISTS fa.asset_movements ( id text PRIMARY KEY, data jsonb NOT NULL );
 CREATE TABLE IF NOT EXISTS fa.asset_disposals ( id text PRIMARY KEY, data jsonb NOT NULL );
 CREATE TABLE IF NOT EXISTS fa.asset_maintenance ( id text PRIMARY KEY, data jsonb NOT NULL );
+CREATE TABLE IF NOT EXISTS fa.verify_campaigns ( id text PRIMARY KEY, data jsonb NOT NULL );
+CREATE TABLE IF NOT EXISTS fa.verify_records   ( id text PRIMARY KEY, data jsonb NOT NULL );
 CREATE TABLE IF NOT EXISTS fa.oa_records (
   id text PRIMARY KEY, doc_no text, status text, data jsonb NOT NULL
 );
@@ -49,7 +51,8 @@ BEGIN
   FOREACH t IN ARRAY ARRAY[
     'companies','branches','departments','cost_centers','locations',
     'categories','policies','users','running_numbers','assets',
-    'oa_records','documents','audit_logs','dep_runs','asset_movements','asset_disposals','asset_maintenance'
+    'oa_records','documents','audit_logs','dep_runs','asset_movements','asset_disposals','asset_maintenance',
+    'verify_campaigns','verify_records'
   ] LOOP
     EXECUTE format('ALTER TABLE fa.%I ADD COLUMN IF NOT EXISTS version integer NOT NULL DEFAULT 0', t);
     EXECUTE format('ALTER TABLE fa.%I ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now()', t);

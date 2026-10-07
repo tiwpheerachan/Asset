@@ -24,6 +24,7 @@ import type {
   DisposalType,
   Location,
   MaintenanceType,
+  VerifyResult,
   OAIntegration,
   OARecord,
   OAStatus,
@@ -60,7 +61,8 @@ const KEY = 'fa.session.v3'; // เก็บเฉพาะ session ที่ br
 type PersistKey =
   | 'companies' | 'branches' | 'departments' | 'costCenters' | 'locations'
   | 'categories' | 'policies' | 'users' | 'running' | 'assets' | 'oa'
-  | 'documents' | 'audit' | 'runs' | 'movements' | 'disposals' | 'maintenance';
+  | 'documents' | 'audit' | 'runs' | 'movements' | 'disposals' | 'maintenance'
+  | 'verifyCampaigns' | 'verifyRecords';
 const PERSIST_COLLECTIONS: { key: PersistKey; id: (r: Record<string, unknown>) => string }[] = [
   { key: 'companies', id: (r) => r.id as string },
   { key: 'branches', id: (r) => r.id as string },
@@ -79,6 +81,8 @@ const PERSIST_COLLECTIONS: { key: PersistKey; id: (r: Record<string, unknown>) =
   { key: 'movements', id: (r) => r.id as string },
   { key: 'disposals', id: (r) => r.id as string },
   { key: 'maintenance', id: (r) => r.id as string },
+  { key: 'verifyCampaigns', id: (r) => r.id as string },
+  { key: 'verifyRecords', id: (r) => r.id as string },
 ];
 
 const PERSIST_ID: Record<string, (r: Record<string, unknown>) => string> = Object.fromEntries(
@@ -214,6 +218,8 @@ function seedState(): State {
     movements: [],
     disposals: [],
     maintenance: [],
+    verifyCampaigns: [],
+    verifyRecords: [],
     policies: POLICIES,
     categories: CATEGORIES,
     companies: COMPANIES,
@@ -250,6 +256,9 @@ interface StoreApi {
   transferAsset: (id: string, toLocationId: string, reason: string) => void;
   disposeAsset: (id: string, input: { disposalType: DisposalType; proceeds: number; nbvAtDisposal: number }, reason: string) => void;
   addMaintenance: (id: string, input: { type: MaintenanceType; date: string; cost: number; vendor: string; note: string }) => void;
+  createCampaign: (name: string) => string;
+  closeCampaign: (id: string) => void;
+  recordVerify: (campaignId: string, assetId: string, result: VerifyResult, extra?: { foundLocationId?: string | null; note?: string }) => void;
   createAsset: (a: Omit<Asset, 'id' | 'code' | 'createdAt' | 'createdBy' | 'updatedAt' | 'updatedBy'>, reason?: string) => string;
   importAssets: (rows: Asset[]) => number;
   setOAStatus: (id: string, status: OAStatus, extra?: Partial<OARecord>, reason?: string) => void;
@@ -554,6 +563,29 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             maintenance: [mn, ...s.maintenance],
             audit: [mkAudit({ action: 'MAINTENANCE', assetCode: a.code, entity: 'asset_maintenance', newValue: input.type, reason: input.note || undefined }), ...s.audit],
           };
+        }),
+      createCampaign: (name) => {
+        const cid = uid('VC');
+        commit((s) => ({
+          ...s,
+          verifyCampaigns: [{ id: cid, name, startDate: TODAY, status: 'OPEN', createdBy: s.session?.name ?? '', createdAt: nowIso() }, ...s.verifyCampaigns],
+          audit: [mkAudit({ action: 'VERIFY_CAMPAIGN_OPEN', entity: 'verify_campaigns', newValue: name }), ...s.audit],
+        }));
+        return cid;
+      },
+      closeCampaign: (id) =>
+        commit((s) => ({
+          ...s,
+          verifyCampaigns: s.verifyCampaigns.map((c) => (c.id === id ? { ...c, status: 'CLOSED' as const, closedAt: nowIso() } : c)),
+          audit: [mkAudit({ action: 'VERIFY_CAMPAIGN_CLOSE', entity: 'verify_campaigns', newValue: id }), ...s.audit],
+        })),
+      recordVerify: (campaignId, assetId, result, extra) =>
+        commit((s) => {
+          const rid = `${campaignId}:${assetId}`;
+          const who = s.session?.name ?? '';
+          const rec = { id: rid, campaignId, assetId, result, foundLocationId: extra?.foundLocationId ?? null, note: extra?.note ?? '', by: who, at: nowIso() };
+          const others = s.verifyRecords.filter((r) => r.id !== rid);
+          return { ...s, verifyRecords: [rec, ...others] };
         }),
       createAsset: (a, reason) => {
         let newId = '';

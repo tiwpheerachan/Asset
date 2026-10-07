@@ -274,6 +274,31 @@ export interface DepRun {
   postedAt?: string;
 }
 
+export type VerifyResult = 'FOUND' | 'WRONG_LOCATION' | 'DAMAGED' | 'NOT_FOUND' | 'UNKNOWN';
+
+/** แคมเปญตรวจนับทรัพย์สิน (§22) เช่น "ตรวจนับประจำปี 2026" */
+export interface VerifyCampaign {
+  id: string;
+  name: string;
+  startDate: string;
+  status: 'OPEN' | 'CLOSED';
+  createdBy: string;
+  createdAt: string;
+  closedAt?: string | null;
+}
+
+/** ผลการตรวจนับต่อทรัพย์สิน 1 ชิ้นในแคมเปญ (1 รายการต่อ campaign+asset) */
+export interface VerifyRecord {
+  id: string; // `${campaignId}:${assetId}`
+  campaignId: string;
+  assetId: string;
+  result: VerifyResult;
+  foundLocationId: string | null;
+  note: string;
+  by: string;
+  at: string;
+}
+
 export type MaintenanceType = 'REPAIR' | 'PREVENTIVE' | 'INSPECTION' | 'CALIBRATION' | 'OTHER';
 
 /** บันทึกการซ่อมบำรุง/ตรวจเช็คทรัพย์สิน */
