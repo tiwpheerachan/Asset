@@ -77,7 +77,7 @@ export function AssetCreateModal({ open, onClose, onCreated }: { open: boolean; 
       <Notice icon={<Info size={15} />}>{t('assets.createHint')}</Notice>
       <div className="mt-4 grid grid-cols-1 gap-3.5 sm:grid-cols-2">
         <FormField label={t('field.assetCode')}>
-          <Input value={previewCode(f.companyId)} disabled className="font-mono" />
+          <Input value={previewCode(f.companyId, parentId)} disabled className="font-mono" />
         </FormField>
         <FormField label={t('field.subcategory')} required>
           <Select value={f.subcategoryId} onChange={(e) => set('subcategoryId', e.target.value)}>

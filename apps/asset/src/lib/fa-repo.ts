@@ -12,6 +12,9 @@ import { buildSeedAssets, buildSeedDocuments, SEED_AUDIT, SEED_OA, SEED_RUNS } f
 void _ACCOUNTS;
 export const STATE_VERSION = 3;
 
+// เผื่อไว้ต่ำกว่าเพดาน parameter ของ Postgres (65535)
+const MAX_PARAMS = 50000;
+
 /** รูป State ที่เก็บลง DB (ไม่รวม session — session อยู่ที่ browser) */
 type PersistState = Omit<State, 'session'>;
 
@@ -22,6 +25,8 @@ type Coll = {
   id: (r: Record<string, unknown>) => string;
   cols?: { name: string; get: (r: Record<string, unknown>) => unknown }[];
 };
+
+type CollKey = keyof PersistState;
 
 const COLLECTIONS: Coll[] = [
   { key: 'companies', table: 'fa.companies', id: (r) => r.id as string },
@@ -105,14 +110,20 @@ export async function getState(): Promise<PersistState> {
     return seed;
   }
   const out = {} as Record<string, unknown>;
+  const rev: Record<string, Record<string, number>> = {};
   for (const c of COLLECTIONS) {
-    const r = await pool().query(`SELECT data FROM ${c.table}`);
+    const r = await pool().query(`SELECT id, data, version FROM ${c.table}`);
     out[c.key] = r.rows.map((row) => row.data);
+    const m: Record<string, number> = {};
+    for (const row of r.rows) m[row.id as string] = (row.version as number) ?? 0;
+    rev[c.key] = m;
   }
   const meta = await pool().query("SELECT key, data FROM fa.app_state WHERE key IN ('oaIntegration','version')");
   const metaMap = new Map(meta.rows.map((m) => [m.key, m.data]));
   out.oaIntegration = metaMap.get('oaIntegration') ?? OA_INTEGRATION;
   out.version = metaMap.get('version') ?? STATE_VERSION;
+  // เวอร์ชันราย record ให้ client เก็บไว้เทียบตอนเซฟ (optimistic lock) — ไม่ใช่ field ของ State
+  (out as Record<string, unknown>)._rev = rev;
   return out as unknown as PersistState;
 }
 
@@ -121,7 +132,6 @@ export async function getState(): Promise<PersistState> {
  *  (ลด round-trip จากหลายร้อยครั้งเหลือหลักสิบ — แก้อาการ “กดตรวจสอบแล้วช้า”) */
 export async function saveState(state: PersistState): Promise<void> {
   await ensureSchema();
-  const MAX_PARAMS = 50000; // เผื่อไว้ต่ำกว่าเพดาน parameter ของ Postgres (65535)
   const client = await pool().connect();
   try {
     await client.query('BEGIN');
@@ -153,6 +163,104 @@ export async function saveState(state: PersistState): Promise<void> {
       "INSERT INTO fa.app_state(key,data,updated_at) VALUES('version',$1,now()) ON CONFLICT (key) DO UPDATE SET data=excluded.data, updated_at=now()",
       [JSON.stringify(state.version ?? STATE_VERSION)],
     );
+    await client.query('COMMIT');
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
+  }
+}
+
+const COLL_BY_KEY = new Map<CollKey, Coll>(COLLECTIONS.map((c) => [c.key, c]));
+
+type PgClient = { query: (text: string, values?: unknown[]) => Promise<{ rowCount: number | null }> };
+
+/** แถวที่ upsert พร้อม base = เวอร์ชันที่ client โหลดมา (undefined/null = แถวใหม่) */
+type Upsert = { data: Record<string, unknown>; base?: number | null };
+
+/** ความขัดแย้งจาก optimistic lock — แถวถูกคนอื่นแก้/สร้างไปก่อนแล้ว */
+export class ConflictError extends Error {
+  code = 'FA_CONFLICT' as const;
+  conflicts: { collection: string; id: string }[];
+  constructor(conflicts: { collection: string; id: string }[]) {
+    super(`version conflict on ${conflicts.length} row(s)`);
+    this.name = 'ConflictError';
+    this.conflicts = conflicts;
+  }
+}
+
+/**
+ * เขียนแถวเดียวแบบมีเงื่อนไขเวอร์ชัน:
+ *  - แถวใหม่ (base ว่าง) → INSERT version=0; ถ้า id ชนของเดิม = conflict
+ *  - แถวเดิม (base = n)  → UPDATE ... version=version+1 WHERE id=? AND version=n; ถ้าไม่โดนแถว = conflict
+ * คืน true ถ้าสำเร็จ, false ถ้า conflict
+ */
+async function writeRow(client: PgClient, c: Coll, u: Upsert): Promise<boolean> {
+  const id = c.id(u.data);
+  const extraCols = c.cols ?? [];
+  const dataJson = JSON.stringify(u.data);
+  if (u.base === undefined || u.base === null) {
+    const colNames = ['id', 'data', 'version', ...extraCols.map((x) => x.name)];
+    const vals: unknown[] = [id, dataJson, 0, ...extraCols.map((x) => x.get(u.data))];
+    const ph = colNames.map((_, k) => `$${k + 1}`).join(', ');
+    const r = await client.query(
+      `INSERT INTO ${c.table}(${colNames.join(', ')}) VALUES (${ph}) ON CONFLICT (id) DO NOTHING`,
+      vals,
+    );
+    return (r.rowCount ?? 0) > 0;
+  }
+  const sets = ['data = $2', 'version = version + 1', 'updated_at = now()', ...extraCols.map((x, i) => `${x.name} = $${4 + i}`)];
+  const vals: unknown[] = [id, dataJson, u.base, ...extraCols.map((x) => x.get(u.data))];
+  const r = await client.query(
+    `UPDATE ${c.table} SET ${sets.join(', ')} WHERE id = $1 AND version = $3`,
+    vals,
+  );
+  return (r.rowCount ?? 0) > 0;
+}
+
+/** รูป payload ของการบันทึกแบบส่วนต่าง (diff) — เขียนเฉพาะแถวที่เปลี่ยน/ลบ ไม่แตะแถวอื่น */
+export type StateDiff = {
+  changes?: Partial<Record<CollKey, { upserts?: Upsert[]; deletes?: string[] }>>;
+  oaIntegration?: unknown;
+  version?: unknown;
+};
+
+/**
+ * บันทึกแบบส่วนต่าง: upsert เฉพาะแถวที่เปลี่ยน + ลบเฉพาะ id ที่ถูกลบ ในทรานแซกชันเดียว
+ * ไม่มีการ DELETE ทั้งตาราง + ตรวจเวอร์ชันราย record → กันทั้ง data loss และการแก้แถวเดียวกันทับกัน
+ * ถ้าเจอ conflict จะ ROLLBACK ทั้งก้อนแล้วโยน ConflictError (ไม่เขียนบางส่วน)
+ */
+export async function saveStateDiff(diff: StateDiff): Promise<void> {
+  await ensureSchema();
+  const client = await pool().connect();
+  try {
+    await client.query('BEGIN');
+    const conflicts: { collection: string; id: string }[] = [];
+    for (const [key, change] of Object.entries(diff.changes ?? {})) {
+      const c = COLL_BY_KEY.get(key as CollKey);
+      if (!c || !change) continue;
+      for (const u of change.upserts ?? []) {
+        const ok = await writeRow(client, c, u);
+        if (!ok) conflicts.push({ collection: key, id: c.id(u.data) });
+      }
+      if (change.deletes?.length) {
+        await client.query(`DELETE FROM ${c.table} WHERE id = ANY($1)`, [change.deletes]);
+      }
+    }
+    if (conflicts.length) throw new ConflictError(conflicts);
+    if (diff.oaIntegration !== undefined) {
+      await client.query(
+        "INSERT INTO fa.app_state(key,data,updated_at) VALUES('oaIntegration',$1,now()) ON CONFLICT (key) DO UPDATE SET data=excluded.data, updated_at=now()",
+        [JSON.stringify(diff.oaIntegration)],
+      );
+    }
+    if (diff.version !== undefined) {
+      await client.query(
+        "INSERT INTO fa.app_state(key,data,updated_at) VALUES('version',$1,now()) ON CONFLICT (key) DO UPDATE SET data=excluded.data, updated_at=now()",
+        [JSON.stringify(diff.version)],
+      );
+    }
     await client.query('COMMIT');
   } catch (e) {
     await client.query('ROLLBACK');

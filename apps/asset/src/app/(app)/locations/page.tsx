@@ -35,6 +35,39 @@ export default function LocationsPage() {
   const assets = live.filter((a) => (sel === '__none' ? !a.locationId : a.locationId === sel));
   const loc = state.locations.find((l) => l.id === sel);
 
+  // เรียงสถานที่ในสาขาแบบต้นไม้ (แม่มาก่อนลูก) พร้อมระดับความลึก สำหรับย่อหน้าแสดงผล
+  const orderedLocs = (branchId: string) => {
+    const all = state.locations.filter((l) => l.branchId === branchId);
+    const ids = new Set(all.map((l) => l.id));
+    const byParent = new Map<string, Location[]>();
+    for (const l of all) {
+      const key = l.parentLocationId && ids.has(l.parentLocationId) ? l.parentLocationId : '__root';
+      const arr = byParent.get(key) ?? [];
+      arr.push(l);
+      byParent.set(key, arr);
+    }
+    const out: { loc: Location; depth: number }[] = [];
+    const walk = (key: string, depth: number) => {
+      for (const l of byParent.get(key) ?? []) {
+        out.push({ loc: l, depth });
+        if (depth < 10) walk(l.id, depth + 1);
+      }
+    };
+    walk('__root', 0);
+    return out;
+  };
+
+  // id ของสถานที่ลูกหลานทั้งหมด (ใช้กันเลือกตัวเอง/ลูกเป็นแม่ = กัน loop)
+  const descendantsOf = (id: string) => {
+    const set = new Set<string>();
+    const stack = [id];
+    while (stack.length) {
+      const cur = stack.pop()!;
+      for (const l of state.locations) if (l.parentLocationId === cur && !set.has(l.id)) { set.add(l.id); stack.push(l.id); }
+    }
+    return set;
+  };
+
   return (
     <>
       <PageHeader
@@ -65,15 +98,16 @@ export default function LocationsPage() {
                       <span className="flex-1">{L(b.name)}</span>
                       <span className="text-[12px] tabular-nums text-ink-3">{stat.get(`B:${b.id}`)?.n ?? 0}</span>
                     </div>
-                    {state.locations.filter((l) => l.branchId === b.id).map((l) => (
+                    {orderedLocs(b.id).map(({ loc: l, depth }) => (
                       <button
                         key={l.id}
                         onClick={() => setSel(l.id)}
-                        className={cx('flex w-full items-center gap-2 py-1.5 pl-12 pr-3 text-left text-[13px]', sel === l.id ? 'bg-brand-50 font-medium text-brand-700' : 'text-ink-2 hover:bg-canvas')}
+                        style={{ paddingLeft: 48 + depth * 16 }}
+                        className={cx('flex w-full items-center gap-2 py-1.5 pr-3 text-left text-[13px]', sel === l.id ? 'bg-brand-50 font-medium text-brand-700' : 'text-ink-2 hover:bg-canvas')}
                       >
                         <MapPin size={13} className="shrink-0 text-ink-4" />
                         <span className="flex-1 truncate">
-                          <span className="font-mono text-[12px] text-ink-3">{l.code}</span> · {l.room}
+                          <span className="font-mono text-[12px] text-ink-3">{l.code}</span> · {L(l.name) || l.room}
                         </span>
                         <span className="text-[12px] tabular-nums text-ink-3">{stat.get(l.id)?.n ?? 0}</span>
                       </button>
@@ -95,7 +129,7 @@ export default function LocationsPage() {
         <Card>
           <CardHeader
             title={loc ? `${loc.code} · ${L(loc.name)}` : t('loc.unassigned')}
-            sub={loc ? `${lk.company(loc.companyId)} / ${lk.branch(loc.branchId)} / ${t('field.building')} ${loc.building} / ${t('field.floor')} ${loc.floor} / ${loc.room}` : undefined}
+            sub={loc ? `${lk.company(loc.companyId)} / ${lk.branch(loc.branchId)} › ${lk.locationPath(loc.id)}` : undefined}
             actions={
               <>
                 <span className="text-[12.5px] text-ink-3">{num(assets.length)} · {money(assets.reduce((s, a) => s + vals.get(a.id)!.cost, 0), 0)} {t('common.thb')}</span>
@@ -151,6 +185,20 @@ export default function LocationsPage() {
             <FormField label={t('field.branch')} required>
               <Select value={edit.branchId} onChange={(e) => setEdit({ ...edit, branchId: e.target.value })}>
                 {state.branches.map((b) => <option key={b.id} value={b.id}>{L(b.name)}</option>)}
+              </Select>
+            </FormField>
+            <FormField label={t('loc.parent')}>
+              <Select
+                value={edit.parentLocationId ?? ''}
+                onChange={(e) => setEdit({ ...edit, parentLocationId: e.target.value || null })}
+              >
+                <option value="">— {t('loc.underBranch')} —</option>
+                {(() => {
+                  const blocked = descendantsOf(edit.id);
+                  return state.locations
+                    .filter((l) => l.branchId === edit.branchId && l.id !== edit.id && !blocked.has(l.id))
+                    .map((l) => <option key={l.id} value={l.id}>{l.code} · {L(l.name)}</option>);
+                })()}
               </Select>
             </FormField>
             <FormField label={t('field.building')}><Input value={edit.building} onChange={(e) => setEdit({ ...edit, building: e.target.value })} /></FormField>

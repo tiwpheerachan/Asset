@@ -211,9 +211,9 @@ export default function CategoriesPage() {
                 <div className="grid gap-3.5 lg:grid-cols-3">
                   {([['assetAccount', 'ASSET'], ['expenseAccount', 'EXPENSE'], ['accumAccount', 'ACCUM']] as const).map(([k, kind]) => (
                     <FormField key={k} label={t(`field.${k}`)} required>
-                      <Select value={cur[k]} disabled={!editGl} onChange={(e) => set(k, e.target.value)} className="font-mono text-[12.5px]">
+                      <Select value={lk.accountId(cur[k])} disabled={!editGl} onChange={(e) => set(k, e.target.value)} className="font-mono text-[12.5px]">
                         <option value="">—</option>
-                        {acc(kind).map((a) => <option key={a.code} value={a.code}>{a.code} — {L(a.name)}</option>)}
+                        {acc(kind).map((a) => <option key={a.id} value={a.id}>{a.code} — {L(a.name)}</option>)}
                       </Select>
                     </FormField>
                   ))}

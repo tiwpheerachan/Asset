@@ -20,7 +20,12 @@ export function useLookups() {
     const ccs = by(state.costCenters);
     const locs = by(state.locations);
     const pols = by(state.policies);
-    const accs = new Map(accounts.map((a) => [a.code, a]));
+    // แมปบัญชีด้วยทั้ง id (ถาวร) และ code (ของเดิม) → อ้างอิงได้ทั้งสองแบบ (backward-compat)
+    const accs = new Map<string, (typeof accounts)[number]>();
+    for (const a of accounts) {
+      accs.set(a.id, a);
+      accs.set(a.code, a); // รองรับข้อมูลเดิมที่เคยเก็บเป็น code
+    }
     return {
       category: (id?: string | null) => (id ? L(cats.get(id)?.name) || id : ''),
       categoryObj: (id?: string | null) => (id ? cats.get(id) : undefined),
@@ -34,12 +39,29 @@ export function useLookups() {
       },
       location: (id?: string | null) => (id ? L(locs.get(id)?.name) : ''),
       locationObj: (id?: string | null) => (id ? locs.get(id) : undefined),
+      // เส้นทางเต็มของสถานที่ ไล่จากแม่ลงมา เช่น "ชั้น 7 › Digital Transformation › IT Room"
+      locationPath: (id?: string | null) => {
+        if (!id) return '';
+        const parts: string[] = [];
+        let cur = locs.get(id);
+        let guard = 0;
+        while (cur && guard++ < 20) {
+          parts.unshift(L(cur.name) || cur.code);
+          cur = cur.parentLocationId ? locs.get(cur.parentLocationId) : undefined;
+        }
+        return parts.join(' › ');
+      },
       policy: (id?: string | null) => (id ? L(pols.get(id)?.name) : ''),
       policyObj: (id?: string | null) => (id ? pols.get(id) : undefined),
-      account: (code?: string) => {
-        const a = code ? accs.get(code) : undefined;
-        return a ? `${a.code} — ${L(a.name)}` : code ?? '';
+      // แสดงผล: รับได้ทั้ง id ถาวรหรือ code → คืน "code — ชื่อ"
+      account: (ref?: string) => {
+        const a = ref ? accs.get(ref) : undefined;
+        return a ? `${a.code} — ${L(a.name)}` : ref ?? '';
       },
+      // คืน id ถาวร (normalize ค่าเดิมที่เป็น code ให้กลายเป็น id) — ใช้ตั้งค่า value ของ dropdown
+      accountId: (ref?: string) => (ref ? accs.get(ref)?.id ?? ref : ''),
+      // คืน code (ใช้ตอนต้องส่งเลขบัญชีออกนอกระบบ)
+      accountCode: (ref?: string) => (ref ? accs.get(ref)?.code ?? ref : ''),
       unit: (u: string) => (UNITS[u] ? UNITS[u][lang] : u),
       assetName: (a: Pick<Asset, 'nameTh' | 'nameEn'>) => (lang === 'th' ? a.nameTh : a.nameEn || a.nameTh),
     };

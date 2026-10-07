@@ -202,7 +202,7 @@ function MappingTab() {
 
 function ReviewDrawer({ oa, onClose }: { oa: OARecord; onClose: () => void }) {
   const { t, money, date, L } = useI18n();
-  const { state, setOAStatus, createFromOA, previewCode, can } = useStore();
+  const { state, setOAStatus, createFromOA, previewCodes, can } = useStore();
   const lk = useLookups();
   const router = useRouter();
   const [sub, setSub] = useState(oa.suggestedSubcategoryId ?? '');
@@ -224,14 +224,13 @@ function ReviewDrawer({ oa, onClose }: { oa: OARecord; onClose: () => void }) {
   }, [state.oa, state.assets, oa]);
 
   const n = split ? oa.quantity : 1;
-  const codes = useMemo(() => {
-    const first = previewCode(oa.companyId);
-    const cfg = state.running.find((r) => r.companyId === oa.companyId) ?? state.running[0];
-    const base = first.slice(0, first.length - cfg.seqDigits);
-    return Array.from({ length: n }, (_, i) => `${base}${String(cfg.nextSeq + i).padStart(cfg.seqDigits, '0')}`);
-  }, [n, previewCode, oa.companyId, state.running]);
   const subCat = state.categories.find((c) => c.id === sub);
   const parent = state.categories.find((c) => c.id === subCat?.parentId);
+  const codeCatId = subCat?.parentId ?? sub;
+  const codes = useMemo(
+    () => previewCodes(oa.companyId, codeCatId, n),
+    [previewCodes, oa.companyId, codeCatId, n, state.running],
+  );
   // เกณฑ์เข้าทรัพย์สิน (capitalization) — ราคาต่อหน่วยต่ำกว่าเกณฑ์ ควรลงเป็นค่าใช้จ่าย
   const unitCost = oa.quantity > 0 ? oa.amount / oa.quantity : oa.amount;
   const belowThreshold = unitCost < SETTINGS.capitalizationThreshold;

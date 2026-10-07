@@ -59,8 +59,8 @@ function ReportsInner() {
           const list = assets.filter((a) => ids.includes(a.subcategoryId) || ids.includes(a.categoryId));
           return { count: list.length, cost: list.reduce((s, a) => s + vals.get(a.id)!.cost, 0), accum: list.reduce((s, a) => s + vals.get(a.id)!.accumulated, 0), nbv: list.reduce((s, a) => s + vals.get(a.id)!.nbv, 0) };
         };
-        rows.push({ level: 1, name: lk.category(p.id), account: p.assetAccount, ...agg([p.id]) });
-        for (const s of subs) rows.push({ level: 2, name: `   ${lk.category(s.id)}`, account: s.assetAccount, ...agg([s.id]) });
+        rows.push({ level: 1, name: lk.category(p.id), account: lk.accountCode(p.assetAccount), ...agg([p.id]) });
+        for (const s of subs) rows.push({ level: 2, name: `   ${lk.category(s.id)}`, account: lk.accountCode(s.assetAccount), ...agg([s.id]) });
       }
       const l1 = rows.filter((x) => x.level === 1);
       return {

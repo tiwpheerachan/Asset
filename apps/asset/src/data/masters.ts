@@ -70,7 +70,8 @@ export const LOCATIONS: Location[] = [
 ];
 
 /* ------------------------------------------------------------------ Accounts (from legacy export) */
-export const ACCOUNTS: Account[] = [
+// id = รหัสถาวร (ตั้งครั้งเดียวจาก code ตอน seed) · code = เลขผังบัญชีที่เปลี่ยนได้ภายหลัง
+const RAW_ACCOUNTS: Omit<Account, 'id'>[] = [
   // ---- สินทรัพย์ (ASSET) ----
   { code: '124101', kind: 'ASSET', name: { th: 'อาคารและสิ่งปลูกสร้าง', en: 'Buildings & structures', zh: '建筑物' } },
   { code: '124102', kind: 'ASSET', name: { th: 'ส่วนปรับปรุงและตกแต่ง', en: 'Leasehold improvements', zh: '装修及改良' } },
@@ -112,6 +113,11 @@ export const ACCOUNTS: Account[] = [
   { code: '125203', kind: 'ACCUM', name: { th: 'ค่าตัดจำหน่ายสะสม - ลิขสิทธิ์/สิทธิบัตร', en: 'Accum. amortisation — Copyright & patents', zh: '累计摊销 — 版权专利' } },
 ];
 
+export const ACCOUNTS: Account[] = RAW_ACCOUNTS.map((a) => ({ id: `ACC-${a.code}`, ...a }));
+/** code → immutable id (ใช้ตอน seed หมวดหมู่ให้ชี้บัญชีด้วย id) */
+const ACC_ID = new Map(ACCOUNTS.map((a) => [a.code, a.id]));
+const accId = (code: string) => ACC_ID.get(code) ?? code;
+
 /* ------------------------------------------------------------------ Categories (from legacy export) */
 const cat = (
   id: string,
@@ -130,9 +136,10 @@ const cat = (
   defaultLifeYears: lifeYears,
   defaultResidual: 1,
   method: 'SL',
-  assetAccount: acc[0],
-  expenseAccount: acc[1],
-  accumAccount: acc[2],
+  // เก็บเป็น id ถาวรของบัญชี (ไม่ใช่ code) — lookups แปลงเป็น "code — ชื่อ" ให้ตอนแสดง
+  assetAccount: accId(acc[0]),
+  expenseAccount: accId(acc[1]),
+  accumAccount: accId(acc[2]),
   active: true,
 });
 

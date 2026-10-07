@@ -25,7 +25,7 @@ export default function TopBar({ user, onMenu, mobileOpen }: { user: User; onMen
   const [q, setQ] = useState("");
 
   return (
-    <header className="no-print sticky top-0 z-20 border-b border-border bg-surface/95 backdrop-blur">
+    <header className="no-print sticky top-0 z-20 border-b border-border/70 bg-surface/70 backdrop-blur-xl">
       <div className="flex h-14 w-full items-center gap-3 px-4 sm:px-6 lg:px-8">
         {/* ปุ่มเปิดเมนู (เฉพาะมือถือ) */}
         <button

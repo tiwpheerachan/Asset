@@ -3,8 +3,8 @@ import './globals.css';
 import { Providers } from '@/components/providers';
 
 export const metadata: Metadata = {
-  title: 'SHD Fixed Asset',
-  description: 'SHD Fixed Asset Management System',
+  title: 'ONE Asset',
+  description: 'ONE Asset — ระบบบริหารทรัพย์สินถาวร',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

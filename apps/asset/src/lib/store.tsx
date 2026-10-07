@@ -54,6 +54,148 @@ import type { State } from './store-types';
 const STATE_VERSION = 3;
 const KEY = 'fa.session.v3'; // เก็บเฉพาะ session ที่ browser — ข้อมูลหลักอยู่ Postgres (schema fa)
 
+/** คอลเลกชันที่ persist ลง DB + วิธีหา id ของแต่ละแถว (ต้องตรงกับ COLLECTIONS ฝั่ง fa-repo.ts) */
+type PersistKey =
+  | 'companies' | 'branches' | 'departments' | 'costCenters' | 'locations'
+  | 'categories' | 'policies' | 'users' | 'running' | 'assets' | 'oa'
+  | 'documents' | 'audit' | 'runs';
+const PERSIST_COLLECTIONS: { key: PersistKey; id: (r: Record<string, unknown>) => string }[] = [
+  { key: 'companies', id: (r) => r.id as string },
+  { key: 'branches', id: (r) => r.id as string },
+  { key: 'departments', id: (r) => r.id as string },
+  { key: 'costCenters', id: (r) => r.id as string },
+  { key: 'locations', id: (r) => r.id as string },
+  { key: 'categories', id: (r) => r.id as string },
+  { key: 'policies', id: (r) => r.id as string },
+  { key: 'users', id: (r) => r.id as string },
+  { key: 'running', id: (r) => r.companyId as string },
+  { key: 'assets', id: (r) => r.id as string },
+  { key: 'oa', id: (r) => r.id as string },
+  { key: 'documents', id: (r) => r.id as string },
+  { key: 'audit', id: (r) => r.id as string },
+  { key: 'runs', id: (r) => r.id as string },
+];
+
+const PERSIST_ID: Record<string, (r: Record<string, unknown>) => string> = Object.fromEntries(
+  PERSIST_COLLECTIONS.map((c) => [c.key, c.id]),
+);
+
+/** เวอร์ชันราย record ที่ server ส่งมากับ GET (ใต้ key `_rev`) */
+type RevMap = Record<string, Record<string, number>>;
+
+/** ภาพถ่ายของสิ่งที่อยู่ใน DB (เท่าที่ browser นี้รู้) — ใช้เทียบหา diff + เก็บเวอร์ชันราย record */
+type SavedSnapshot = {
+  colls: Record<string, Map<string, string>>; // collection → (id → JSON ของแถว)
+  revs: Record<string, Map<string, number>>; // collection → (id → version ใน DB)
+  oaIntegration: string;
+  version: string;
+};
+
+function emptySnapshot(): SavedSnapshot {
+  return { colls: {}, revs: {}, oaIntegration: '', version: '' };
+}
+
+/** สร้าง snapshot จาก state + เวอร์ชันจาก server (ใช้ตอนโหลดเสร็จ/หลัง reconcile) */
+function buildSnapshot(state: Partial<Record<string, unknown>>, rev?: RevMap): SavedSnapshot {
+  const colls: Record<string, Map<string, string>> = {};
+  const revs: Record<string, Map<string, number>> = {};
+  for (const { key, id } of PERSIST_COLLECTIONS) {
+    const rows = (state[key] as Record<string, unknown>[] | undefined) ?? [];
+    const cm = new Map<string, string>();
+    const rm = new Map<string, number>();
+    for (const r of rows) {
+      const rid = id(r);
+      cm.set(rid, JSON.stringify(r));
+      rm.set(rid, rev?.[key]?.[rid] ?? 0);
+    }
+    colls[key] = cm;
+    revs[key] = rm;
+  }
+  return {
+    colls,
+    revs,
+    oaIntegration: JSON.stringify(state.oaIntegration ?? null),
+    version: JSON.stringify(state.version ?? null),
+  };
+}
+
+type Upsert = { data: Record<string, unknown>; base: number | null };
+type DiffBody = {
+  changes: Record<string, { upserts: Upsert[]; deletes: string[] }>;
+  oaIntegration?: unknown;
+  version?: unknown;
+};
+
+/**
+ * เทียบ state ปัจจุบันกับ snapshot ล่าสุด → ได้เฉพาะแถวที่เปลี่ยน/ลบ (พร้อม base version) + snapshot ใหม่
+ * snapshot ใหม่คำนวณเวอร์ชันที่ "คาดว่าจะเป็น" หลังเซฟ (insert→0, update→base+1) ตรงกับฝั่ง server
+ */
+function computeDiff(
+  state: Partial<Record<string, unknown>>,
+  last: SavedSnapshot,
+): { body: DiffBody; snapshot: SavedSnapshot; empty: boolean } {
+  const changes: DiffBody['changes'] = {};
+  const snapColls: Record<string, Map<string, string>> = {};
+  const snapRevs: Record<string, Map<string, number>> = {};
+  for (const { key, id } of PERSIST_COLLECTIONS) {
+    const rows = (state[key] as Record<string, unknown>[] | undefined) ?? [];
+    const prevJson = last.colls[key] ?? new Map<string, string>();
+    const prevRev = last.revs[key] ?? new Map<string, number>();
+    const curJson = new Map<string, string>();
+    const curRev = new Map<string, number>();
+    const upserts: Upsert[] = [];
+    for (const r of rows) {
+      const rid = id(r);
+      const js = JSON.stringify(r);
+      curJson.set(rid, js);
+      const base = prevRev.has(rid) ? (prevRev.get(rid) as number) : null;
+      if (prevJson.get(rid) !== js) {
+        upserts.push({ data: r, base });
+        curRev.set(rid, base === null ? 0 : base + 1); // เวอร์ชันที่คาดว่าจะเป็นหลังเซฟ
+      } else {
+        curRev.set(rid, base ?? 0);
+      }
+    }
+    const deletes: string[] = [];
+    for (const rid of prevJson.keys()) if (!curJson.has(rid)) deletes.push(rid);
+    if (upserts.length || deletes.length) changes[key] = { upserts, deletes };
+    snapColls[key] = curJson;
+    snapRevs[key] = curRev;
+  }
+  const oaStr = JSON.stringify(state.oaIntegration ?? null);
+  const verStr = JSON.stringify(state.version ?? null);
+  const body: DiffBody = { changes };
+  if (oaStr !== last.oaIntegration) body.oaIntegration = state.oaIntegration;
+  if (verStr !== last.version) body.version = state.version;
+  const empty =
+    Object.keys(changes).length === 0 && body.oaIntegration === undefined && body.version === undefined;
+  return {
+    body,
+    snapshot: { colls: snapColls, revs: snapRevs, oaIntegration: oaStr, version: verStr },
+    empty,
+  };
+}
+
+/** รวมข้อมูลจาก server (ล่าสุด) กับการแก้ของเราที่เพิ่งพยายามเซฟ — ใช้ตอนเจอ conflict (409) */
+function mergeServerWithAttempt(
+  serverState: Record<string, unknown>,
+  body: DiffBody,
+): Record<string, unknown> {
+  const merged: Record<string, unknown> = { ...serverState };
+  for (const [key, change] of Object.entries(body.changes)) {
+    const idOf = PERSIST_ID[key];
+    if (!idOf) continue;
+    const rows = ((merged[key] as Record<string, unknown>[] | undefined) ?? []).slice();
+    const map = new Map(rows.map((r) => [idOf(r), r]));
+    for (const u of change.upserts) map.set(idOf(u.data), u.data); // การแก้ของเราทับ (ของเราชนะ)
+    for (const did of change.deletes) map.delete(did);
+    merged[key] = Array.from(map.values());
+  }
+  if (body.oaIntegration !== undefined) merged.oaIntegration = body.oaIntegration;
+  if (body.version !== undefined) merged.version = body.version;
+  return merged;
+}
+
 function seedState(): State {
   const assets = buildSeedAssets();
   return {
@@ -93,7 +235,8 @@ interface StoreApi {
   signOut: () => void;
   resetDemo: () => void;
   audit: (e: Omit<AuditLog, 'id' | 'at' | 'user' | 'role' | 'source'> & { source?: AuditSource }) => void;
-  previewCode: (companyId: string, date?: string) => string;
+  previewCode: (companyId: string, categoryId?: string, date?: string) => string;
+  previewCodes: (companyId: string, categoryId: string, n: number, date?: string) => string[];
   updateAsset: (id: string, patch: Partial<Asset>, reason?: string) => void;
   setAssetStatus: (id: string, status: AssetStatus, reason?: string) => void;
   createAsset: (a: Omit<Asset, 'id' | 'code' | 'createdAt' | 'createdBy' | 'updatedAt' | 'updatedBy'>, reason?: string) => string;
@@ -112,9 +255,19 @@ interface StoreApi {
 
 const Ctx = createContext<StoreApi | null>(null);
 
-function formatCode(cfg: RunningNumberConfig, date: string, seq: number) {
-  const [y, m, d] = date.split('-');
-  return `${cfg.prefix}${cfg.includeYear ? y.slice(2) : ''}${cfg.includeMonth ? m : ''}${cfg.includeDay ? d : ''}${String(seq).padStart(cfg.seqDigits, '0')}`;
+/** ย่อ code หมวด/บริษัทให้เหลือ A-Z 0-9 (เช่น "COM", "SHD") สำหรับใช้เป็นส่วนของรหัสทรัพย์สิน */
+function segmentize(code: string | undefined, fallback: string): string {
+  const s = (code ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+  return s || fallback;
+}
+
+/**
+ * รหัสทรัพย์สินแบบ COMPANY-CATEGORY-YY-SEQ (เช่น SHD-COM-26-00001)
+ * ไม่ฝังสาขาไว้ในรหัส เพราะทรัพย์สินย้ายสาขาได้ (รีวิว §12) — ลำดับแยกตามบริษัท+หมวดหมู่
+ */
+function formatAssetCode(companyCode: string, catCode: string, date: string, seq: number, digits: number) {
+  const yy = (date.split('-')[0] ?? '').slice(2);
+  return `${companyCode}-${catCode}-${yy}-${String(seq).padStart(digits, '0')}`;
 }
 
 export function StoreProvider({ children }: { children: ReactNode }) {
@@ -123,25 +276,50 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const stateRef = useRef(state);
   stateRef.current = state;
 
-  // บันทึกลง DB แบบต่อคิว (กันไม่ให้ POST ทับกันจนเขียนทั้งตารางพร้อมกันหลายรอบ)
+  // บันทึกลง DB แบบ "ส่วนต่าง" (เขียนเฉพาะแถวที่เปลี่ยน/ลบ ไม่แตะแถวอื่น)
+  // → ผู้ใช้สองคนเซฟพร้อมกันไม่ทับข้อมูลกัน (เลิกวิธี POST ทั้งก้อน + DELETE ทั้งตาราง)
+  const lastSavedRef = useRef<SavedSnapshot>(emptySnapshot());
   const savingRef = useRef(false);
-  const pendingRef = useRef<string | null>(null);
-  const flushSave = useCallback(async (body: string) => {
+  const saveAgainRef = useRef(false);
+  const doSave = useCallback(async () => {
     if (savingRef.current) {
-      pendingRef.current = body; // เก็บเวอร์ชันล่าสุดไว้ แล้วค่อยเขียนหลังอันปัจจุบันเสร็จ
+      saveAgainRef.current = true; // มีการเปลี่ยนระหว่างกำลังเซฟ — เซฟอีกรอบหลังเสร็จ
       return;
     }
     savingRef.current = true;
     try {
-      await fetch('/api/fa/state', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
+      const { session: _session, ...rest } = stateRef.current;
+      void _session;
+      const { body, snapshot, empty } = computeDiff(rest as Record<string, unknown>, lastSavedRef.current);
+      if (!empty) {
+        const res = await fetch('/api/fa/state', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (res.ok) {
+          lastSavedRef.current = snapshot; // DB ตรงกับที่เราส่งแล้ว
+        } else if (res.status === 409) {
+          // มีคนอื่นแก้แถวที่เราแตะไปก่อน — ดึงข้อมูลล่าสุด แล้ว merge การแก้ของเราทับ
+          // (ตั้ง baseline เป็นเวอร์ชันล่าสุดของ server) จากนั้น effect จะเซฟซ้ำด้วย base ใหม่
+          const r2 = await fetch('/api/fa/state', { cache: 'no-store' });
+          if (r2.ok) {
+            const db = (await r2.json()) as Record<string, unknown>;
+            const rev = db._rev as RevMap | undefined;
+            delete db._rev;
+            lastSavedRef.current = buildSnapshot(db, rev);
+            const merged = mergeServerWithAttempt(db, body);
+            setState((cur) => ({ ...(merged as unknown as State), session: cur.session }));
+          }
+        }
+      }
     } catch {
       /* จะลองใหม่เมื่อ state เปลี่ยนครั้งถัดไป */
     } finally {
       savingRef.current = false;
-      const next = pendingRef.current;
-      if (next) {
-        pendingRef.current = null;
-        void flushSave(next);
+      if (saveAgainRef.current) {
+        saveAgainRef.current = false;
+        void doSave();
       }
     }
   }, []);
@@ -160,8 +338,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       try {
         const res = await fetch('/api/fa/state', { cache: 'no-store' });
         if (res.ok) {
-          const db = (await res.json()) as State;
+          const db = (await res.json()) as State & { _rev?: RevMap };
           if (!cancelled && db && Array.isArray(db.assets)) {
+            const rev = db._rev;
+            delete db._rev;
+            lastSavedRef.current = buildSnapshot(db as unknown as Record<string, unknown>, rev);
             setState({ ...db, session });
           } else if (!cancelled) {
             setState((s) => ({ ...s, session }));
@@ -190,12 +371,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       /* ignore */
     }
     const t = setTimeout(() => {
-      const { session: _session, ...rest } = state;
-      void _session;
-      void flushSave(JSON.stringify(rest));
+      void doSave();
     }, 400);
     return () => clearTimeout(t);
-  }, [state, ready, flushSave]);
+  }, [state, ready, doSave]);
 
   const role: Role = state.session?.role ?? 'AUDITOR';
   const userName = state.session?.name ?? 'Guest';
@@ -222,10 +401,29 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     };
     const audit: StoreApi['audit'] = (e) => commit((s) => ({ ...s, audit: [mkAudit(e), ...s.audit] }));
 
-    const nextCodes = (s: State, companyId: string, n: number, date = TODAY): { codes: string[]; running: RunningNumberConfig[] } => {
+    const codeParts = (s: State, companyId: string, categoryId: string) => {
       const cfg = s.running.find((r) => r.companyId === companyId) ?? s.running[0];
-      const codes = Array.from({ length: n }, (_, i) => formatCode(cfg, date, cfg.nextSeq + i));
-      return { codes, running: s.running.map((r) => (r === cfg ? { ...r, nextSeq: r.nextSeq + n } : r)) };
+      const companyCode = segmentize(s.companies.find((c) => c.id === companyId)?.code ?? cfg?.prefix, 'CO');
+      const catCode = segmentize(s.categories.find((c) => c.id === categoryId)?.code, 'GEN');
+      const start = cfg?.seqByCategory?.[categoryId] ?? 1;
+      return { cfg, companyCode, catCode, start };
+    };
+
+    const nextCodes = (
+      s: State,
+      companyId: string,
+      categoryId: string,
+      n: number,
+      date = TODAY,
+    ): { codes: string[]; running: RunningNumberConfig[] } => {
+      const { cfg, companyCode, catCode, start } = codeParts(s, companyId, categoryId);
+      const codes = Array.from({ length: n }, (_, i) =>
+        formatAssetCode(companyCode, catCode, date, start + i, cfg?.seqDigits ?? 5),
+      );
+      const running = s.running.map((r) =>
+        r === cfg ? { ...r, seqByCategory: { ...(r.seqByCategory ?? {}), [categoryId]: start + n } } : r,
+      );
+      return { codes, running };
     };
 
     return {
@@ -246,9 +444,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         commit((s) => ({ ...fresh, session: s.session }));
       },
       audit,
-      previewCode: (companyId, date = TODAY) => {
-        const cfg = state.running.find((r) => r.companyId === companyId) ?? state.running[0];
-        return formatCode(cfg, date, cfg.nextSeq);
+      previewCode: (companyId, categoryId, date = TODAY) => {
+        const { cfg, companyCode, catCode, start } = codeParts(state, companyId, categoryId ?? '');
+        return formatAssetCode(companyCode, catCode, date, start, cfg?.seqDigits ?? 5);
+      },
+      previewCodes: (companyId, categoryId, n, date = TODAY) => {
+        const { cfg, companyCode, catCode, start } = codeParts(state, companyId, categoryId);
+        return Array.from({ length: n }, (_, i) =>
+          formatAssetCode(companyCode, catCode, date, start + i, cfg?.seqDigits ?? 5),
+        );
       },
       updateAsset: (id, patch, reason) =>
         commit((s) => {
@@ -280,7 +484,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       createAsset: (a, reason) => {
         let newId = '';
         commit((s) => {
-          const { codes, running } = nextCodes(s, a.companyId, 1);
+          const { codes, running } = nextCodes(s, a.companyId, a.categoryId, 1);
           newId = uid('A');
           const asset: Asset = { ...a, id: newId, code: codes[0], createdAt: nowIso(), createdBy: s.session?.name ?? '', updatedAt: nowIso(), updatedBy: s.session?.name ?? '' };
           return { ...s, running, assets: [asset, ...s.assets], audit: [mkAudit({ action: 'CREATE', assetCode: asset.code, entity: 'assets', newValue: 'manual', reason }), ...s.audit] };
@@ -314,13 +518,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           const o = s.oa.find((x) => x.id === id);
           if (!o) return s;
           const n = split ? o.quantity : 1;
-          const { codes, running } = nextCodes(s, o.companyId, n);
-          cbDocNo = o.docNo;
-          cbCodes = codes;
-          cbAmount = o.amount;
           const sub = s.categories.find((c) => c.id === subcategoryId);
           const parentId = sub?.parentId ?? subcategoryId;
           const parent = s.categories.find((c) => c.id === parentId);
+          const { codes, running } = nextCodes(s, o.companyId, parentId, n);
+          cbDocNo = o.docNo;
+          cbCodes = codes;
+          cbAmount = o.amount;
           const policy = s.policies.find((p) => p.categoryId === parentId && p.active);
           const unitCost = Math.round((o.amount / o.quantity) * 100) / 100;
           const created: Asset[] = codes.map((code, i) => {
@@ -522,6 +726,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
               ...(status === 'CALCULATED' ? { calculatedAt: t } : {}),
               ...(status === 'REVIEWED' ? { reviewedAt: t, reviewedBy: who } : {}),
               ...(status === 'LOCKED' ? { lockedAt: t, lockedBy: who } : {}),
+              ...(status === 'POSTED' ? { postedAt: t, postedBy: who } : {}),
             };
           }),
           audit: [mkAudit({ action: `DEP_RUN_${status}`, entity: 'asset_depreciation_runs', newValue: period }), ...s.audit],

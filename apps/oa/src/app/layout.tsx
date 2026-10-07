@@ -5,8 +5,8 @@ import { LOCALE_HTML_LANG } from "@/lib/i18n/locales";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ระบบขออนุมัติภายใน | Internal Approval",
-  description: "ระบบยื่นและอนุมัติคำขอภายในองค์กร",
+  title: "One OA",
+  description: "One OA — ระบบยื่นและอนุมัติคำขอภายในองค์กร",
 };
 
 /**

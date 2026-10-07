@@ -38,3 +38,18 @@ CREATE INDEX IF NOT EXISTS idx_fa_assets_status     ON fa.assets (status);
 CREATE INDEX IF NOT EXISTS idx_fa_oa_docno          ON fa.oa_records (doc_no);
 CREATE INDEX IF NOT EXISTS idx_fa_oa_status         ON fa.oa_records (status);
 CREATE INDEX IF NOT EXISTS idx_fa_knowledge_updated ON fa.knowledge (updated_at DESC);
+
+-- version + updated_at ต่อแถว (optimistic locking) — idempotent, รันซ้ำได้
+DO $fa$
+DECLARE t text;
+BEGIN
+  FOREACH t IN ARRAY ARRAY[
+    'companies','branches','departments','cost_centers','locations',
+    'categories','policies','users','running_numbers','assets',
+    'oa_records','documents','audit_logs','dep_runs'
+  ] LOOP
+    EXECUTE format('ALTER TABLE fa.%I ADD COLUMN IF NOT EXISTS version integer NOT NULL DEFAULT 0', t);
+    EXECUTE format('ALTER TABLE fa.%I ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now()', t);
+  END LOOP;
+END
+$fa$;

@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import {
-  Archive, ArrowLeft, Building2, CheckCircle2, Clock, Download, FileEdit, FileText, ImageIcon, Lock, MapPin, Pencil, Printer, RotateCcw, Send, Split, Undo2, Upload, UserCheck, UserRound,
+  Archive, ArrowLeft, Building2, CheckCircle2, Clock, Download, FileEdit, FileText, ImageIcon, Lock, MapPin, Pencil, Printer, RotateCcw, Send, Split, Trash2, Undo2, Upload, UserCheck, UserRound, X,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { CURRENT_PERIOD, useStore } from '@/lib/store';
@@ -67,8 +67,14 @@ function Detail({ asset }: { asset: Asset }) {
     actions.push(<Button key="back" icon={<Undo2 size={15} />} onClick={() => setStatusModal({ to: 'DRAFT', label: t('detail.sendBack') })}>{t('detail.sendBack')}</Button>);
     actions.push(<Button key="act" variant="success" icon={<CheckCircle2 size={15} />} onClick={() => setStatusModal({ to: 'ACTIVE', label: t('detail.activate') })}>{t('detail.activate')}</Button>);
   }
-  if (asset.status === 'ACTIVE' && can('approveAsset'))
+  if (asset.status === 'ACTIVE' && can('approveAsset')) {
     actions.push(<Button key="inact" onClick={() => setStatusModal({ to: 'INACTIVE', label: t('detail.deactivate') })}>{t('detail.deactivate')}</Button>);
+    actions.push(<Button key="reqdisp" variant="danger" icon={<Trash2 size={15} />} onClick={() => setStatusModal({ to: 'DISPOSAL_PENDING', label: t('detail.requestDisposal') })}>{t('detail.requestDisposal')}</Button>);
+  }
+  if (asset.status === 'DISPOSAL_PENDING' && can('approveAsset')) {
+    actions.push(<Button key="canceldisp" icon={<X size={15} />} onClick={() => setStatusModal({ to: 'ACTIVE', label: t('detail.cancelDisposal') })}>{t('detail.cancelDisposal')}</Button>);
+    actions.push(<Button key="confirmdisp" variant="danger" icon={<Trash2 size={15} />} onClick={() => setStatusModal({ to: 'DISPOSED', label: t('detail.confirmDisposal') })}>{t('detail.confirmDisposal')}</Button>);
+  }
   if (['INACTIVE', 'DISPOSED'].includes(asset.status) && can('approveAsset')) {
     actions.push(<Button key="react" icon={<RotateCcw size={15} />} onClick={() => setStatusModal({ to: 'ACTIVE', label: t('detail.reactivate') })}>{t('detail.reactivate')}</Button>);
     actions.push(<Button key="arch" icon={<Archive size={15} />} onClick={() => setStatusModal({ to: 'ARCHIVED', label: t('detail.archive') })}>{t('detail.archive')}</Button>);
@@ -188,7 +194,7 @@ function Detail({ asset }: { asset: Asset }) {
       {statusModal && (
         <StatusModal
           label={statusModal.label}
-          needReason={asset.status === 'ACTIVE' || statusModal.to === 'DRAFT' || statusModal.to === 'ARCHIVED'}
+          needReason={asset.status === 'ACTIVE' || statusModal.to === 'DRAFT' || statusModal.to === 'ARCHIVED' || statusModal.to === 'DISPOSAL_PENDING' || statusModal.to === 'DISPOSED'}
           onClose={() => setStatusModal(null)}
           onConfirm={(reason) => {
             setAssetStatus(asset.id, statusModal.to, reason);
@@ -308,7 +314,7 @@ function OverviewTab({ asset }: { asset: Asset }) {
               { label: t('field.branch'), value: lk.branch(asset.branchId) },
               { label: t('field.department'), value: lk.department(asset.departmentId) },
               { label: t('field.costCenter'), value: lk.costCenter(asset.costCenterId) },
-              { label: t('field.location'), value: lk.location(asset.locationId) || <span className="text-amber-700">{t('common.notSet')}</span> },
+              { label: t('field.location'), value: lk.locationPath(asset.locationId) || <span className="text-amber-700">{t('common.notSet')}</span> },
               { label: t('field.holder'), value: <span className="text-ink-3">Phase 2</span> },
             ]}
           />
@@ -491,7 +497,7 @@ function DepreciationTab({ asset }: { asset: Asset }) {
   const sched = useMemo(() => buildSchedule(asset, prorationFor(asset, state.policies)), [asset, state.policies]);
   const years = [...new Set(sched.map((r) => r.period.slice(0, 4)))];
   const [year, setYear] = useState(years.includes(CURRENT_PERIOD.slice(0, 4)) ? CURRENT_PERIOD.slice(0, 4) : years[0] ?? '');
-  const locked = new Set(state.runs.filter((r) => r.status === 'LOCKED').map((r) => r.period));
+  const locked = new Set(state.runs.filter((r) => r.status === 'LOCKED' || r.status === 'POSTED').map((r) => r.period));
   const rows = year === 'all' ? sched : sched.filter((r) => r.period.startsWith(year));
 
   if (!sched.length) return <Notice tone="amber">{t('issue.INVALID_READY_DATE')}</Notice>;

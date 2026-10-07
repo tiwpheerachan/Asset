@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import {
-  IconBuilding, IconChart, IconChevron, IconChevronLeft,
+  IconBuilding, IconChart, IconChevron,
   IconCheckCircle, IconClock, IconDownload, IconForm, IconHome, IconInbox,
   IconTypeTable, IconLink,
   IconSend, IconSettings, IconShield, IconUsers,
@@ -119,33 +120,38 @@ export default function Sidebar({
     <aside
       id="workspace-navigation"
       aria-label={t("app.short")}
-      className={`app-sidebar no-print fixed inset-y-0 left-0 z-40 flex h-screen w-[256px] flex-col border-r border-border bg-surface shadow-e3 transition-transform duration-200 lg:sticky lg:top-0 lg:z-auto lg:shrink-0 lg:translate-x-0 lg:shadow-none lg:transition-[width] ${
+      className={`app-sidebar no-print fixed inset-y-0 left-0 z-40 flex h-screen w-[256px] flex-col border-r border-border/70 bg-surface/70 backdrop-blur-xl shadow-e3 transition-transform duration-200 lg:sticky lg:top-0 lg:z-auto lg:shrink-0 lg:translate-x-0 lg:shadow-none lg:transition-[width] ${
         mobileOpen ? "translate-x-0" : "-translate-x-full"
       } ${collapsed ? "lg:w-[72px]" : "lg:w-[256px]"}`}
     >
       {/* หัวแถบเมนู */}
-      <div className="flex items-center gap-2.5 px-4 pb-4 pt-6">
+      <div className={`flex items-center gap-2 pb-3 pt-4 ${collapsed ? "justify-center px-2" : "px-3"}`}>
         {!collapsed && (
-          <span className="min-w-0 flex-1 truncate text-[15px] font-semibold tracking-tight text-text">
-            {t("app.short")}
-          </span>
+          <Link href="/" onClick={onNavigate} className="min-w-0 flex-1" aria-label={t("app.short")}>
+            <img src="/one-oa-logo.png" alt="One OA" className="h-11 w-auto select-none" draggable={false} />
+          </Link>
         )}
         {/* จอใหญ่: ปุ่มยุบ · มือถือ: ปุ่มปิด drawer */}
         <button
           type="button"
           onClick={() => setCollapsed(!collapsed)}
-          className="btn-icon hidden h-7 w-7 ring-0 hover:bg-surface-2 lg:inline-flex"
+          className="btn-icon hidden h-8 w-8 ring-0 text-muted hover:bg-surface-2 hover:text-text lg:inline-flex"
           aria-label={collapsed ? t("nav.expand") : t("nav.collapse")}
+          title={collapsed ? t("nav.expand") : t("nav.collapse")}
         >
-          <IconChevronLeft className={`h-4 w-4 transition ${collapsed ? "rotate-180" : ""}`} />
+          {collapsed ? (
+            <PanelLeftOpen className="h-[18px] w-[18px]" strokeWidth={1.8} />
+          ) : (
+            <PanelLeftClose className="h-[18px] w-[18px]" strokeWidth={1.8} />
+          )}
         </button>
         <button
           type="button"
           onClick={onNavigate}
-          className="btn-icon h-7 w-7 ring-0 hover:bg-surface-2 lg:hidden"
+          className="btn-icon h-8 w-8 ring-0 text-muted hover:bg-surface-2 hover:text-text lg:hidden"
           aria-label={t("nav.collapse")}
         >
-          <IconChevronLeft className="h-4 w-4" />
+          <PanelLeftClose className="h-[18px] w-[18px]" strokeWidth={1.8} />
         </button>
       </div>
 
@@ -213,6 +219,19 @@ export default function Sidebar({
         })}
       </nav>
 
+      {/* การ์ดโปรโมต + ปุ่มคู่มือการใช้งาน (ซ่อนเมื่อยุบเมนู) */}
+      {!collapsed && (
+        <div className="border-t border-border/70 p-3">
+          <img src="/one-oa-card.png" alt="One OA" className="w-full select-none rounded-xl" draggable={false} />
+          <Link
+            href="/help"
+            onClick={onNavigate}
+            className="mt-2 flex items-center justify-center gap-1 rounded-lg bg-primary py-2 text-[12px] font-semibold text-white transition hover:opacity-90"
+          >
+            {t("nav.help")} →
+          </Link>
+        </div>
+      )}
     </aside>
   );
 }

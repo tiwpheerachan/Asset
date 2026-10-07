@@ -11,11 +11,12 @@ export type AssetStatus =
   | 'INACTIVE'
   | 'UNDER_REPAIR'
   | 'TEMPORARILY_UNUSED'
+  | 'DISPOSAL_PENDING'
   | 'DISPOSED'
   | 'ARCHIVED';
 
 export type OAStatus = 'NEW' | 'REVIEWING' | 'READY_TO_CREATE' | 'CREATED' | 'REJECTED' | 'DUPLICATE' | 'ERROR';
-export type RunStatus = 'DRAFT' | 'CALCULATED' | 'REVIEWED' | 'LOCKED';
+export type RunStatus = 'DRAFT' | 'CALCULATED' | 'REVIEWED' | 'LOCKED' | 'POSTED';
 export type DepMethod = 'SL' | 'DB' | 'UOP';
 export type Proration = 'FULL_MONTH' | 'ACTUAL_DAYS' | 'NEXT_MONTH';
 export type StartRule = 'READY_DATE' | 'ACQUISITION_DATE';
@@ -69,9 +70,14 @@ export interface Location {
   floor: string;
   room: string;
   name: Localized;
+  /** สถานที่แม่ (null = อยู่ใต้สาขาโดยตรง) — รองรับผังสถานที่ซ้อนได้ไม่จำกัดชั้น (§19) */
+  parentLocationId?: string | null;
   active: boolean;
 }
 export interface Account {
+  /** รหัสถาวร (immutable) — หมวดหมู่อ้างอิงบัญชีด้วย id นี้ เพื่อให้เปลี่ยน code ภายหลังได้โดย mapping ไม่พัง */
+  id: string;
+  /** เลขที่บัญชีตามผังบัญชี (business reference — เปลี่ยนได้) */
   code: string;
   name: Localized;
   kind: 'ASSET' | 'EXPENSE' | 'ACCUM';
@@ -262,6 +268,8 @@ export interface DepRun {
   reviewedAt?: string;
   lockedBy?: string;
   lockedAt?: string;
+  postedBy?: string;
+  postedAt?: string;
 }
 
 export interface AppUser {
@@ -280,6 +288,8 @@ export interface RunningNumberConfig {
   includeDay: boolean;
   seqDigits: number;
   nextSeq: number;
+  /** ลำดับที่แยกตามหมวดหมู่ สำหรับรหัสแบบ COMPANY-CAT-YY-SEQ (เริ่ม 1 ต่อหมวด) */
+  seqByCategory?: Record<string, number>;
 }
 
 export interface OAIntegration {

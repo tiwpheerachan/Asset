@@ -12,6 +12,7 @@ const ASSET_TONE: Record<AssetStatus, Tone> = {
   INACTIVE: 'gray',
   UNDER_REPAIR: 'amber',
   TEMPORARILY_UNUSED: 'teal',
+  DISPOSAL_PENDING: 'amber',
   DISPOSED: 'red',
   ARCHIVED: 'gray',
 };
@@ -24,7 +25,7 @@ const OA_TONE: Record<OAStatus, Tone> = {
   DUPLICATE: 'violet',
   ERROR: 'red',
 };
-const RUN_TONE: Record<RunStatus, Tone> = { DRAFT: 'gray', CALCULATED: 'blue', REVIEWED: 'amber', LOCKED: 'green' };
+const RUN_TONE: Record<RunStatus, Tone> = { DRAFT: 'gray', CALCULATED: 'blue', REVIEWED: 'amber', LOCKED: 'green', POSTED: 'violet' };
 
 export function AssetStatusBadge({ status }: { status: AssetStatus }) {
   const { t } = useI18n();

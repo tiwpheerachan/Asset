@@ -15,6 +15,8 @@ import {
   LogOut,
   MapPin,
   Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
   Paperclip,
   RotateCcw,
   Search,
@@ -82,48 +84,76 @@ export function LangSwitch({ compact }: { compact?: boolean }) {
 }
 
 function Logo() {
-  const { t } = useI18n();
   return (
-    <div className="flex items-center gap-2.5">
-      <div className="leading-tight">
-        <div className="text-[14px] font-semibold text-ink">Fixed Asset</div>
-        <div className="text-[11.5px] text-ink-3">{t('app.subtitle')}</div>
-      </div>
+    <div className="flex items-center">
+      <img src="/one-asset-logo.png" alt="ONE Asset" className="h-14 w-auto select-none" draggable={false} />
     </div>
   );
 }
 
-function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
+function Sidebar({
+  onNavigate,
+  collapsed = false,
+  onToggleCollapse,
+}: {
+  onNavigate?: () => void;
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
+}) {
   const path = usePathname();
   const { t } = useI18n();
   const { state } = useStore();
   const oaPending = state.oa.filter((o) => ['NEW', 'REVIEWING', 'READY_TO_CREATE', 'ERROR'].includes(o.status)).length;
   return (
     <nav className="flex h-full flex-col">
-      <div className="flex h-14 items-center border-b border-line px-4">
-        <Logo />
+      <div className={cx('flex h-16 items-center border-b border-line', collapsed ? 'justify-center px-2' : 'gap-2 px-3')}>
+        {!collapsed && <Logo />}
+        {onToggleCollapse && (
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            title={collapsed ? t('nav.expand') : t('nav.collapse')}
+            aria-label={collapsed ? t('nav.expand') : t('nav.collapse')}
+            className={cx(
+              'hidden shrink-0 rounded-md p-1.5 text-ink-3 transition-colors hover:bg-canvas hover:text-ink lg:inline-flex',
+              !collapsed && 'ml-auto',
+            )}
+          >
+            {collapsed ? <PanelLeftOpen size={18} strokeWidth={1.8} /> : <PanelLeftClose size={18} strokeWidth={1.8} />}
+          </button>
+        )}
       </div>
-      <div className="flex-1 overflow-y-auto px-2.5 py-3">
+      <div className={cx('flex-1 overflow-y-auto py-3', collapsed ? 'px-2' : 'px-2.5')}>
         {NAV.map((g) => (
           <div key={g.group} className="mb-4">
-            <div className="mb-1 px-2 text-[11px] font-semibold uppercase tracking-wider text-ink-4">{t(g.group)}</div>
+            {collapsed ? (
+              <div className="mx-1 mb-2 border-t border-line/70 first:border-0" />
+            ) : (
+              <div className="mb-1 px-2 text-[11px] font-semibold uppercase tracking-wider text-ink-4">{t(g.group)}</div>
+            )}
             {g.items.map((it) => {
               const active = it.href === '/' ? path === '/' : path.startsWith(it.href);
               const Icon = it.icon;
+              const hasBadge = 'badge' in it && it.badge === 'oa' && oaPending > 0;
               return (
                 <Link
                   key={it.href}
                   href={it.href}
                   onClick={onNavigate}
+                  title={collapsed ? t(it.key) : undefined}
                   className={cx(
-                    'mb-0.5 flex items-center gap-2.5 rounded-md px-2 py-[7px] text-[13.5px] transition-colors',
+                    'relative mb-0.5 flex items-center rounded-md py-[7px] text-[13.5px] transition-colors',
+                    collapsed ? 'justify-center px-0' : 'gap-2.5 px-2',
                     active ? 'bg-brand-50 font-semibold text-brand-700' : 'text-ink-2 hover:bg-canvas',
                   )}
                 >
                   <Icon size={17} strokeWidth={active ? 2.2 : 1.8} className={active ? 'text-brand-600' : 'text-ink-3'} />
-                  <span className="flex-1 truncate">{t(it.key)}</span>
-                  {'badge' in it && it.badge === 'oa' && oaPending > 0 && (
+                  {!collapsed && <span className="flex-1 truncate">{t(it.key)}</span>}
+                  {!collapsed && hasBadge && (
                     <span className="rounded bg-amber-100 px-1.5 text-[11px] font-semibold text-amber-800">{oaPending}</span>
+                  )}
+                  {collapsed && hasBadge && (
+                    <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-amber-500" />
                   )}
                 </Link>
               );
@@ -131,9 +161,18 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           </div>
         ))}
       </div>
-      <div className="border-t border-line px-4 py-3 text-[11.5px] text-ink-4">
-        {t('app.phase')} · v0.1 · {state.companies[0]?.code}
-      </div>
+      {!collapsed && (
+        <div className="border-t border-line p-3">
+          <img src="/one-asset-card.png" alt="ONE Asset" className="w-full select-none rounded-xl" draggable={false} />
+          <Link
+            href="/help"
+            onClick={onNavigate}
+            className="mt-2 flex items-center justify-center gap-1 rounded-lg bg-brand-600 py-2 text-[12px] font-semibold text-white transition hover:bg-brand-700"
+          >
+            คู่มือการใช้งาน →
+          </Link>
+        </div>
+      )}
     </nav>
   );
 }
@@ -192,6 +231,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const path = usePathname();
   const [q, setQ] = useState('');
   const [mobile, setMobile] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     if (ready && !state.session) router.replace('/login');
@@ -199,14 +239,34 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   useEffect(() => setMobile(false), [path]);
 
+  useEffect(() => {
+    try {
+      setCollapsed(localStorage.getItem('fa_nav_collapsed') === '1');
+    } catch {}
+  }, []);
+
+  const toggleCollapse = () =>
+    setCollapsed((c) => {
+      const v = !c;
+      try {
+        localStorage.setItem('fa_nav_collapsed', v ? '1' : '0');
+      } catch {}
+      return v;
+    });
+
   if (!ready || !state.session) {
     return <div className="flex h-screen items-center justify-center text-[13px] text-ink-3">Loading…</div>;
   }
 
   return (
     <div className="min-h-screen">
-      <aside className="no-print fixed inset-y-0 left-0 z-30 hidden w-60 border-r border-line bg-white lg:block">
-        <Sidebar />
+      <aside
+        className={cx(
+          'no-print fixed inset-y-0 left-0 z-30 hidden border-r border-line/70 bg-white/70 backdrop-blur-xl transition-[width] duration-200 lg:block',
+          collapsed ? 'w-16' : 'w-60',
+        )}
+      >
+        <Sidebar collapsed={collapsed} onToggleCollapse={toggleCollapse} />
       </aside>
       {mobile && (
         <div className="fixed inset-0 z-40 lg:hidden">
@@ -219,8 +279,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           </aside>
         </div>
       )}
-      <div className="lg:pl-60">
-        <header className="no-print sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-line bg-white/95 px-4 backdrop-blur md:px-6">
+      <div className={cx('transition-[padding] duration-200', collapsed ? 'lg:pl-16' : 'lg:pl-60')}>
+        <header className="no-print sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-line/70 bg-white/70 px-4 backdrop-blur-xl md:px-6">
           <button className="rounded p-1.5 text-ink-2 hover:bg-canvas lg:hidden" onClick={() => setMobile(true)} aria-label="menu">
             <Menu size={20} />
           </button>

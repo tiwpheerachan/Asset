@@ -13,7 +13,7 @@ import { AssetStatusBadge } from '@/components/badges';
 import { AssetCreateModal } from '@/components/asset-create';
 import { Badge, Button, Card, DL, Drawer, Empty, Input, PageHeader, Select, Table, Td, Th, cx } from '@/components/ui';
 
-const STATUSES: AssetStatus[] = ['CANDIDATE', 'DRAFT', 'PENDING_REVIEW', 'ACTIVE', 'INACTIVE', 'UNDER_REPAIR', 'TEMPORARILY_UNUSED', 'DISPOSED', 'ARCHIVED'];
+const STATUSES: AssetStatus[] = ['CANDIDATE', 'DRAFT', 'PENDING_REVIEW', 'ACTIVE', 'INACTIVE', 'UNDER_REPAIR', 'TEMPORARILY_UNUSED', 'DISPOSAL_PENDING', 'DISPOSED', 'ARCHIVED'];
 const MISSING = ['photo', 'document', 'location', 'category', 'policy'] as const;
 type Missing = (typeof MISSING)[number];
 

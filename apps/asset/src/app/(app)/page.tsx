@@ -10,7 +10,7 @@ import { addMonths, buildSchedule, isDepreciable, prorationFor } from '@/lib/dep
 import { Card, CardHeader, PageHeader, cx } from '@/components/ui';
 import { BarList, DepTrendChart } from '@/components/charts';
 
-const VALUED = ['ACTIVE', 'INACTIVE', 'UNDER_REPAIR', 'TEMPORARILY_UNUSED', 'DRAFT', 'PENDING_REVIEW'];
+const VALUED = ['ACTIVE', 'INACTIVE', 'UNDER_REPAIR', 'TEMPORARILY_UNUSED', 'DISPOSAL_PENDING', 'DRAFT', 'PENDING_REVIEW'];
 const PENDING = ['CANDIDATE', 'DRAFT', 'PENDING_REVIEW'];
 
 export default function Dashboard() {

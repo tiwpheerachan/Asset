@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { Upload } from 'lucide-react';
 import { Button } from './ui';
 import { useI18n } from '@/lib/i18n';
+import { useStore } from '@/lib/store';
 import type { Asset } from '@/lib/types';
 import type { Valuation } from '@/lib/depreciation';
 
@@ -16,6 +17,7 @@ export function PostDepreciationButton({
   disabled?: boolean;
 }) {
   const { t } = useI18n();
+  const { setRunStatus } = useStore();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState('');
 
@@ -47,6 +49,8 @@ export function PostDepreciationButton({
           posted += data.count ?? 0;
           if (data.reused) reused = true;
         }
+        // ส่งเข้า ONEBOOK สำเร็จ → ปิดลูป: ตั้งสถานะรอบค่าเสื่อมเป็น POSTED
+        setRunStatus(period, 'POSTED');
         setMsg(reused ? t('dep.postedAlready') : t('dep.postedOk').replace('{n}', String(posted)));
       } catch (e) {
         setMsg(String((e as Error)?.message || e));

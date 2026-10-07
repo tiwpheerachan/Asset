@@ -19,7 +19,7 @@ function usePeriodCalc(period: string) {
   const { state } = useStore();
   return useMemo(() => {
     const rows = state.assets
-      .filter((a) => ['ACTIVE', 'INACTIVE', 'UNDER_REPAIR', 'TEMPORARILY_UNUSED'].includes(a.status))
+      .filter((a) => ['ACTIVE', 'INACTIVE', 'UNDER_REPAIR', 'TEMPORARILY_UNUSED', 'DISPOSAL_PENDING'].includes(a.status))
       .map((a) => {
         const issues = depIssues(a, state.policies);
         const v = valuate(a, period, prorationFor(a, state.policies));
@@ -70,16 +70,16 @@ function RunsTab({ onPreview }: { onPreview: (p: string) => void }) {
     <div className="p-4">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-1.5 text-[12px]">
-          {(['DRAFT', 'CALCULATED', 'REVIEWED', 'LOCKED'] as RunStatus[]).map((s, i) => (
+          {(['DRAFT', 'CALCULATED', 'REVIEWED', 'LOCKED', 'POSTED'] as RunStatus[]).map((s, i, arr) => (
             <span key={s} className="flex items-center gap-1.5">
               <RunStatusBadge status={s} />
-              {i < 3 && <ArrowRight size={12} className="text-ink-4" />}
+              {i < arr.length - 1 && <ArrowRight size={12} className="text-ink-4" />}
             </span>
           ))}
           <span className="ml-2 text-ink-3">· {t('dep.glNote')}</span>
         </div>
         {can('runDep') && (
-          <Button icon={<Plus size={15} />} disabled={latest && latest.status !== 'LOCKED'} onClick={() => createRun(nextPeriod)}>
+          <Button icon={<Plus size={15} />} disabled={latest && latest.status !== 'LOCKED' && latest.status !== 'POSTED'} onClick={() => createRun(nextPeriod)}>
             {t('dep.newRun')} · {period(nextPeriod)}
           </Button>
         )}
@@ -105,8 +105,8 @@ function RunsTab({ onPreview }: { onPreview: (p: string) => void }) {
                 <tr>
                   <Td className="whitespace-nowrap font-medium text-ink">{period(r.period)}</Td>
                   <Td><RunStatusBadge status={r.status} /></Td>
-                  <Td right>{r.status === 'DRAFT' ? '—' : num(r.status === 'LOCKED' && r.amount ? r.assetCount : c.count)}</Td>
-                  <Td right className="font-medium text-ink">{r.status === 'DRAFT' ? '—' : money(r.status === 'LOCKED' && r.amount ? r.amount : c.amount)}</Td>
+                  <Td right>{r.status === 'DRAFT' ? '—' : num((r.status === 'LOCKED' || r.status === 'POSTED') && r.amount ? r.assetCount : c.count)}</Td>
+                  <Td right className="font-medium text-ink">{r.status === 'DRAFT' ? '—' : money((r.status === 'LOCKED' || r.status === 'POSTED') && r.amount ? r.amount : c.amount)}</Td>
                   <Td className="whitespace-nowrap">{r.createdBy}<div className="text-[11.5px] text-ink-4">{dateTime(r.createdAt)}</div></Td>
                   <Td className="whitespace-nowrap">{r.reviewedBy ?? '—'}{r.reviewedAt && <div className="text-[11.5px] text-ink-4">{dateTime(r.reviewedAt)}</div>}</Td>
                   <Td className="whitespace-nowrap">{r.lockedBy ?? '—'}{r.lockedAt && <div className="text-[11.5px] text-ink-4">{dateTime(r.lockedAt)}</div>}</Td>
@@ -176,7 +176,7 @@ function PreviewTab({ period: p, setPeriod }: { period: string; setPeriod: (p: s
         >
           {t('common.exportExcel')}
         </Button>
-        <PostDepreciationButton period={p} rows={c.rows} disabled={!can('runDep')} />
+        <PostDepreciationButton period={p} rows={c.rows} disabled={!can('runDep') || run?.status !== 'LOCKED'} />
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
