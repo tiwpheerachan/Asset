@@ -274,6 +274,21 @@ export interface DepRun {
   postedAt?: string;
 }
 
+export type MaintenanceType = 'REPAIR' | 'PREVENTIVE' | 'INSPECTION' | 'CALIBRATION' | 'OTHER';
+
+/** บันทึกการซ่อมบำรุง/ตรวจเช็คทรัพย์สิน */
+export interface AssetMaintenance {
+  id: string;
+  assetId: string;
+  type: MaintenanceType;
+  date: string;
+  cost: number;
+  vendor: string;
+  note: string;
+  by: string;
+  at: string;
+}
+
 export type DisposalType = 'SALE' | 'SCRAP' | 'LOST' | 'DAMAGE' | 'DONATION' | 'WRITE_OFF';
 
 /** บันทึกการจำหน่ายทรัพย์สิน (§25) — เก็บประเภท/รายรับ/NBV ณ วันจำหน่าย/กำไร-ขาดทุน */

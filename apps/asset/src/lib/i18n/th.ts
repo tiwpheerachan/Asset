@@ -23,6 +23,7 @@ const th: Dict = {
     expand: 'ขยายเมนู',
   },
   common: {
+    by: 'โดย',
     search: 'ค้นหา',
     globalSearch: 'ค้นหารหัสทรัพย์สิน ชื่อ Serial เลขใบแจ้งหนี้ เลขที่ OA',
     filters: 'ตัวกรอง',
@@ -315,6 +316,21 @@ const th: Dict = {
     createTitle: 'สร้างทรัพย์สิน (กรอกเอง)',
     createHint: 'ใช้สำหรับกรณียกเว้นเท่านั้น ขั้นตอนปกติคือ นำเข้า OA → รายการรอลงทะเบียน → ทรัพย์สิน',
   },
+  maint: {
+    add: 'เพิ่มบันทึกซ่อมบำรุง',
+    total: 'ค่าใช้จ่ายรวม',
+    records: 'รายการ',
+    date: 'วันที่',
+    type: 'ประเภท',
+    vendor: 'ผู้ให้บริการ',
+    cost: 'ค่าใช้จ่าย (บาท)',
+    note: 'หมายเหตุ',
+    REPAIR: 'ซ่อมแซม',
+    PREVENTIVE: 'บำรุงรักษาเชิงป้องกัน',
+    INSPECTION: 'ตรวจเช็ค',
+    CALIBRATION: 'สอบเทียบ',
+    OTHER: 'อื่น ๆ',
+  },
   disposal: {
     type: 'ประเภทการจำหน่าย',
     proceeds: 'รายรับจากการจำหน่าย (บาท)',
@@ -330,7 +346,7 @@ const th: Dict = {
     WRITE_OFF: 'ตัดจำหน่าย',
   },
   detail: {
-    tabs: { overview: 'ภาพรวม', accounting: 'บัญชี', depreciation: 'ค่าเสื่อมราคา', location: 'สถานที่', documents: 'เอกสาร', history: 'ประวัติ' },
+    tabs: { overview: 'ภาพรวม', accounting: 'บัญชี', depreciation: 'ค่าเสื่อมราคา', location: 'สถานที่', maintenance: 'ซ่อมบำรุง', documents: 'เอกสาร', history: 'ประวัติ' },
     general: 'ข้อมูลทั่วไป',
     org: 'โครงสร้างองค์กร',
     source: 'อ้างอิงการจัดซื้อ / แหล่งที่มา',

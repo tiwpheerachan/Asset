@@ -5,18 +5,18 @@ import { useParams } from 'next/navigation';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import {
-  Archive, ArrowLeft, Building2, CheckCircle2, Clock, Download, FileEdit, FileText, ImageIcon, Lock, MapPin, Pencil, Printer, RotateCcw, Send, Split, Trash2, Undo2, Upload, UserCheck, UserRound, X,
+  Archive, ArrowLeft, Building2, CheckCircle2, Clock, Download, FileEdit, FileText, ImageIcon, Lock, MapPin, Pencil, Plus, Printer, RotateCcw, Send, Split, Trash2, Undo2, Upload, UserCheck, UserRound, X,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { CURRENT_PERIOD, TODAY, useStore } from '@/lib/store';
 import { useLookups, useValuations } from '@/lib/hooks';
 import { buildSchedule, depIssues, prorationFor, totalCost } from '@/lib/depreciation';
 import { exportXlsx } from '@/lib/excel';
-import type { Asset, AssetStatus, DisposalType, DocType } from '@/lib/types';
+import type { Asset, AssetStatus, DisposalType, DocType, MaintenanceType } from '@/lib/types';
 import { AssetStatusBadge } from '@/components/badges';
 import { Badge, Button, Card, CardHeader, DL, Drawer, Empty, FormField, Input, Modal, Notice, PageHeader, Select, Table, Tabs, Td, Textarea, Th, cx } from '@/components/ui';
 
-type Tab = 'overview' | 'accounting' | 'depreciation' | 'location' | 'documents' | 'history';
+type Tab = 'overview' | 'accounting' | 'depreciation' | 'location' | 'maintenance' | 'documents' | 'history';
 
 export default function AssetDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -179,6 +179,7 @@ function Detail({ asset }: { asset: Asset }) {
               { id: 'accounting', label: t('detail.tabs.accounting') },
               { id: 'depreciation', label: t('detail.tabs.depreciation') },
               { id: 'location', label: t('detail.tabs.location') },
+              { id: 'maintenance', label: t('detail.tabs.maintenance'), count: state.maintenance.filter((m) => m.assetId === asset.id).length },
               { id: 'documents', label: t('detail.tabs.documents'), count: docs.length },
               { id: 'history', label: t('detail.tabs.history'), count: history.length },
             ]}
@@ -189,6 +190,7 @@ function Detail({ asset }: { asset: Asset }) {
           {tab === 'accounting' && <AccountingTab asset={asset} />}
           {tab === 'depreciation' && <DepreciationTab asset={asset} />}
           {tab === 'location' && <LocationTab asset={asset} />}
+          {tab === 'maintenance' && <MaintenanceTab asset={asset} />}
           {tab === 'documents' && <DocumentsTab asset={asset} />}
           {tab === 'history' && <HistoryTab asset={asset} />}
         </div>
@@ -881,6 +883,93 @@ function HistoryTab({ asset }: { asset: Asset }) {
         </Table>
       )}
     </div>
+  );
+}
+
+/* ================================================================ Maintenance tab */
+const MAINTENANCE_TYPES: MaintenanceType[] = ['REPAIR', 'PREVENTIVE', 'INSPECTION', 'CALIBRATION', 'OTHER'];
+
+function MaintenanceTab({ asset }: { asset: Asset }) {
+  const { t, money, date } = useI18n();
+  const { state, addMaintenance, can } = useStore();
+  const [open, setOpen] = useState(false);
+  const rows = state.maintenance.filter((m) => m.assetId === asset.id).sort((a, b) => (a.date < b.date ? 1 : -1));
+  const total = rows.reduce((s, m) => s + (m.cost || 0), 0);
+
+  return (
+    <div>
+      <div className="mb-3 flex items-center justify-between">
+        <span className="text-[13px] text-ink-3">{t('maint.total')}: <b className="font-mono text-ink">{money(total)}</b> · {rows.length} {t('maint.records')}</span>
+        {(can('editDraft') || can('approveAsset')) && (
+          <Button size="sm" variant="primary" icon={<Plus size={14} />} onClick={() => setOpen(true)}>{t('maint.add')}</Button>
+        )}
+      </div>
+      {rows.length === 0 ? (
+        <Empty>{t('common.noData')}</Empty>
+      ) : (
+        <Table>
+          <thead>
+            <tr>
+              <Th>{t('maint.date')}</Th>
+              <Th>{t('maint.type')}</Th>
+              <Th>{t('maint.vendor')}</Th>
+              <Th right>{t('maint.cost')}</Th>
+              <Th>{t('maint.note')}</Th>
+              <Th>{t('common.by')}</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((m) => (
+              <tr key={m.id}>
+                <Td className="whitespace-nowrap">{date(m.date)}</Td>
+                <Td><Badge tone="blue">{t(`maint.${m.type}`)}</Badge></Td>
+                <Td>{m.vendor || '—'}</Td>
+                <Td right className="font-mono">{m.cost ? money(m.cost) : '—'}</Td>
+                <Td className="max-w-[280px] truncate text-ink-2">{m.note || '—'}</Td>
+                <Td className="whitespace-nowrap text-ink-3">{m.by}</Td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      )}
+      {open && <MaintenanceModal onClose={() => setOpen(false)} onConfirm={(input) => { addMaintenance(asset.id, input); setOpen(false); }} />}
+    </div>
+  );
+}
+
+function MaintenanceModal({ onClose, onConfirm }: { onClose: () => void; onConfirm: (input: { type: MaintenanceType; date: string; cost: number; vendor: string; note: string }) => void }) {
+  const { t } = useI18n();
+  const [type, setType] = useState<MaintenanceType>('REPAIR');
+  const [d, setD] = useState(TODAY);
+  const [cost, setCost] = useState(0);
+  const [vendor, setVendor] = useState('');
+  const [note, setNote] = useState('');
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title={t('maint.add')}
+      footer={
+        <>
+          <Button onClick={onClose}>{t('common.cancel')}</Button>
+          <Button variant="primary" disabled={!d} onClick={() => onConfirm({ type, date: d, cost, vendor, note })}>{t('common.save')}</Button>
+        </>
+      }
+    >
+      <div className="grid gap-3.5 sm:grid-cols-2">
+        <FormField label={t('maint.type')} required>
+          <Select value={type} onChange={(e) => setType(e.target.value as MaintenanceType)}>
+            {MAINTENANCE_TYPES.map((x) => <option key={x} value={x}>{t(`maint.${x}`)}</option>)}
+          </Select>
+        </FormField>
+        <FormField label={t('maint.date')} required><Input type="date" value={d} onChange={(e) => setD(e.target.value)} /></FormField>
+        <FormField label={t('maint.vendor')}><Input value={vendor} onChange={(e) => setVendor(e.target.value)} /></FormField>
+        <FormField label={t('maint.cost')}><Input type="number" value={cost} onChange={(e) => setCost(Number(e.target.value) || 0)} className="text-right font-mono" /></FormField>
+      </div>
+      <div className="mt-3">
+        <FormField label={t('maint.note')}><Textarea value={note} onChange={(e) => setNote(e.target.value)} /></FormField>
+      </div>
+    </Modal>
   );
 }
 

@@ -23,6 +23,7 @@ const zh: Dict = {
     expand: '展开菜单',
   },
   common: {
+    by: '操作人',
     search: '搜索',
     globalSearch: '搜索资产编号、名称、序列号、发票号、OA 单号',
     filters: '筛选',
@@ -315,6 +316,21 @@ const zh: Dict = {
     createTitle: '手工新增资产',
     createHint: '手工新增仅用于例外情况。标准流程为：OA 导入 → 待登记 → 资产。',
   },
+  maint: {
+    add: '新增维护记录',
+    total: '总费用',
+    records: '条记录',
+    date: '日期',
+    type: '类型',
+    vendor: '服务商',
+    cost: '费用（泰铢）',
+    note: '备注',
+    REPAIR: '维修',
+    PREVENTIVE: '预防性保养',
+    INSPECTION: '检查',
+    CALIBRATION: '校准',
+    OTHER: '其他',
+  },
   disposal: {
     type: '处置类型',
     proceeds: '处置收入（泰铢）',
@@ -330,7 +346,7 @@ const zh: Dict = {
     WRITE_OFF: '核销',
   },
   detail: {
-    tabs: { overview: '概览', accounting: '会计', depreciation: '折旧', location: '存放地点', documents: '附件', history: '历史' },
+    tabs: { overview: '概览', accounting: '会计', depreciation: '折旧', location: '存放地点', maintenance: '维护保养', documents: '附件', history: '历史' },
     general: '基本信息',
     org: '组织信息',
     source: '采购 / 来源参考',

@@ -21,6 +21,7 @@ const en = {
     expand: 'Expand menu',
   },
   common: {
+    by: 'By',
     search: 'Search',
     globalSearch: 'Search asset code, name, serial, invoice, OA no.',
     filters: 'Filters',
@@ -313,6 +314,21 @@ const en = {
     createTitle: 'Create asset (manual)',
     createHint: 'Manual creation is for exceptions. Standard flow is OA Import → Candidate → Asset.',
   },
+  maint: {
+    add: 'Add maintenance',
+    total: 'Total cost',
+    records: 'records',
+    date: 'Date',
+    type: 'Type',
+    vendor: 'Vendor',
+    cost: 'Cost (THB)',
+    note: 'Note',
+    REPAIR: 'Repair',
+    PREVENTIVE: 'Preventive',
+    INSPECTION: 'Inspection',
+    CALIBRATION: 'Calibration',
+    OTHER: 'Other',
+  },
   disposal: {
     type: 'Disposal type',
     proceeds: 'Proceeds (THB)',
@@ -328,7 +344,7 @@ const en = {
     WRITE_OFF: 'Write-off',
   },
   detail: {
-    tabs: { overview: 'Overview', accounting: 'Accounting', depreciation: 'Depreciation', location: 'Location', documents: 'Documents', history: 'History' },
+    tabs: { overview: 'Overview', accounting: 'Accounting', depreciation: 'Depreciation', location: 'Location', maintenance: 'Maintenance', documents: 'Documents', history: 'History' },
     general: 'General information',
     org: 'Organisation',
     source: 'Purchase / source reference',
