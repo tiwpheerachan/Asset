@@ -58,7 +58,7 @@ const KEY = 'fa.session.v3'; // เก็บเฉพาะ session ที่ br
 type PersistKey =
   | 'companies' | 'branches' | 'departments' | 'costCenters' | 'locations'
   | 'categories' | 'policies' | 'users' | 'running' | 'assets' | 'oa'
-  | 'documents' | 'audit' | 'runs';
+  | 'documents' | 'audit' | 'runs' | 'movements';
 const PERSIST_COLLECTIONS: { key: PersistKey; id: (r: Record<string, unknown>) => string }[] = [
   { key: 'companies', id: (r) => r.id as string },
   { key: 'branches', id: (r) => r.id as string },
@@ -74,6 +74,7 @@ const PERSIST_COLLECTIONS: { key: PersistKey; id: (r: Record<string, unknown>) =
   { key: 'documents', id: (r) => r.id as string },
   { key: 'audit', id: (r) => r.id as string },
   { key: 'runs', id: (r) => r.id as string },
+  { key: 'movements', id: (r) => r.id as string },
 ];
 
 const PERSIST_ID: Record<string, (r: Record<string, unknown>) => string> = Object.fromEntries(
@@ -206,6 +207,7 @@ function seedState(): State {
     documents: buildSeedDocuments(assets),
     audit: SEED_AUDIT,
     runs: SEED_RUNS,
+    movements: [],
     policies: POLICIES,
     categories: CATEGORIES,
     companies: COMPANIES,
@@ -239,6 +241,7 @@ interface StoreApi {
   previewCodes: (companyId: string, categoryId: string, n: number, date?: string) => string[];
   updateAsset: (id: string, patch: Partial<Asset>, reason?: string) => void;
   setAssetStatus: (id: string, status: AssetStatus, reason?: string) => void;
+  transferAsset: (id: string, toLocationId: string, reason: string) => void;
   createAsset: (a: Omit<Asset, 'id' | 'code' | 'createdAt' | 'createdBy' | 'updatedAt' | 'updatedBy'>, reason?: string) => string;
   importAssets: (rows: Asset[]) => number;
   setOAStatus: (id: string, status: OAStatus, extra?: Partial<OARecord>, reason?: string) => void;
@@ -479,6 +482,32 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             ...s,
             assets: s.assets.map((x) => (x.id === id ? { ...x, status, updatedAt: nowIso(), updatedBy: s.session?.name ?? '' } : x)),
             audit: [mkAudit({ action: 'STATUS_CHANGE', assetCode: a.code, entity: 'assets', field: 'status', oldValue: a.status, newValue: status, reason }), ...s.audit],
+          };
+        }),
+      transferAsset: (id, toLocationId, reason) =>
+        commit((s) => {
+          const a = s.assets.find((x) => x.id === id);
+          if (!a) return s;
+          const toLoc = s.locations.find((l) => l.id === toLocationId);
+          const toBranchId = toLoc?.branchId ?? a.branchId;
+          const who = s.session?.name ?? '';
+          const mv = {
+            id: uid('MV'),
+            assetId: id,
+            fromBranchId: a.branchId,
+            toBranchId,
+            fromLocationId: a.locationId,
+            toLocationId,
+            movementDate: TODAY,
+            reason,
+            by: who,
+            at: nowIso(),
+          };
+          return {
+            ...s,
+            assets: s.assets.map((x) => (x.id === id ? { ...x, locationId: toLocationId, branchId: toBranchId, updatedAt: nowIso(), updatedBy: who } : x)),
+            movements: [mv, ...s.movements],
+            audit: [mkAudit({ action: 'TRANSFER', assetCode: a.code, entity: 'asset_movements', field: 'locationId', oldValue: a.locationId ?? '—', newValue: toLoc?.code ?? toLocationId, reason }), ...s.audit],
           };
         }),
       createAsset: (a, reason) => {

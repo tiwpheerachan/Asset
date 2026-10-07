@@ -272,6 +272,20 @@ export interface DepRun {
   postedAt?: string;
 }
 
+/** บันทึกการเคลื่อนย้าย/โอนย้ายทรัพย์สิน (§24) — เก็บประวัติทุกครั้งที่ย้ายที่/สาขา */
+export interface AssetMovement {
+  id: string;
+  assetId: string;
+  fromBranchId: string | null;
+  toBranchId: string;
+  fromLocationId: string | null;
+  toLocationId: string | null;
+  movementDate: string;
+  reason: string;
+  by: string;
+  at: string;
+}
+
 export interface AppUser {
   id: string;
   name: string;

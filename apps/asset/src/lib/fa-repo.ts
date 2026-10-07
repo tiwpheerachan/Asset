@@ -55,6 +55,7 @@ const COLLECTIONS: Coll[] = [
   { key: 'documents', table: 'fa.documents', id: (r) => r.id as string },
   { key: 'audit', table: 'fa.audit_logs', id: (r) => r.id as string },
   { key: 'runs', table: 'fa.dep_runs', id: (r) => r.id as string },
+  { key: 'movements', table: 'fa.asset_movements', id: (r) => r.id as string },
 ];
 
 export function seedState(): PersistState {
@@ -66,6 +67,7 @@ export function seedState(): PersistState {
     documents: buildSeedDocuments(assets),
     audit: SEED_AUDIT,
     runs: SEED_RUNS,
+    movements: [],
     policies: POLICIES,
     categories: CATEGORIES,
     companies: COMPANIES,

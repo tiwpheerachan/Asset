@@ -40,13 +40,14 @@ export default function AssetDetailPage() {
 
 function Detail({ asset }: { asset: Asset }) {
   const { t, money, period, dateTime } = useI18n();
-  const { state, can, setAssetStatus } = useStore();
+  const { state, can, setAssetStatus, transferAsset } = useStore();
   const lk = useLookups();
   const vals = useValuations();
   const v = vals.get(asset.id)!;
   const [tab, setTab] = useState<Tab>('overview');
   const [editOpen, setEditOpen] = useState(false);
   const [statusModal, setStatusModal] = useState<{ to: AssetStatus; label: string } | null>(null);
+  const [transferOpen, setTransferOpen] = useState(false);
   const docs = state.documents.filter((d) => d.assetId === asset.id);
   const history = state.audit.filter((a) => a.assetCode === asset.code);
   const issues = depIssues({ ...asset, status: 'ACTIVE' }, state.policies);
@@ -75,6 +76,8 @@ function Detail({ asset }: { asset: Asset }) {
     actions.push(<Button key="canceldisp" icon={<X size={15} />} onClick={() => setStatusModal({ to: 'ACTIVE', label: t('detail.cancelDisposal') })}>{t('detail.cancelDisposal')}</Button>);
     actions.push(<Button key="confirmdisp" variant="danger" icon={<Trash2 size={15} />} onClick={() => setStatusModal({ to: 'DISPOSED', label: t('detail.confirmDisposal') })}>{t('detail.confirmDisposal')}</Button>);
   }
+  if (['ACTIVE', 'INACTIVE', 'UNDER_REPAIR', 'TEMPORARILY_UNUSED'].includes(asset.status) && (can('approveAsset') || can('editDraft')))
+    actions.push(<Button key="transfer" icon={<MapPin size={15} />} onClick={() => setTransferOpen(true)}>{t('detail.transfer')}</Button>);
   if (['INACTIVE', 'DISPOSED'].includes(asset.status) && can('approveAsset')) {
     actions.push(<Button key="react" icon={<RotateCcw size={15} />} onClick={() => setStatusModal({ to: 'ACTIVE', label: t('detail.reactivate') })}>{t('detail.reactivate')}</Button>);
     actions.push(<Button key="arch" icon={<Archive size={15} />} onClick={() => setStatusModal({ to: 'ARCHIVED', label: t('detail.archive') })}>{t('detail.archive')}</Button>);
@@ -202,7 +205,53 @@ function Detail({ asset }: { asset: Asset }) {
           }}
         />
       )}
+      {transferOpen && (
+        <TransferModal
+          asset={asset}
+          onClose={() => setTransferOpen(false)}
+          onConfirm={(toLocationId, reason) => {
+            transferAsset(asset.id, toLocationId, reason);
+            setTransferOpen(false);
+          }}
+        />
+      )}
     </>
+  );
+}
+
+function TransferModal({ asset, onClose, onConfirm }: { asset: Asset; onClose: () => void; onConfirm: (toLocationId: string, reason: string) => void }) {
+  const { t } = useI18n();
+  const { state } = useStore();
+  const lk = useLookups();
+  const [toLocationId, setToLocationId] = useState('');
+  const [reason, setReason] = useState('');
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title={t('detail.transfer')}
+      footer={
+        <>
+          <Button onClick={onClose}>{t('common.cancel')}</Button>
+          <Button variant="primary" disabled={!toLocationId || toLocationId === asset.locationId || !reason.trim()} onClick={() => onConfirm(toLocationId, reason)}>{t('common.confirm')}</Button>
+        </>
+      }
+    >
+      <FormField label={t('detail.transferFrom')}>
+        <Input value={lk.locationPath(asset.locationId) || t('common.notSet')} disabled />
+      </FormField>
+      <FormField label={t('detail.transferTo')} required>
+        <Select value={toLocationId} onChange={(e) => setToLocationId(e.target.value)}>
+          <option value="">—</option>
+          {state.locations.filter((l) => l.active && l.id !== asset.locationId).map((l) => (
+            <option key={l.id} value={l.id}>{lk.branch(l.branchId)} › {lk.locationPath(l.id)}</option>
+          ))}
+        </Select>
+      </FormField>
+      <FormField label={t('common.reason')} required>
+        <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t('common.reasonPlaceholder')} />
+      </FormField>
+    </Modal>
   );
 }
 

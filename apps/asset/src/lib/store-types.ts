@@ -1,5 +1,5 @@
 import type {
-  AppUser, Asset, AssetDocument, AuditLog, Branch, Category, Company,
+  AppUser, Asset, AssetDocument, AssetMovement, AuditLog, Branch, Category, Company,
   CostCenter, Department, DepPolicy, DepRun, Location, OAIntegration,
   OARecord, Role, RunningNumberConfig,
 } from './types';
@@ -13,6 +13,7 @@ export interface State {
   documents: AssetDocument[];
   audit: AuditLog[];
   runs: DepRun[];
+  movements: AssetMovement[];
   policies: DepPolicy[];
   categories: Category[];
   companies: Company[];
