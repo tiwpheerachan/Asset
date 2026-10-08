@@ -29,6 +29,7 @@ import {
 import { LANGS, useI18n } from '@/lib/i18n';
 import { CURRENT_PERIOD, useStore } from '@/lib/store';
 import { AppSwitcher } from './app-switcher';
+import { HelpAssistant } from './help-assistant';
 import { cx } from './ui';
 
 const NAV = [
@@ -312,6 +313,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </header>
         <main className="mx-auto max-w-[1440px] px-4 py-6 md:px-6">{children}</main>
       </div>
+      <HelpAssistant />
     </div>
   );
 }
