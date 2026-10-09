@@ -4,6 +4,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import { useT } from "@/components/I18nProvider";
 import TopBar from "@/components/TopBar";
+import HelpAssistant from "@/components/HelpAssistant";
 import type { Role } from "@/lib/types";
 
 /**
@@ -87,6 +88,7 @@ export default function AppShell({
         <TopBar user={user} onMenu={() => setMobileOpen(true)} mobileOpen={mobileOpen} />
         <main id="main" tabIndex={-1} className="min-w-0 flex-1">{children}</main>
       </div>
+      <HelpAssistant />
     </div>
   );
 }

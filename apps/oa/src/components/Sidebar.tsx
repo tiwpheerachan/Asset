@@ -47,6 +47,7 @@ export default function Sidebar({
       title: t("nav.group.mine"),
       icon: IconHome,
       items: [
+        { href: "/dashboard", label: "แดชบอร์ด", icon: IconChart, accent: "accent-sky", match: (p) => p.startsWith("/dashboard") },
         { href: "/", label: t("nav.submit"), icon: IconSend, accent: "accent-primary", match: (p) => p === "/" },
         {
           href: "/requests?tab=awaiting",
