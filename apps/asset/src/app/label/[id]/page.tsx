@@ -47,7 +47,12 @@ export default function LabelPage() {
 
   const size = SIZES[si];
   const typeCode = asset.subcategoryId || asset.categoryId || '';
-  const typeName = lk.category(asset.subcategoryId || asset.categoryId);
+  const catObj = lk.categoryObj(asset.subcategoryId || asset.categoryId);
+  // ป้ายแสดงเป็นภาษาอังกฤษทั้งใบ (อ่านง่าย/สากลสำหรับติดทรัพย์สิน)
+  const typeNameEn = catObj?.name.en || lk.category(asset.subcategoryId || asset.categoryId);
+  const companyEn = state.companies.find((c) => c.id === asset.companyId)?.name.en || lk.company(asset.companyId);
+  const nameEn = asset.nameEn || asset.nameTh;
+  const codeChipW = Math.min(300, asset.code.length * 11 + 28);
   const previewW = 560;
   const previewH = (previewW * VB_H) / VB_W;
 
@@ -150,32 +155,45 @@ export default function LabelPage() {
           viewBox={`0 0 ${VB_W} ${VB_H}`}
           width={previewW}
           height={previewH}
-          style={{ fontFamily: 'ui-sans-serif, system-ui, -apple-system, "Noto Sans Thai", "Sarabun", sans-serif', display: 'block' }}
+          style={{ fontFamily: 'ui-sans-serif, system-ui, -apple-system, "Inter", "Noto Sans", sans-serif', display: 'block' }}
         >
-          {/* พื้นหลัง + กรอบ */}
-          <rect x={0.5} y={0.5} width={VB_W - 1} height={VB_H - 1} rx={14} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1.5} />
+          <defs>
+            <clipPath id="cardClip"><rect x={0} y={0} width={VB_W} height={VB_H} rx={20} /></clipPath>
+          </defs>
 
-          {/* QR → หน้าทรัพย์สินแบบอ่านอย่างเดียว */}
-          <g transform="translate(26,81)">
-            <QRCodeSVG value={`${origin}/a/${asset.id}`} size={188} level="M" marginSize={0} />
+          <g clipPath="url(#cardClip)">
+            {/* พื้นหลัง */}
+            <rect x={0} y={0} width={VB_W} height={VB_H} fill="#ffffff" />
+            {/* แถบหัว (โทนอ่อน) + เส้นเน้นสีด้านบน */}
+            <rect x={0} y={0} width={VB_W} height={64} fill="#f8fafc" />
+            <rect x={0} y={0} width={VB_W} height={5} fill="#2563eb" />
+            <line x1={0} y1={64} x2={VB_W} y2={64} stroke="#e2e8f0" strokeWidth={1.5} />
+            {/* ชื่อบริษัท (ซ้าย) */}
+            <text x={26} y={40} fontSize={18} fontWeight={700} fill="#334155">{clip(companyEn, 36)}</text>
+            {/* ชิปรหัสทรัพย์สิน (ขวา) โทนน้ำเงินอ่อน */}
+            <rect x={VB_W - 26 - codeChipW} y={17} width={codeChipW} height={30} rx={8} fill="#eff4ff" stroke="#dbe4ff" strokeWidth={1} />
+            <text x={VB_W - 26 - codeChipW / 2} y={37} textAnchor="middle" fontSize={16} fontWeight={700} fontFamily="ui-monospace, monospace" fill="#1d4ed8">{asset.code}</text>
           </g>
-          <text x={120} y={300} textAnchor="middle" fontSize={15} fill="#94a3b8">{t('label.scan')}</text>
 
-          {/* เส้นแบ่ง */}
-          <line x1={240} y1={34} x2={240} y2={316} stroke="#e2e8f0" strokeWidth={1.5} />
+          {/* QR อยู่ในแผ่นโทนอ่อน */}
+          <rect x={26} y={88} width={184} height={184} rx={14} fill="#f8fafc" stroke="#e8edf3" strokeWidth={1.5} />
+          <rect x={44} y={106} width={148} height={148} rx={6} fill="#ffffff" />
+          <g transform="translate(47,109)">
+            <QRCodeSVG value={`${origin}/a/${asset.id}`} size={142} level="M" marginSize={0} />
+          </g>
+          <text x={118} y={296} textAnchor="middle" fontSize={13} fontWeight={600} letterSpacing={1} fill="#94a3b8">SCAN FOR DETAILS</text>
 
-          {/* ข้อมูลหัว */}
-          <text x={262} y={52} fontSize={18} fontWeight={600} fill="#64748b">{clip(lk.company(asset.companyId), 40)}</text>
-          <text x={262} y={80} fontSize={23} fontWeight={700} fill="#1e293b">{clip(lk.assetName(asset), 30)}</text>
-          <text x={262} y={102} fontSize={17} fontFamily="ui-monospace, monospace" fill="#64748b">{asset.code}</text>
+          {/* คอลัมน์ขวา */}
+          <text x={232} y={108} fontSize={25} fontWeight={700} fill="#0f172a">{clip(nameEn, 26)}</text>
+          <rect x={232} y={118} width={70} height={4} rx={2} fill="#2563eb" />
 
           {/* บาร์โค้ด "ประเภท" — เป็นอะไร */}
           {typeCode && (
             <>
-              <text x={262} y={126} fontSize={13} fontWeight={600} fill="#94a3b8">{t('field.category').toUpperCase()}</text>
-              <BarcodeBars value={typeCode} x={262} y={132} width={412} height={50} />
-              <text x={468} y={200} textAnchor="middle" fontSize={19} fontWeight={700} fontFamily="ui-monospace, monospace" fill="#0f172a">
-                {clip(`${typeCode} · ${typeName}`, 30)}
+              <text x={232} y={150} fontSize={12} fontWeight={700} letterSpacing={1.5} fill="#94a3b8">CATEGORY</text>
+              <BarcodeBars value={typeCode} x={232} y={158} width={444} height={46} />
+              <text x={454} y={222} textAnchor="middle" fontSize={17} fontWeight={700} fontFamily="ui-monospace, monospace" fill="#0f172a">
+                {clip(`${typeCode}  ·  ${typeNameEn}`, 34)}
               </text>
             </>
           )}
@@ -183,13 +201,16 @@ export default function LabelPage() {
           {/* บาร์โค้ด "SN" — ตัวไหน */}
           {asset.serialNumber ? (
             <>
-              <text x={262} y={224} fontSize={13} fontWeight={600} fill="#94a3b8">{t('field.serialNumber').toUpperCase()}</text>
-              <BarcodeBars value={asset.serialNumber} x={262} y={230} width={412} height={50} />
-              <text x={468} y={298} textAnchor="middle" fontSize={18} fontFamily="ui-monospace, monospace" fill="#334155">
-                SN: {asset.serialNumber}
+              <text x={232} y={252} fontSize={12} fontWeight={700} letterSpacing={1.5} fill="#94a3b8">SERIAL NO.</text>
+              <BarcodeBars value={asset.serialNumber} x={232} y={260} width={444} height={46} />
+              <text x={454} y={324} textAnchor="middle" fontSize={16} fontWeight={600} fontFamily="ui-monospace, monospace" fill="#475569">
+                {asset.serialNumber}
               </text>
             </>
           ) : null}
+
+          {/* กรอบนอก */}
+          <rect x={0.75} y={0.75} width={VB_W - 1.5} height={VB_H - 1.5} rx={20} fill="none" stroke="#e2e8f0" strokeWidth={1.5} />
         </svg>
       </div>
 
