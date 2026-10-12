@@ -583,7 +583,7 @@ const en = {
     invalidCost: 'Invalid cost',
     dupCode: 'Asset code already exists',
   },
-  label: { scan: 'Scan for asset details', property: 'Property of' },
+  label: { scan: 'Scan for asset details', property: 'Property of', size: 'Size', actualSize: 'Actual size', printerHint: 'Pick the size that matches your label stock, then Print — the page is sized exactly to the sticker (0 margin), ready for a barcode/label printer. Or download as PNG/SVG to import into label software. Barcodes are vector, so they stay sharp at any size.' },
 } as const;
 
 export default en;

@@ -1,81 +1,200 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Printer } from 'lucide-react';
+import { Printer, Download, Image as ImageIcon } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { useStore } from '@/lib/store';
 import { useLookups } from '@/lib/hooks';
 import { Button } from '@/components/ui';
 import { LangSwitch } from '@/components/shell';
-import { Barcode128 } from '@/components/barcode';
+import { BarcodeBars } from '@/components/barcode';
 
-/** Printable asset label — 70 × 35 mm. Contents per spec: Company, Asset code, Asset name, QR code. */
+/**
+ * ป้ายทรัพย์สิน — เรนเดอร์ทั้งใบเป็น SVG ชิ้นเดียว (QR + บาร์โค้ดประเภท + บาร์โค้ด SN + ข้อความ)
+ * เพื่อให้: (1) ดาวน์โหลดเป็น PNG/SVG ได้ (2) พิมพ์ด้วย @page ขนาดตรงกับสติกเกอร์ของเครื่องพิมพ์บาร์โค้ด
+ * ระบบพิกัดคงที่ 700 × 350 (อัตราส่วน 2:1) — ขนาดจริงกำหนดเป็นมิลลิเมตรตอนพิมพ์/ดาวน์โหลด
+ */
+
+const VB_W = 700;
+const VB_H = 350;
+
+// สต็อกสติกเกอร์ยอดนิยม (อัตราส่วน 2:1 ให้พอดีกับดีไซน์เดียว)
+const SIZES = [
+  { w: 70, h: 35 },
+  { w: 100, h: 50 },
+  { w: 60, h: 30 },
+  { w: 50, h: 25 },
+];
+
+const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
+
 export default function LabelPage() {
   const { id } = useParams<{ id: string }>();
   const { t } = useI18n();
   const { state, ready } = useStore();
   const lk = useLookups();
+  const svgRef = useRef<SVGSVGElement>(null);
   const [origin, setOrigin] = useState('');
+  const [si, setSi] = useState(0);
+  const [busy, setBusy] = useState(false);
   useEffect(() => setOrigin(window.location.origin), []);
+
   const asset = state.assets.find((a) => a.id === id);
   if (!ready) return null;
   if (!asset) return <div className="p-8 text-sm">{t('common.noData')}</div>;
 
+  const size = SIZES[si];
+  const typeCode = asset.subcategoryId || asset.categoryId || '';
+  const typeName = lk.category(asset.subcategoryId || asset.categoryId);
+  const previewW = 560;
+  const previewH = (previewW * VB_H) / VB_W;
+
+  const serialize = () => {
+    const svg = svgRef.current;
+    if (!svg) return '';
+    const clone = svg.cloneNode(true) as SVGSVGElement;
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    clone.setAttribute('width', String(VB_W));
+    clone.setAttribute('height', String(VB_H));
+    return '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(clone);
+  };
+
+  const triggerDownload = (url: string, filename: string) => {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  };
+
+  const downloadSVG = () => {
+    const s = serialize();
+    if (!s) return;
+    triggerDownload(URL.createObjectURL(new Blob([s], { type: 'image/svg+xml' })), `label-${asset.code}.svg`);
+  };
+
+  const downloadPNG = () => {
+    const s = serialize();
+    if (!s) return;
+    setBusy(true);
+    const scale = 4; // ความละเอียดสูงให้คมเวลาพิมพ์
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = VB_W * scale;
+      c.height = VB_H * scale;
+      const ctx = c.getContext('2d');
+      if (!ctx) { setBusy(false); return; }
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      c.toBlob((b) => {
+        if (b) triggerDownload(URL.createObjectURL(b), `label-${asset.code}.png`);
+        setBusy(false);
+      }, 'image/png');
+    };
+    img.onerror = () => setBusy(false);
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s);
+  };
+
   return (
-    <div className="min-h-screen bg-canvas p-8 print:bg-white print:p-0">
-      <div className="no-print mb-6 flex items-center gap-3">
+    <div id="print-root" className="min-h-screen bg-canvas p-6 print:bg-white print:p-0">
+      {/* ขนาดกระดาษตอนพิมพ์ = สติกเกอร์ที่เลือก (ขอบ 0) เหมาะกับเครื่องพิมพ์บาร์โค้ด */}
+      <style>{`@media print{
+        @page{ size:${size.w}mm ${size.h}mm; margin:0; }
+        html,body{ margin:0 !important; background:#fff !important; }
+        .no-print{ display:none !important; }
+        #print-root{ position:fixed; inset:0; padding:0 !important; }
+        #label-artboard{ width:${size.w}mm !important; height:${size.h}mm !important; }
+      }`}</style>
+
+      {/* แถบควบคุม (ไม่พิมพ์) */}
+      <div className="no-print mb-5 flex flex-wrap items-center gap-3">
         <h1 className="text-[18px] font-semibold text-ink">{t('detail.labelTitle')}</h1>
         <span className="font-mono text-[13px] text-ink-3">{asset.code}</span>
-        <div className="ml-auto flex items-center gap-2">
+
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <label className="flex items-center gap-1.5 text-[12px] text-ink-3">
+            {t('label.size')}
+            <select
+              value={si}
+              onChange={(e) => setSi(Number(e.target.value))}
+              className="rounded-md border border-line bg-white px-2 py-1 text-[12px] text-ink"
+            >
+              {SIZES.map((s, i) => (
+                <option key={i} value={i}>{s.w} × {s.h} mm</option>
+              ))}
+            </select>
+          </label>
           <LangSwitch compact />
+          <Button variant="ghost" icon={<ImageIcon size={15} />} onClick={downloadPNG} disabled={busy}>
+            {busy ? '…' : 'PNG'}
+          </Button>
+          <Button variant="ghost" icon={<Download size={15} />} onClick={downloadSVG}>SVG</Button>
           <Button variant="primary" icon={<Printer size={15} />} onClick={() => window.print()}>
             {t('common.print')}
           </Button>
         </div>
       </div>
-      <div
-        className="flex items-stretch gap-[2.5mm] overflow-hidden rounded-[1.5mm] border border-slate-300 bg-white p-[2.5mm]"
-        style={{ width: '70mm', height: '35mm' }}
-      >
-        {/* ซ้าย: QR (เปิดหน้าทรัพย์สินแบบอ่านอย่างเดียว) */}
-        <div className="flex shrink-0 flex-col items-center justify-center gap-[0.8mm]">
-          <QRCodeSVG value={`${origin}/a/${asset.id}`} size={96} level="M" style={{ width: '21mm', height: '21mm' }} />
-          <div className="text-[5pt] uppercase tracking-wide text-slate-400">{t('label.scan')}</div>
-        </div>
 
-        {/* เส้นแบ่ง */}
-        <div className="w-px shrink-0 self-stretch bg-slate-200" />
+      {/* พื้นที่พรีวิว (แสดงขยายให้ดูง่าย — ขนาดจริงกำหนดตอนพิมพ์/ดาวน์โหลด) */}
+      <div className="no-print mb-2 text-[12px] text-ink-3">{t('label.actualSize')}: {size.w} × {size.h} mm</div>
+      <div className="inline-block rounded-lg bg-white p-4 shadow-sm ring-1 ring-line print:p-0 print:shadow-none print:ring-0">
+        <svg
+          id="label-artboard"
+          ref={svgRef}
+          viewBox={`0 0 ${VB_W} ${VB_H}`}
+          width={previewW}
+          height={previewH}
+          style={{ fontFamily: 'ui-sans-serif, system-ui, -apple-system, "Noto Sans Thai", "Sarabun", sans-serif', display: 'block' }}
+        >
+          {/* พื้นหลัง + กรอบ */}
+          <rect x={0.5} y={0.5} width={VB_W - 1} height={VB_H - 1} rx={14} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1.5} />
 
-        {/* ขวา: ชื่อบริษัท/ทรัพย์สิน/รหัส + บาร์โค้ดประเภท + บาร์โค้ด SN */}
-        <div className="flex min-w-0 flex-1 flex-col justify-between">
-          <div className="min-w-0">
-            <div className="truncate text-[5.5pt] font-semibold uppercase tracking-wide text-slate-500">{lk.company(asset.companyId)}</div>
-            <div className="truncate text-[7pt] font-medium leading-tight text-slate-800">{lk.assetName(asset)}</div>
-            <div className="truncate font-mono text-[6pt] leading-tight text-slate-500">{asset.code}</div>
-          </div>
+          {/* QR → หน้าทรัพย์สินแบบอ่านอย่างเดียว */}
+          <g transform="translate(26,81)">
+            <QRCodeSVG value={`${origin}/a/${asset.id}`} size={188} level="M" marginSize={0} />
+          </g>
+          <text x={120} y={300} textAnchor="middle" fontSize={15} fill="#94a3b8">{t('label.scan')}</text>
+
+          {/* เส้นแบ่ง */}
+          <line x1={240} y1={34} x2={240} y2={316} stroke="#e2e8f0" strokeWidth={1.5} />
+
+          {/* ข้อมูลหัว */}
+          <text x={262} y={52} fontSize={18} fontWeight={600} fill="#64748b">{clip(lk.company(asset.companyId), 40)}</text>
+          <text x={262} y={80} fontSize={23} fontWeight={700} fill="#1e293b">{clip(lk.assetName(asset), 30)}</text>
+          <text x={262} y={102} fontSize={17} fontFamily="ui-monospace, monospace" fill="#64748b">{asset.code}</text>
 
           {/* บาร์โค้ด "ประเภท" — เป็นอะไร */}
-          {(asset.subcategoryId || asset.categoryId) && (
-            <div className="min-w-0">
-              <Barcode128 value={asset.subcategoryId || asset.categoryId} height={40} style={{ width: '100%', height: '5mm' }} />
-              <div className="truncate text-center font-mono text-[6.5pt] font-semibold leading-none tracking-wide text-slate-900">
-                {asset.subcategoryId || asset.categoryId} · {lk.category(asset.subcategoryId || asset.categoryId)}
-              </div>
-            </div>
+          {typeCode && (
+            <>
+              <text x={262} y={126} fontSize={13} fontWeight={600} fill="#94a3b8">{t('field.category').toUpperCase()}</text>
+              <BarcodeBars value={typeCode} x={262} y={132} width={412} height={50} />
+              <text x={468} y={200} textAnchor="middle" fontSize={19} fontWeight={700} fontFamily="ui-monospace, monospace" fill="#0f172a">
+                {clip(`${typeCode} · ${typeName}`, 30)}
+              </text>
+            </>
           )}
 
           {/* บาร์โค้ด "SN" — ตัวไหน */}
           {asset.serialNumber ? (
-            <div className="min-w-0">
-              <Barcode128 value={asset.serialNumber} height={40} style={{ width: '100%', height: '5mm' }} />
-              <div className="truncate text-center font-mono text-[6.5pt] leading-none tracking-wide text-slate-700">SN: {asset.serialNumber}</div>
-            </div>
-          ) : (
-            <div className="text-[6pt] uppercase tracking-wide text-slate-400">{t('label.property')}</div>
-          )}
-        </div>
+            <>
+              <text x={262} y={224} fontSize={13} fontWeight={600} fill="#94a3b8">{t('field.serialNumber').toUpperCase()}</text>
+              <BarcodeBars value={asset.serialNumber} x={262} y={230} width={412} height={50} />
+              <text x={468} y={298} textAnchor="middle" fontSize={18} fontFamily="ui-monospace, monospace" fill="#334155">
+                SN: {asset.serialNumber}
+              </text>
+            </>
+          ) : null}
+        </svg>
+      </div>
+
+      <div className="no-print mt-3 max-w-[560px] text-[11.5px] leading-relaxed text-ink-3">
+        {t('label.printerHint')}
       </div>
     </div>
   );

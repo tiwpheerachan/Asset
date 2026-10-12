@@ -41,6 +41,29 @@ function encode128B(value: string): number[] {
   return mods;
 }
 
+/**
+ * แท่งบาร์โค้ดแบบ "ฝังในพิกัดของ SVG แม่" (คืน <g> ของ <rect>) — ใช้ประกอบเป็นป้ายชิ้นเดียว
+ * เพื่อให้ export เป็นรูป/พิมพ์ได้ทั้งใบ ขยายให้พอดีกับกรอบ width × height ที่กำหนด
+ */
+export function BarcodeBars({
+  value, x, y, width, height, color = '#0f172a',
+}: {
+  value: string; x: number; y: number; width: number; height: number; color?: string;
+}) {
+  if (!value) return null;
+  const mods = encode128B(value);
+  const total = mods.reduce((a, b) => a + b, 0);
+  const unit = width / total;
+  const bars: React.ReactElement[] = [];
+  let cx = x;
+  for (let i = 0; i < mods.length; i++) {
+    const w = mods[i] * unit;
+    if (i % 2 === 0 && mods[i] > 0) bars.push(<rect key={i} x={cx} y={y} width={w} height={height} fill={color} />);
+    cx += w;
+  }
+  return <g>{bars}</g>;
+}
+
 export function Barcode128({
   value,
   height = 46,

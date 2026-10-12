@@ -585,7 +585,7 @@ const zh: Dict = {
     invalidCost: '原值无效',
     dupCode: '资产编号已存在',
   },
-  label: { scan: '扫码查看资产详情', property: '资产所属' },
+  label: { scan: '扫码查看资产详情', property: '资产所属', size: '尺寸', actualSize: '实际尺寸', printerHint: '选择与标签纸匹配的尺寸后点击打印——页面将精确设为贴纸大小（0 边距），可直接用于条码/标签打印机；也可下载为 PNG/SVG 导入标签软件。条形码为矢量图，任意尺寸都清晰。' },
 };
 
 export default zh;
