@@ -171,15 +171,19 @@ function RegisterInner() {
               {sel('costCenter', t('field.costCenter'), state.costCenters.map((c) => ({ v: c.id, l: lk.costCenter(c.id) })))}
               {sel('location', t('field.location'), state.locations.map((l) => ({ v: l.id, l: `${l.code} · ${lk.location(l.id)}` })), { v: '__none', l: `— ${t('assets.missingLocation')} —` })}
               {sel('subcategory', t('field.subcategory'), state.categories.filter((c) => c.parentId && (!f.category || c.parentId === f.category)).map((c) => ({ v: c.id, l: lk.category(c.id) })))}
-              <div className="flex items-center gap-1.5">
-                <span className="w-24 shrink-0 text-[12px] text-ink-3">{t('field.acquisitionDate')}</span>
-                <Input type="date" value={f.acqFrom} onChange={(e) => setF((p) => ({ ...p, acqFrom: e.target.value }))} />
-                <Input type="date" value={f.acqTo} onChange={(e) => setF((p) => ({ ...p, acqTo: e.target.value }))} />
+              <div className="flex flex-col gap-1">
+                <span className="text-[12px] text-ink-3">{t('field.acquisitionDate')}</span>
+                <div className="flex items-center gap-1.5">
+                  <Input type="date" className="min-w-0 flex-1" value={f.acqFrom} onChange={(e) => setF((p) => ({ ...p, acqFrom: e.target.value }))} />
+                  <Input type="date" className="min-w-0 flex-1" value={f.acqTo} onChange={(e) => setF((p) => ({ ...p, acqTo: e.target.value }))} />
+                </div>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-24 shrink-0 text-[12px] text-ink-3">{t('field.readyDate')}</span>
-                <Input type="date" value={f.readyFrom} onChange={(e) => setF((p) => ({ ...p, readyFrom: e.target.value }))} />
-                <Input type="date" value={f.readyTo} onChange={(e) => setF((p) => ({ ...p, readyTo: e.target.value }))} />
+              <div className="flex flex-col gap-1">
+                <span className="text-[12px] text-ink-3">{t('field.readyDate')}</span>
+                <div className="flex items-center gap-1.5">
+                  <Input type="date" className="min-w-0 flex-1" value={f.readyFrom} onChange={(e) => setF((p) => ({ ...p, readyFrom: e.target.value }))} />
+                  <Input type="date" className="min-w-0 flex-1" value={f.readyTo} onChange={(e) => setF((p) => ({ ...p, readyTo: e.target.value }))} />
+                </div>
               </div>
             </div>
           )}
