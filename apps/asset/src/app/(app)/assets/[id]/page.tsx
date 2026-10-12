@@ -15,6 +15,7 @@ import { exportXlsx } from '@/lib/excel';
 import type { Asset, AssetStatus, DisposalType, DocType, MaintenanceType } from '@/lib/types';
 import { AssetStatusBadge } from '@/components/badges';
 import { Badge, Button, Card, CardHeader, DL, Drawer, Empty, FormField, Input, Modal, Notice, PageHeader, Select, Table, Tabs, Td, Textarea, Th, cx } from '@/components/ui';
+import { Barcode128 } from '@/components/barcode';
 
 type Tab = 'overview' | 'accounting' | 'depreciation' | 'location' | 'maintenance' | 'documents' | 'history';
 
@@ -390,13 +391,30 @@ function OverviewTab({ asset }: { asset: Asset }) {
           )}
         </div>
         <div className="rounded-lg border border-line p-3">
-          <div className="mb-2 text-[12px] font-medium text-ink-3">{t('detail.qr')}</div>
+          <div className="mb-2 text-[12px] font-medium text-ink-3">{t('detail.qr')} · {t('detail.barcode')}</div>
           {['ACTIVE', 'INACTIVE', 'PENDING_REVIEW'].includes(asset.status) ? (
-            <div className="flex items-center gap-3">
-              <div className="rounded border border-line bg-white p-1.5">
-                <QRCodeSVG value={`${origin}/a/${asset.id}`} size={88} level="M" />
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+              {/* QR → หน้าทรัพย์สินแบบอ่านอย่างเดียว */}
+              <div className="flex shrink-0 flex-col items-center gap-1">
+                <div className="rounded border border-line bg-white p-1.5">
+                  <QRCodeSVG value={`${origin}/a/${asset.id}`} size={88} level="M" />
+                </div>
+                <span className="text-[10px] uppercase tracking-wide text-ink-3">{t('detail.qr')}</span>
               </div>
-              <p className="text-[12px] leading-snug text-ink-3">{t('detail.qrHint')}</p>
+              {/* บาร์โค้ด 1 มิติ: รหัสทรัพย์สิน (+ SN ถ้ามี) */}
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="rounded border border-line bg-white px-3 py-2">
+                  <Barcode128 value={asset.code} height={46} />
+                  <div className="mt-1 text-center font-mono text-[12px] font-semibold tracking-[0.22em] text-ink">{asset.code}</div>
+                </div>
+                {asset.serialNumber && (
+                  <div className="rounded border border-line bg-white px-3 py-1.5">
+                    <Barcode128 value={asset.serialNumber} height={30} />
+                    <div className="mt-0.5 text-center font-mono text-[10.5px] tracking-[0.12em] text-ink-3">SN: {asset.serialNumber}</div>
+                  </div>
+                )}
+                <p className="text-[11px] leading-snug text-ink-3">{t('detail.barcodeHint')}</p>
+              </div>
             </div>
           ) : (
             <p className="text-[12px] text-ink-3">{t('status.ACTIVE')} → QR</p>

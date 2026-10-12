@@ -389,6 +389,8 @@ const en = {
     printLabel: 'Print label',
     qr: 'QR code',
     qrHint: 'QR opens the read-only asset page (full detail by permission).',
+    barcode: 'Barcode',
+    barcodeHint: 'Scan the barcode (Code 128) to look up the asset by its code.',
     schedule: 'Depreciation schedule',
     legacy: 'Legacy reconciliation (FY2026 export)',
     legacyOpeningAccum: 'Opening accum. dep. (1 Jan 2026)',

@@ -9,6 +9,7 @@ import { useStore } from '@/lib/store';
 import { useLookups } from '@/lib/hooks';
 import { Button } from '@/components/ui';
 import { LangSwitch } from '@/components/shell';
+import { Barcode128 } from '@/components/barcode';
 
 /** Printable asset label — 70 × 35 mm. Contents per spec: Company, Asset code, Asset name, QR code. */
 export default function LabelPage() {
@@ -35,20 +36,37 @@ export default function LabelPage() {
         </div>
       </div>
       <div
-        className="flex items-stretch gap-3 rounded border border-slate-400 bg-white p-[3mm]"
+        className="flex items-stretch gap-[2.5mm] overflow-hidden rounded-[1.5mm] border border-slate-300 bg-white p-[2.5mm]"
         style={{ width: '70mm', height: '35mm' }}
       >
-        <div className="flex shrink-0 items-center">
-          <QRCodeSVG value={`${origin}/a/${asset.id}`} size={96} level="M" style={{ width: '27mm', height: '27mm' }} />
+        {/* ซ้าย: QR (เปิดหน้าทรัพย์สินแบบอ่านอย่างเดียว) */}
+        <div className="flex shrink-0 flex-col items-center justify-center gap-[0.8mm]">
+          <QRCodeSVG value={`${origin}/a/${asset.id}`} size={96} level="M" style={{ width: '21mm', height: '21mm' }} />
+          <div className="text-[5pt] uppercase tracking-wide text-slate-400">{t('label.scan')}</div>
         </div>
-        <div className="flex min-w-0 flex-1 flex-col justify-between py-[0.5mm]">
-          <div>
-            <div className="text-[7pt] uppercase tracking-wide text-slate-500">{t('label.property')}</div>
-            <div className="truncate text-[8pt] font-semibold leading-tight text-slate-900">{lk.company(asset.companyId)}</div>
+
+        {/* เส้นแบ่ง */}
+        <div className="w-px shrink-0 self-stretch bg-slate-200" />
+
+        {/* ขวา: ชื่อบริษัท/ทรัพย์สิน + บาร์โค้ด + SN */}
+        <div className="flex min-w-0 flex-1 flex-col justify-between">
+          <div className="min-w-0">
+            <div className="truncate text-[6pt] font-semibold uppercase tracking-wide text-slate-500">{lk.company(asset.companyId)}</div>
+            <div className="line-clamp-2 text-[7.5pt] font-medium leading-tight text-slate-800">{lk.assetName(asset)}</div>
           </div>
-          <div className="font-mono text-[11pt] font-bold leading-none tracking-tight text-slate-900">{asset.code}</div>
-          <div className="line-clamp-2 text-[7.5pt] leading-tight text-slate-700">{lk.assetName(asset)}</div>
-          <div className="text-[6pt] text-slate-400">{t('label.scan')}</div>
+
+          {/* บาร์โค้ดของรหัสทรัพย์สิน */}
+          <div className="min-w-0">
+            <Barcode128 value={asset.code} height={40} style={{ width: '100%', height: '7mm' }} />
+            <div className="mt-[0.3mm] text-center font-mono text-[9pt] font-bold leading-none tracking-[0.18em] text-slate-900">{asset.code}</div>
+          </div>
+
+          {/* Serial Number (ถ้ามี) */}
+          {asset.serialNumber ? (
+            <div className="truncate font-mono text-[6.5pt] leading-none tracking-wide text-slate-600">SN: {asset.serialNumber}</div>
+          ) : (
+            <div className="text-[6pt] uppercase tracking-wide text-slate-400">{t('label.property')}</div>
+          )}
         </div>
       </div>
     </div>
