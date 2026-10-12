@@ -20,7 +20,6 @@ import {
   PanelLeftOpen,
   Paperclip,
   RotateCcw,
-  Search,
   Settings,
   TrendingDown,
   Workflow,
@@ -29,6 +28,7 @@ import {
 import { LANGS, useI18n } from '@/lib/i18n';
 import { CURRENT_PERIOD, useStore } from '@/lib/store';
 import { AppSwitcher } from './app-switcher';
+import { AssetSearch } from './asset-search';
 import { HelpAssistant } from './help-assistant';
 import { cx } from './ui';
 
@@ -232,7 +232,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { state, ready } = useStore();
   const router = useRouter();
   const path = usePathname();
-  const [q, setQ] = useState('');
   const [mobile, setMobile] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
@@ -287,21 +286,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <button className="rounded p-1.5 text-ink-2 hover:bg-canvas lg:hidden" onClick={() => setMobile(true)} aria-label="menu">
             <Menu size={20} />
           </button>
-          <form
-            className="relative max-w-xl flex-1"
-            onSubmit={(e) => {
-              e.preventDefault();
-              router.push(`/assets?q=${encodeURIComponent(q)}`);
-            }}
-          >
-            <Search size={16} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-4" />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder={t('common.globalSearch')}
-              className="h-9 w-full rounded-md border border-line bg-canvas pl-8 pr-3 text-[13.5px] placeholder:text-ink-4 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-100"
-            />
-          </form>
+          <AssetSearch />
           <div className="ml-auto flex items-center gap-3">
             <span className="hidden rounded-md border border-line px-2 py-1 text-[12px] text-ink-3 xl:inline">
               {t('common.period')}: <b className="font-semibold text-ink-2">{period(CURRENT_PERIOD)}</b>

@@ -23,6 +23,9 @@ const zh: Dict = {
     collapse: '收起菜单',
     expand: '展开菜单',
   },
+  search: {
+    none: '未找到匹配资产', seeAll: '查看全部结果',
+  },
   common: {
     by: '操作人',
     search: '搜索',

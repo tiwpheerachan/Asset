@@ -23,6 +23,9 @@ const th: Dict = {
     collapse: 'ย่อเมนู',
     expand: 'ขยายเมนู',
   },
+  search: {
+    none: 'ไม่พบทรัพย์สินที่ตรงกับ', seeAll: 'ดูผลทั้งหมด',
+  },
   common: {
     by: 'โดย',
     search: 'ค้นหา',

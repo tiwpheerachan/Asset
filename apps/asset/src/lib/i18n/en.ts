@@ -21,6 +21,9 @@ const en = {
     collapse: 'Collapse menu',
     expand: 'Expand menu',
   },
+  search: {
+    none: 'No assets match', seeAll: 'See all results',
+  },
   common: {
     by: 'By',
     search: 'Search',
