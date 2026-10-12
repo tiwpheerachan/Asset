@@ -30,6 +30,28 @@ const SIZES = [
 
 const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
 
+/**
+ * ข้อความที่ "ย่อให้พอดีกรอบ" แทนการตัดทิ้ง — ถ้าความกว้างโดยประมาณเกิน max
+ * จะบีบตัวอักษรให้พอดีด้วย textLength (ไม่ตัด ไม่ล้นกรอบ) ถ้าสั้นก็แสดงขนาดปกติ
+ */
+function FitText({
+  x, y, text, max, fontSize, fill, fontWeight, mono, anchor, factor = 0.6,
+}: {
+  x: number; y: number; text: string; max: number; fontSize: number;
+  fill?: string; fontWeight?: number; mono?: boolean; anchor?: 'start' | 'middle' | 'end'; factor?: number;
+}) {
+  const fit = text.length * fontSize * factor > max;
+  return (
+    <text
+      x={x} y={y} fontSize={fontSize} fill={fill} fontWeight={fontWeight}
+      textAnchor={anchor} fontFamily={mono ? 'ui-monospace, monospace' : undefined}
+      textLength={fit ? max : undefined} lengthAdjust={fit ? 'spacingAndGlyphs' : undefined}
+    >
+      {text}
+    </text>
+  );
+}
+
 export default function LabelPage() {
   const { id } = useParams<{ id: string }>();
   const { t } = useI18n();
@@ -164,19 +186,17 @@ export default function LabelPage() {
           {/* เส้นแบ่ง */}
           <line x1={240} y1={34} x2={240} y2={316} stroke="#e2e8f0" strokeWidth={1.5} />
 
-          {/* ข้อมูลหัว */}
-          <text x={262} y={52} fontSize={18} fontWeight={600} fill="#64748b">{clip(lk.company(asset.companyId), 40)}</text>
-          <text x={262} y={80} fontSize={23} fontWeight={700} fill="#1e293b">{clip(lk.assetName(asset), 30)}</text>
-          <text x={262} y={102} fontSize={17} fontFamily="ui-monospace, monospace" fill="#64748b">{asset.code}</text>
+          {/* ข้อมูลหัว — ย่อพอดีกรอบ ไม่ตัด */}
+          <FitText x={262} y={52} text={clip(lk.company(asset.companyId), 70)} max={412} fontSize={17} fontWeight={600} fill="#64748b" factor={0.56} />
+          <FitText x={262} y={80} text={clip(lk.assetName(asset), 70)} max={412} fontSize={22} fontWeight={700} fill="#1e293b" factor={0.56} />
+          <text x={262} y={102} fontSize={16} fontFamily="ui-monospace, monospace" fill="#64748b">{asset.code}</text>
 
           {/* บาร์โค้ด "ประเภท" — เป็นอะไร */}
           {typeCode && (
             <>
               <text x={262} y={126} fontSize={13} fontWeight={600} fill="#94a3b8">CATEGORY</text>
               <BarcodeBars value={typeCode} x={262} y={132} width={412} height={50} />
-              <text x={468} y={200} textAnchor="middle" fontSize={19} fontWeight={700} fontFamily="ui-monospace, monospace" fill="#0f172a">
-                {clip(`${typeCode} · ${typeName}`, 30)}
-              </text>
+              <FitText x={468} y={200} text={clip(`${typeCode} · ${typeName}`, 60)} max={408} anchor="middle" fontSize={18} fontWeight={700} mono fill="#0f172a" />
             </>
           )}
 
@@ -185,9 +205,7 @@ export default function LabelPage() {
             <>
               <text x={262} y={224} fontSize={13} fontWeight={600} fill="#94a3b8">SERIAL NO.</text>
               <BarcodeBars value={asset.serialNumber} x={262} y={230} width={412} height={50} />
-              <text x={468} y={298} textAnchor="middle" fontSize={18} fontFamily="ui-monospace, monospace" fill="#334155">
-                SN: {asset.serialNumber}
-              </text>
+              <FitText x={468} y={298} text={`SN: ${asset.serialNumber}`} max={408} anchor="middle" fontSize={18} mono fill="#334155" />
             </>
           ) : null}
         </svg>
