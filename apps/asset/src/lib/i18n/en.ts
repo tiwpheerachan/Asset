@@ -390,7 +390,7 @@ const en = {
     qr: 'QR code',
     qrHint: 'QR opens the read-only asset page (full detail by permission).',
     barcode: 'Barcode',
-    barcodeHint: 'Scan the barcode (Code 128) to look up the asset by its code.',
+    barcodeHint: 'Two Code 128 barcodes — top: asset category (what it is), bottom: serial number / SN (which unit).',
     schedule: 'Depreciation schedule',
     legacy: 'Legacy reconciliation (FY2026 export)',
     legacyOpeningAccum: 'Opening accum. dep. (1 Jan 2026)',

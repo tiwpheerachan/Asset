@@ -48,22 +48,30 @@ export default function LabelPage() {
         {/* เส้นแบ่ง */}
         <div className="w-px shrink-0 self-stretch bg-slate-200" />
 
-        {/* ขวา: ชื่อบริษัท/ทรัพย์สิน + บาร์โค้ด + SN */}
+        {/* ขวา: ชื่อบริษัท/ทรัพย์สิน/รหัส + บาร์โค้ดประเภท + บาร์โค้ด SN */}
         <div className="flex min-w-0 flex-1 flex-col justify-between">
           <div className="min-w-0">
-            <div className="truncate text-[6pt] font-semibold uppercase tracking-wide text-slate-500">{lk.company(asset.companyId)}</div>
-            <div className="line-clamp-2 text-[7.5pt] font-medium leading-tight text-slate-800">{lk.assetName(asset)}</div>
+            <div className="truncate text-[5.5pt] font-semibold uppercase tracking-wide text-slate-500">{lk.company(asset.companyId)}</div>
+            <div className="truncate text-[7pt] font-medium leading-tight text-slate-800">{lk.assetName(asset)}</div>
+            <div className="truncate font-mono text-[6pt] leading-tight text-slate-500">{asset.code}</div>
           </div>
 
-          {/* บาร์โค้ดของรหัสทรัพย์สิน */}
-          <div className="min-w-0">
-            <Barcode128 value={asset.code} height={40} style={{ width: '100%', height: '7mm' }} />
-            <div className="mt-[0.3mm] text-center font-mono text-[9pt] font-bold leading-none tracking-[0.18em] text-slate-900">{asset.code}</div>
-          </div>
+          {/* บาร์โค้ด "ประเภท" — เป็นอะไร */}
+          {(asset.subcategoryId || asset.categoryId) && (
+            <div className="min-w-0">
+              <Barcode128 value={asset.subcategoryId || asset.categoryId} height={40} style={{ width: '100%', height: '5mm' }} />
+              <div className="truncate text-center font-mono text-[6.5pt] font-semibold leading-none tracking-wide text-slate-900">
+                {asset.subcategoryId || asset.categoryId} · {lk.category(asset.subcategoryId || asset.categoryId)}
+              </div>
+            </div>
+          )}
 
-          {/* Serial Number (ถ้ามี) */}
+          {/* บาร์โค้ด "SN" — ตัวไหน */}
           {asset.serialNumber ? (
-            <div className="truncate font-mono text-[6.5pt] leading-none tracking-wide text-slate-600">SN: {asset.serialNumber}</div>
+            <div className="min-w-0">
+              <Barcode128 value={asset.serialNumber} height={40} style={{ width: '100%', height: '5mm' }} />
+              <div className="truncate text-center font-mono text-[6.5pt] leading-none tracking-wide text-slate-700">SN: {asset.serialNumber}</div>
+            </div>
           ) : (
             <div className="text-[6pt] uppercase tracking-wide text-slate-400">{t('label.property')}</div>
           )}

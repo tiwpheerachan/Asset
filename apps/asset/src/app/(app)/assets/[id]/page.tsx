@@ -401,16 +401,21 @@ function OverviewTab({ asset }: { asset: Asset }) {
                 </div>
                 <span className="text-[10px] uppercase tracking-wide text-ink-3">{t('detail.qr')}</span>
               </div>
-              {/* บาร์โค้ด 1 มิติ: รหัสทรัพย์สิน (+ SN ถ้ามี) */}
+              {/* บาร์โค้ด 1 มิติ — บน: ประเภท/หมวดหมู่ (เป็นอะไร) · ล่าง: SN (ชิ้นไหน) */}
               <div className="min-w-0 flex-1 space-y-2">
-                <div className="rounded border border-line bg-white px-3 py-2">
-                  <Barcode128 value={asset.code} height={46} />
-                  <div className="mt-1 text-center font-mono text-[12px] font-semibold tracking-[0.22em] text-ink">{asset.code}</div>
-                </div>
+                {(asset.subcategoryId || asset.categoryId) && (
+                  <div className="rounded border border-line bg-white px-3 py-2">
+                    <div className="mb-1 text-[10px] font-medium uppercase tracking-wide text-ink-3">{t('field.category')}</div>
+                    <Barcode128 value={asset.subcategoryId || asset.categoryId} height={42} />
+                    <div className="mt-1 text-center font-mono text-[11px] font-semibold tracking-[0.18em] text-ink">{asset.subcategoryId || asset.categoryId}</div>
+                    <div className="text-center text-[10.5px] text-ink-3">{lk.category(asset.subcategoryId || asset.categoryId)}</div>
+                  </div>
+                )}
                 {asset.serialNumber && (
-                  <div className="rounded border border-line bg-white px-3 py-1.5">
-                    <Barcode128 value={asset.serialNumber} height={30} />
-                    <div className="mt-0.5 text-center font-mono text-[10.5px] tracking-[0.12em] text-ink-3">SN: {asset.serialNumber}</div>
+                  <div className="rounded border border-line bg-white px-3 py-2">
+                    <div className="mb-1 text-[10px] font-medium uppercase tracking-wide text-ink-3">{t('field.serialNumber')}</div>
+                    <Barcode128 value={asset.serialNumber} height={36} />
+                    <div className="mt-1 text-center font-mono text-[11px] font-semibold tracking-[0.14em] text-ink">{asset.serialNumber}</div>
                   </div>
                 )}
                 <p className="text-[11px] leading-snug text-ink-3">{t('detail.barcodeHint')}</p>

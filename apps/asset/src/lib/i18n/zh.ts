@@ -392,7 +392,7 @@ const zh: Dict = {
     qr: '二维码',
     qrHint: '扫描二维码打开只读资产页面（按权限显示完整信息）。',
     barcode: '条形码',
-    barcodeHint: '扫描条形码（Code 128）按资产编号查找。',
+    barcodeHint: '两个 Code 128 条形码——上：资产类别（是什么），下：序列号/SN（哪一台）。',
     schedule: '折旧计划表',
     legacy: '与历史数据核对（2026 年导出）',
     legacyOpeningAccum: '期初累计折旧（2026-01-01）',
