@@ -265,6 +265,7 @@ interface StoreApi {
   createFromOA: (id: string, opts: { split: boolean; subcategoryId: string }) => string[];
   syncOA: () => Promise<number>;
   syncOnebook: () => Promise<number>;
+  syncPeak: () => Promise<number>;
   addDocument: (d: Omit<AssetDocument, 'id' | 'uploadedAt' | 'uploadedBy'>) => void;
   setRunStatus: (period: string, status: RunStatus, totals?: { assetCount: number; amount: number }) => void;
   createRun: (period: string) => void;
@@ -669,8 +670,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
               hasPhoto: false,
               source: {
                 oaNo: o.oaNo, poNo: o.poNo, grNo: o.grNo, invoiceNo: o.invoiceNo, supplier: o.supplier, purchaseDate: o.invoiceDate,
-                // ถ้ามาจาก ONEBOOK (นำเข้าจากบัญชี) เก็บรหัสบัญชี/บริษัทไว้ส่ง journal ค่าเสื่อมกลับ
-                glAccountCode: o.rawFields?.onebookAccountCode ? String(o.rawFields.onebookAccountCode) : undefined,
+                // ระบุระบบต้นทางของทรัพย์สินชิ้นนี้ (OA/ONEBOOK/PEAK) เพื่ออ้างอิง/แยกกระบวนการบัญชี
+                sourceSystem: o.templateCode === 'ONEBOOK' ? 'ONEBOOK' : o.templateCode === 'PEAK' ? 'PEAK' : 'OA',
+                // ถ้ามาจากระบบบัญชี (นำเข้าจากบัญชี) เก็บรหัสบัญชีสินทรัพย์ไว้อ้างอิง
+                // ONEBOOK: ใช้ตอนส่ง journal ค่าเสื่อมกลับ · PEAK: อ้างอิงเท่านั้น (PEAK ทำบัญชีเอง)
+                glAccountCode: o.rawFields?.onebookAccountCode
+                  ? String(o.rawFields.onebookAccountCode)
+                  : o.rawFields?.peakAccountCode
+                    ? String(o.rawFields.peakAccountCode)
+                    : undefined,
                 glCompanyId: o.rawFields?.onebookCompanyId ? String(o.rawFields.onebookCompanyId) : undefined,
               },
               oaId: o.id,
@@ -787,6 +795,41 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             audit: [
               mkAudit({
                 action: 'ONEBOOK_IMPORT',
+                entity: 'oa_records',
+                newValue: fresh.map((r) => r.oaNo).join(', '),
+                source: 'OA_SYNC',
+              }),
+              ...s.audit,
+            ],
+          };
+        });
+        return added;
+      },
+      syncPeak: async () => {
+        // ดึงค่าใช้จ่ายที่เป็นทรัพย์สิน (บัญชี 12xx) จาก PEAK บัญชีหลัก ผ่าน server route
+        const res = await fetch('/api/peak/sync', { cache: 'no-store' });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: res.statusText }));
+          throw new Error(err.error || `PEAK sync failed (${res.status})`);
+        }
+        const body = (await res.json()) as { records: OARecord[] };
+        const incoming = body.records ?? [];
+
+        let added = 0;
+        commit((s) => {
+          const seen = new Set(s.oa.map((o) => o.docNo ?? o.id));
+          const fresh = incoming.filter((r) => !seen.has(r.docNo ?? r.id));
+          added = fresh.length;
+          if (fresh.length === 0) {
+            return { ...s, oaIntegration: { ...s.oaIntegration, lastSyncAt: nowIso() } };
+          }
+          return {
+            ...s,
+            oa: [...fresh, ...s.oa],
+            oaIntegration: { ...s.oaIntegration, lastSyncAt: nowIso() },
+            audit: [
+              mkAudit({
+                action: 'PEAK_IMPORT',
                 entity: 'oa_records',
                 newValue: fresh.map((r) => r.oaNo).join(', '),
                 source: 'OA_SYNC',

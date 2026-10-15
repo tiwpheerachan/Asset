@@ -263,6 +263,7 @@ const en = {
     subtitle: 'Approved purchase requests received from OA — review, classify and convert into asset candidates',
     syncNow: 'Sync from OA',
     fromAccounting: 'Import from Accounting',
+    fromPeak: 'Import from PEAK',
     syncing: 'Syncing…',
     lastSync: 'Last sync',
     queue: 'Import queue',

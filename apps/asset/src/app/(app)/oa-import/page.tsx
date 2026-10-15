@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
-import { AlertCircle, ArrowRight, BookOpen, Check, CheckCircle2, Copy, FileText, RefreshCw, Split, XCircle } from 'lucide-react';
+import { AlertCircle, ArrowRight, BookOpen, Check, CheckCircle2, Copy, FileText, Landmark, RefreshCw, Split, XCircle } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { useStore } from '@/lib/store';
 import { useLookups } from '@/lib/hooks';
@@ -16,13 +16,14 @@ const ORDER: OAStatus[] = ['NEW', 'REVIEWING', 'READY_TO_CREATE', 'ERROR', 'DUPL
 
 export default function OAImportPage() {
   const { t, money, date, dateTime } = useI18n();
-  const { state, syncOA, syncOnebook, can } = useStore();
+  const { state, syncOA, syncOnebook, syncPeak, can } = useStore();
   const lk = useLookups();
   const [tab, setTab] = useState<'queue' | 'mapping'>('queue');
   const [status, setStatus] = useState<OAStatus | 'ALL' | 'PENDING'>('PENDING');
   const [open, setOpen] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [syncingOb, setSyncingOb] = useState(false);
+  const [syncingPk, setSyncingPk] = useState(false);
 
   const counts = useMemo(() => {
     const m: Record<string, number> = {};
@@ -60,6 +61,23 @@ export default function OAImportPage() {
               }}
             >
               {syncingOb ? t('oa.syncing') : t('oa.fromAccounting')}
+            </Button>
+            <Button
+              icon={<Landmark size={15} className={syncingPk ? 'animate-pulse' : ''} />}
+              disabled={!can('importOa') || syncingPk}
+              onClick={async () => {
+                setSyncingPk(true);
+                try {
+                  await syncPeak();
+                  setStatus('PENDING');
+                } catch (e) {
+                  console.error('[PEAK sync]', e);
+                } finally {
+                  setSyncingPk(false);
+                }
+              }}
+            >
+              {syncingPk ? t('oa.syncing') : t('oa.fromPeak')}
             </Button>
             <Button
               variant="primary"

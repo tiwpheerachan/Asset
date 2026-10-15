@@ -111,6 +111,8 @@ export interface DepPolicy {
 }
 
 export interface SourceRef {
+  /** ระบบบัญชีต้นทางของทรัพย์สินชิ้นนี้ — OA (ภายใน) / ONEBOOK / PEAK */
+  sourceSystem?: 'OA' | 'ONEBOOK' | 'PEAK';
   oaNo?: string;
   prNo?: string;
   poNo?: string;
@@ -118,7 +120,7 @@ export interface SourceRef {
   invoiceNo?: string;
   supplier?: string;
   purchaseDate?: string;
-  /** รหัสบัญชีสินทรัพย์ของ ONEBOOK (เช่น 1230) — ใช้ตอนส่ง journal ค่าเสื่อมกลับ GL */
+  /** รหัสบัญชีสินทรัพย์ของระบบบัญชี (ONEBOOK เช่น 1230 / PEAK เช่น 124106) — อ้างอิง/ส่ง journal ค่าเสื่อมกลับ (เฉพาะ ONEBOOK) */
   glAccountCode?: string;
   /** company_id ของ ONEBOOK — ใช้ระบุบริษัทตอนลง GL */
   glCompanyId?: string;
