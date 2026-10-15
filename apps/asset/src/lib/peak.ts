@@ -146,16 +146,31 @@ export async function fetchAssetCandidates(range?: { from?: string; to?: string 
 
   const out: PeakCandidate[] = [];
   const isAsset = (code: string) => c.prefixes.some((p) => code.startsWith(p));
+  const status = process.env.PEAK_EXPENSE_STATUS || '0'; // 0=ทุกสถานะ (ดู enum ในเอกสาร PEAK)
 
-  // แบ่งหน้าทีละ 100 จนครบ (status=0 ทุกสถานะ — คัดสถานะที่ยังไม่อนุมัติได้ภายหลังถ้าต้องการ)
+  // ตรวจว่า "เครดิตหมด / ถูกจำกัดอัตราเรียก" เพื่อหยุดอย่างนุ่มนวล (คง candidate ที่ดึงมาแล้ว)
+  const isCreditOrRate = (code: number, text: string) =>
+    code === 402 || code === 429 || /credit|quota|เครดิต|rate.?limit|too many/i.test(text);
+
+  // แบ่งหน้าทีละ 100 จนครบ — ดึงเฉพาะช่วงวันที่ที่ส่งมา (incremental) เพื่อประหยัดเครดิต
   for (let page = 1; page <= 100; page++) {
-    const url = `${c.base}/api/v1/Expenses/list?dateStart=${from}&dateEnd=${to}&status=0&limit=100&page=${page}`;
+    const url = `${c.base}/api/v1/Expenses/list?dateStart=${from}&dateEnd=${to}&status=${status}&limit=100&page=${page}`;
     const res = await fetch(url, { headers: authHeaders(c, clientToken), cache: 'no-store' });
     if (!res.ok) {
       const detail = await res.text().catch(() => res.statusText);
+      if (isCreditOrRate(res.status, detail)) {
+        // เครดิตหมด/ถูกจำกัด → ถ้าดึงมาได้บางส่วนแล้วให้หยุดและคืนเท่าที่ได้, ถ้ายังไม่ได้เลยให้แจ้งชัด
+        if (out.length > 0) break;
+        throw new Error('PEAK_CREDIT_OR_RATE');
+      }
       throw new Error(`PEAK Expenses ${res.status}: ${detail.slice(0, 300)}`);
     }
-    const body = (await res.json()) as { peakExpenses?: { expenses?: PeakExpense[]; totalExpenses?: number } };
+    const body = (await res.json()) as { peakExpenses?: { expenses?: PeakExpense[]; totalExpenses?: number; resCode?: string; resDesc?: string } };
+    // บาง API คืน 200 แต่แจ้งปัญหาใน resCode/resDesc
+    if (body.peakExpenses?.resDesc && isCreditOrRate(Number(body.peakExpenses.resCode), body.peakExpenses.resDesc)) {
+      if (out.length > 0) break;
+      throw new Error('PEAK_CREDIT_OR_RATE');
+    }
     const expenses = body.peakExpenses?.expenses ?? [];
     if (expenses.length === 0) break;
 

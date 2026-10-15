@@ -27,6 +27,12 @@ export async function GET(req: Request) {
         { status: 500 },
       );
     }
+    if (msg === 'PEAK_CREDIT_OR_RATE') {
+      return NextResponse.json(
+        { error: 'เครดิต PEAK API หมดหรือถูกจำกัดอัตราการเรียก — หยุดการดึงชั่วคราว (เติมเครดิต/รอสักครู่แล้วลองใหม่)' },
+        { status: 429 },
+      );
+    }
     return NextResponse.json({ error: msg }, { status: 502 });
   }
 }
