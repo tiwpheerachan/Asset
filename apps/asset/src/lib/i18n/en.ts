@@ -238,8 +238,11 @@ const en = {
     records: 'records',
     units: 'units',
     ofCost: 'of cost',
+    source: { legacy: 'Imported / brought forward', internal: 'Created in system' },
     chart: {
       valueByCategory: 'Asset value by category',
+      bySource: 'Value by source system',
+      byStatus: 'Count by status',
       countByCategory: 'Asset count by category',
       valueByCompany: 'Asset value by company',
       valueByBranch: 'Asset value by branch',

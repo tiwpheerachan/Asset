@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo } from 'react';
-import { AlertTriangle, ArrowRight, Camera, FolderX, Hourglass, Inbox, MapPinOff, FileWarning, Clock3, Package, PlusCircle } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Camera, Coins, FolderX, Hourglass, Inbox, MapPinOff, FileWarning, Clock3, Package, PlusCircle, TrendingDown, Wallet } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { CURRENT_PERIOD, useStore } from '@/lib/store';
 import { useLookups, useMissingFlags, useValuations } from '@/lib/hooks';
@@ -45,6 +45,23 @@ export default function Dashboard() {
       return [...m.entries()].map(([k, g]) => ({ key: k, label: k === '—' ? t('common.notSet') : labelFn(k), ...g })).sort((a, b) => b.cost - a.cost);
     };
 
+    // แหล่งที่มาของทรัพย์สิน (OA / ONEBOOK / PEAK / นำเข้า-ยกมา / สร้างในระบบ)
+    const srcOf = (a: (typeof assets)[number]) => {
+      const s = a.source?.sourceSystem;
+      if (s === 'OA' || s === 'ONEBOOK' || s === 'PEAK') return s;
+      if (a.legacy || /import/i.test(a.createdBy ?? '')) return 'LEGACY';
+      return 'INTERNAL';
+    };
+    const SRC_NAME: Record<string, string> = {
+      OA: 'One OA', ONEBOOK: 'ONEBOOK', PEAK: 'PEAK',
+      LEGACY: t('dashboard.source.legacy'), INTERNAL: t('dashboard.source.internal'),
+    };
+    const bySource = group(srcOf, (k) => SRC_NAME[k] ?? k);
+
+    const statusMap = new Map<string, number>();
+    for (const a of state.assets) if (a.status !== 'ARCHIVED') statusMap.set(a.status, (statusMap.get(a.status) ?? 0) + 1);
+    const byStatus = [...statusMap.entries()].map(([k, v]) => ({ label: t(`status.${k}`), value: v })).sort((a, b) => b.value - a.value);
+
     // depreciation trend: 12 months back + 3 forward
     const trendStart = addMonths(CURRENT_PERIOD, -11);
     const periods = Array.from({ length: 15 }, (_, i) => addMonths(trendStart, i));
@@ -72,6 +89,8 @@ export default function Dashboard() {
       byCompany: group((a) => a.companyId, lk.company),
       byBranch: group((a) => a.branchId, lk.branch),
       byDept: group((a) => a.departmentId, lk.department),
+      bySource,
+      byStatus,
       trend: periods.map((p) => ({ period: p, label: periodShort(p), value: Math.round(sums.get(p)! * 100) / 100 })),
       alerts: {
         oa: state.oa.filter((o) => ['NEW', 'REVIEWING', 'READY_TO_CREATE', 'ERROR'].includes(o.status)).length,
@@ -85,9 +104,9 @@ export default function Dashboard() {
 
   const kpis = [
     { label: t('dashboard.kpi.totalAssets'), value: num(d.count), sub: `${num(d.units)} ${t('dashboard.units')}`, icon: Package, href: '/assets' },
-    { label: t('dashboard.kpi.totalCost'), value: money(d.cost, 0), sub: t('common.thb'), icon: null },
-    { label: t('dashboard.kpi.accumDep'), value: money(d.accum, 0), sub: `${((d.accum / d.cost) * 100).toFixed(1)}% ${t('dashboard.ofCost')}`, icon: null },
-    { label: t('dashboard.kpi.nbv'), value: money(d.nbv, 0), sub: `${((d.nbv / d.cost) * 100).toFixed(1)}% ${t('dashboard.ofCost')}`, icon: null, strong: true },
+    { label: t('dashboard.kpi.totalCost'), value: money(d.cost, 0), sub: t('common.thb'), icon: Wallet },
+    { label: t('dashboard.kpi.accumDep'), value: money(d.accum, 0), sub: `${((d.accum / d.cost) * 100).toFixed(1)}% ${t('dashboard.ofCost')}`, icon: TrendingDown },
+    { label: t('dashboard.kpi.nbv'), value: money(d.nbv, 0), sub: `${((d.nbv / d.cost) * 100).toFixed(1)}% ${t('dashboard.ofCost')}`, icon: Coins, strong: true },
     { label: t('dashboard.kpi.newThisMonth'), value: num(d.newThisMonth), sub: period(CURRENT_PERIOD), icon: PlusCircle, href: '/assets' },
     { label: t('dashboard.kpi.missingPhoto'), value: num(d.missingPhoto), sub: t('dashboard.records'), icon: Camera, href: '/assets?missing=photo', warn: d.missingPhoto > 0 },
     { label: t('dashboard.kpi.missingCategory'), value: num(d.missingCategory), sub: t('dashboard.records'), icon: FolderX, href: '/assets?missing=category', warn: d.missingCategory > 0 },
@@ -109,12 +128,16 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {kpis.map((k, i) => {
           const body = (
-            <div className={cx('h-full rounded-lg border bg-white px-4 py-3.5 shadow-card transition-colors', k.href ? 'hover:border-brand-200' : '', k.strong ? 'border-brand-200' : 'border-line')}>
-              <div className="flex items-center justify-between gap-2">
+            <div className={cx('h-full rounded-xl border bg-white px-4 py-3.5 shadow-card transition-all', k.href ? 'hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-md' : '', k.strong ? 'border-brand-200' : 'border-line')}>
+              <div className="flex items-start justify-between gap-2">
                 <span className="text-[12.5px] text-ink-3">{k.label}</span>
-                {k.icon && <k.icon size={16} className={k.warn ? 'text-amber-600' : 'text-ink-4'} />}
+                {k.icon && (
+                  <span className={cx('flex h-8 w-8 items-center justify-center rounded-lg', k.warn ? 'bg-amber-50 text-amber-600' : k.strong ? 'bg-brand-50 text-brand-600' : 'bg-canvas text-ink-4')}>
+                    <k.icon size={16} />
+                  </span>
+                )}
               </div>
-              <div className={cx('mt-1.5 text-[22px] font-semibold tabular-nums tracking-tight', k.strong ? 'text-brand-700' : 'text-ink')}>{k.value}</div>
+              <div className={cx('mt-2 text-[23px] font-semibold tabular-nums tracking-tight', k.strong ? 'text-brand-700' : 'text-ink')}>{k.value}</div>
               <div className="mt-0.5 text-[12px] text-ink-3">{k.sub}</div>
             </div>
           );
@@ -192,6 +215,27 @@ export default function Dashboard() {
           <CardHeader title={t('dashboard.chart.valueByDepartment')} />
           <div className="px-4 py-4">
             <BarList rows={d.byDept.map((r) => ({ label: r.label, value: r.cost, hint: `${r.count}` }))} format={(n) => money(n, 0)} />
+          </div>
+        </Card>
+      </div>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader title={t('dashboard.chart.bySource')} sub={t('dashboard.chart.costVsNbv')} />
+          <div className="px-4 py-4">
+            <BarList
+              rows={d.bySource.map((r) => ({ label: r.label, value: r.cost, sub: r.nbv, hint: `${r.count}` }))}
+              format={(n) => money(n, 0)}
+              secondary
+              primaryLabel={t('field.nbv')}
+              secondaryLabel={t('field.cost')}
+            />
+          </div>
+        </Card>
+        <Card>
+          <CardHeader title={t('dashboard.chart.byStatus')} />
+          <div className="px-4 py-4">
+            <BarList rows={d.byStatus} format={num} />
           </div>
         </Card>
       </div>

@@ -240,8 +240,11 @@ const zh: Dict = {
     records: '条',
     units: '件',
     ofCost: '占原值',
+    source: { legacy: '导入 / 结转', internal: '系统创建' },
     chart: {
       valueByCategory: '按类别资产价值',
+      bySource: '按来源系统价值',
+      byStatus: '按状态数量',
       countByCategory: '按类别资产数量',
       valueByCompany: '按公司资产价值',
       valueByBranch: '按分支机构资产价值',

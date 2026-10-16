@@ -240,8 +240,11 @@ const th: Dict = {
     records: 'รายการ',
     units: 'หน่วย',
     ofCost: 'ของราคาทุน',
+    source: { legacy: 'นำเข้า / ยกมา', internal: 'สร้างในระบบ' },
     chart: {
       valueByCategory: 'มูลค่าทรัพย์สินตามหมวดหมู่',
+      bySource: 'มูลค่าแยกตามแหล่งที่มา',
+      byStatus: 'จำนวนตามสถานะ',
       countByCategory: 'จำนวนทรัพย์สินตามหมวดหมู่',
       valueByCompany: 'มูลค่าทรัพย์สินตามบริษัท',
       valueByBranch: 'มูลค่าทรัพย์สินตามสาขา',
