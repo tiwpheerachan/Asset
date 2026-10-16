@@ -44,7 +44,8 @@ function cfg() {
     connectId,
     password,
     userToken,
-    sigEnc: (process.env.PEAK_SIG_ENCODING === 'hex' ? 'hex' : 'base64') as 'hex' | 'base64',
+    // เอกสาร PEAK: Time-Signature เป็น HMAC-SHA1 hex (ตัวอย่าง 40 ตัวอักษร) → default hex
+    sigEnc: (process.env.PEAK_SIG_ENCODING === 'base64' ? 'base64' : 'hex') as 'hex' | 'base64',
     prefixes: (process.env.PEAK_ASSET_ACCOUNT_PREFIXES || '12')
       .split(',')
       .map((s) => s.trim())
@@ -165,13 +166,16 @@ export async function fetchAssetCandidates(range?: { from?: string; to?: string 
       }
       throw new Error(`PEAK Expenses ${res.status}: ${detail.slice(0, 300)}`);
     }
-    const body = (await res.json()) as { peakExpenses?: { expenses?: PeakExpense[]; totalExpenses?: number; resCode?: string; resDesc?: string } };
+    // เอกสาร PEAK ใช้คีย์ "PeakExpenses" (P ใหญ่) — รองรับทั้งสองแบบกันพลาด
+    type PeakExpensesBody = { expenses?: PeakExpense[]; totalExpenses?: number; resCode?: string; resDesc?: string };
+    const body = (await res.json()) as { PeakExpenses?: PeakExpensesBody; peakExpenses?: PeakExpensesBody };
+    const pe = body.PeakExpenses ?? body.peakExpenses;
     // บาง API คืน 200 แต่แจ้งปัญหาใน resCode/resDesc
-    if (body.peakExpenses?.resDesc && isCreditOrRate(Number(body.peakExpenses.resCode), body.peakExpenses.resDesc)) {
+    if (pe?.resDesc && isCreditOrRate(Number(pe.resCode), pe.resDesc)) {
       if (out.length > 0) break;
       throw new Error('PEAK_CREDIT_OR_RATE');
     }
-    const expenses = body.peakExpenses?.expenses ?? [];
+    const expenses = pe?.expenses ?? [];
     if (expenses.length === 0) break;
 
     for (const e of expenses) {
@@ -198,7 +202,7 @@ export async function fetchAssetCandidates(range?: { from?: string; to?: string 
         });
       });
     }
-    const total = body.peakExpenses?.totalExpenses ?? expenses.length;
+    const total = pe?.totalExpenses ?? expenses.length;
     if (page * 100 >= total) break;
   }
   return out;
