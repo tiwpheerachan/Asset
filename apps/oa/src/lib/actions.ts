@@ -2049,3 +2049,59 @@ function tempPassword(): string {
   return `${pick(abc, 4)}-${pick(num, 4)}-${pick(abc, 4)}`;
 }
 
+/* ---------- จัดการสิทธิ์ผู้ใช้ (แอดมิน) ---------- */
+
+/**
+ * แอดมินตั้งบทบาท (ADMIN/MANAGER/USER) + ตำแหน่งงาน (สำหรับสายอนุมัติ) + เปิด/ปิดใช้งาน
+ *
+ * ใช้ได้เฉพาะโหมด "แอปคุมสิทธิ์เอง" (SSO_CENTRAL_ROLES=false) — ถ้าระบบกลางเป็นคนคุม
+ * การแก้ที่นี่จะถูกเขียนทับตอน login ครั้งถัดไป จึงปิดไว้กันเข้าใจผิด
+ */
+export async function updateUserAccessAction(form: FormData): Promise<void> {
+  const me = await requireAdmin();
+  if (!rolesAreLocal()) redirect("/admin/users?err=central");
+
+  const id = Number(form.get("user_id"));
+  const role = String(form.get("role") ?? "");
+  const jobRole = String(form.get("job_role") ?? "");
+  const active = form.get("active") === "1";
+
+  if (!Number.isInteger(id) || id <= 0 || !isRole(role) || !isJobRole(jobRole)) {
+    redirect("/admin/users?err=bad");
+  }
+  // กันแอดมินถอดสิทธิ์/ปิดใช้งานตัวเองจนไม่มีใครดูแลระบบได้
+  if (id === me.id && (role !== "ADMIN" || !active)) redirect("/admin/users?err=self");
+
+  await db
+    .prepare("UPDATE users SET role=?, job_role=?, active=? WHERE id=?")
+    .run(role, jobRole, active ? 1 : 0, id);
+
+  revalidatePath("/admin/users");
+  redirect("/admin/users?ok=1");
+}
+
+/**
+ * เพิ่มผู้ใช้จากไดเรกทอรี Lark กลาง — แอดมินค้นชื่อแล้วกดเพิ่มไว้ล่วงหน้า
+ * พอคนนั้นล็อกอินผ่านระบบกลางภายหลัง provisionFromClaims จะจับคู่ด้วยอีเมลเดิม ไม่เกิดบัญชีซ้ำ
+ */
+export async function addUserFromDirectoryAction(form: FormData): Promise<void> {
+  await requireAdmin();
+  if (!rolesAreLocal()) redirect("/admin/users?err=central");
+
+  const email = String(form.get("email") ?? "").trim().toLowerCase();
+  const name = String(form.get("name") ?? "").trim();
+  const role = String(form.get("role") ?? "USER");
+  if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || !isRole(role)) {
+    redirect("/admin/users?err=bad");
+  }
+
+  const { upsertDirectoryUser } = await import("./queries");
+  const u = await upsertDirectoryUser({ email, name: name || email });
+  if (u.role !== role) {
+    await db.prepare("UPDATE users SET role=? WHERE id=?").run(role, u.id);
+  }
+
+  revalidatePath("/admin/users");
+  redirect("/admin/users?ok=added");
+}
+

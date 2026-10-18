@@ -8,6 +8,7 @@ import {
   LOCATIONS, OA_INTEGRATION, POLICIES, RUNNING_NUMBERS, USERS,
 } from '@/data/masters';
 import { buildSeedAssets, buildSeedDocuments, SEED_AUDIT, SEED_OA, SEED_RUNS } from '@/data/seed';
+import { defaultRolePerms } from './rbac';
 
 void _ACCOUNTS;
 export const STATE_VERSION = 3;
@@ -86,6 +87,7 @@ export function seedState(): PersistState {
     running: RUNNING_NUMBERS,
     oaIntegration: OA_INTEGRATION,
     users: USERS,
+    rolePerms: defaultRolePerms(),
   };
 }
 
@@ -128,10 +130,11 @@ export async function getState(): Promise<PersistState> {
     for (const row of r.rows) m[row.id as string] = (row.version as number) ?? 0;
     rev[c.key] = m;
   }
-  const meta = await pool().query("SELECT key, data FROM fa.app_state WHERE key IN ('oaIntegration','version')");
+  const meta = await pool().query("SELECT key, data FROM fa.app_state WHERE key IN ('oaIntegration','version','rolePerms')");
   const metaMap = new Map(meta.rows.map((m) => [m.key, m.data]));
   out.oaIntegration = metaMap.get('oaIntegration') ?? OA_INTEGRATION;
   out.version = metaMap.get('version') ?? STATE_VERSION;
+  out.rolePerms = metaMap.get('rolePerms') ?? defaultRolePerms();
   // เวอร์ชันราย record ให้ client เก็บไว้เทียบตอนเซฟ (optimistic lock) — ไม่ใช่ field ของ State
   (out as Record<string, unknown>)._rev = rev;
   return out as unknown as PersistState;
@@ -172,6 +175,10 @@ export async function saveState(state: PersistState): Promise<void> {
     await client.query(
       "INSERT INTO fa.app_state(key,data,updated_at) VALUES('version',$1,now()) ON CONFLICT (key) DO UPDATE SET data=excluded.data, updated_at=now()",
       [JSON.stringify(state.version ?? STATE_VERSION)],
+    );
+    await client.query(
+      "INSERT INTO fa.app_state(key,data,updated_at) VALUES('rolePerms',$1,now()) ON CONFLICT (key) DO UPDATE SET data=excluded.data, updated_at=now()",
+      [JSON.stringify(state.rolePerms ?? defaultRolePerms())],
     );
     await client.query('COMMIT');
   } catch (e) {
@@ -234,6 +241,7 @@ export type StateDiff = {
   changes?: Partial<Record<CollKey, { upserts?: Upsert[]; deletes?: string[] }>>;
   oaIntegration?: unknown;
   version?: unknown;
+  rolePerms?: unknown;
 };
 
 /**
@@ -271,6 +279,12 @@ export async function saveStateDiff(diff: StateDiff): Promise<void> {
         [JSON.stringify(diff.version)],
       );
     }
+    if (diff.rolePerms !== undefined) {
+      await client.query(
+        "INSERT INTO fa.app_state(key,data,updated_at) VALUES('rolePerms',$1,now()) ON CONFLICT (key) DO UPDATE SET data=excluded.data, updated_at=now()",
+        [JSON.stringify(diff.rolePerms)],
+      );
+    }
     await client.query('COMMIT');
   } catch (e) {
     await client.query('ROLLBACK');
@@ -278,4 +292,15 @@ export async function saveStateDiff(diff: StateDiff): Promise<void> {
   } finally {
     client.release();
   }
+}
+
+/**
+ * อ่านรายชื่อผู้ใช้จาก fa.users (ใช้ตอน SSO map สิทธิ์ — สิทธิ์ที่แอดมินตั้งใน UI เป็นตัวตัดสิน)
+ * ถ้ายังไม่มีในฐานข้อมูลคืนค่า seed เริ่มต้น
+ */
+export async function getUsers(): Promise<import('./types').AppUser[]> {
+  await ensureSchema();
+  const r = await pool().query('SELECT data FROM fa.users');
+  if (r.rows.length === 0) return USERS;
+  return r.rows.map((x) => x.data as import('./types').AppUser);
 }

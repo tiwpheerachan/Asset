@@ -259,12 +259,33 @@ export interface OARecord {
   importedAt: string;
 }
 
+/** ค่าเสื่อมรายชิ้นที่ "ตรึง (snapshot)" ไว้ในรอบ — ใช้ชุดเดียวกันทั้ง Preview/รายงาน/ส่งบัญชี
+ *  เพื่อไม่ให้ยอดเพี้ยนเมื่อมีการแก้ทรัพย์สินหลังคำนวณ/ล็อก */
+export interface DepRunLine {
+  assetId: string;
+  assetCode: string;
+  assetName: string;
+  subcategoryId: string;
+  cost: number;
+  periodDep: number;
+  accumulated: number;
+  nbv: number;
+  /** รหัสบัญชีสินทรัพย์ (Dr/Cr ฝั่งสินทรัพย์) — จาก source ของทรัพย์สิน */
+  glAccountCode: string | null;
+  glCompanyId: string | null;
+  /** บัญชีค่าเสื่อม (Dr) และบัญชีค่าเสื่อมสะสม (Cr) จากหมวดของทรัพย์สิน — ส่งให้ ONEBOOK ลงตรงบัญชี ไม่ต้องเดา 6170/+1 */
+  expenseAccountCode: string | null;
+  accumAccountCode: string | null;
+}
+
 export interface DepRun {
   id: string;
   period: string; // YYYY-MM
   status: RunStatus;
   assetCount: number;
   amount: number;
+  /** รายละเอียดค่าเสื่อมรายชิ้น ตรึงไว้ตอนคำนวณ/ล็อก (ว่าง = รอบเก่าก่อนมีฟีเจอร์นี้) */
+  lines?: DepRunLine[];
   createdBy: string;
   createdAt: string;
   calculatedAt?: string;
@@ -352,6 +373,11 @@ export interface AppUser {
   email: string;
   role: Role;
   active: boolean;
+  /** รูปโปรไฟล์จากไดเรกทอรีกลาง (ถ้ามี) — ใช้แสดงในหน้าผู้ใช้/สิทธิ์ */
+  avatarUrl?: string | null;
+  /** ตำแหน่ง/แผนก จากไดเรกทอรี (ไว้โชว์เฉย ๆ) */
+  title?: string | null;
+  department?: string | null;
 }
 
 export interface RunningNumberConfig {

@@ -4,7 +4,9 @@
  *
  * พก "รหัสบัญชีสินทรัพย์ของ ONEBOOK" (เช่น 1230) มาใน rawFields เพื่อ:
  *  - ใช้เดา/อ้างอิงหมวดตอน review
- *  - ใช้ตอนส่ง journal ค่าเสื่อมกลับ ONEBOOK ภายหลัง (accum = รหัส+1, expense = 6170)
+ *  - ใช้ตอนส่ง journal ค่าเสื่อมกลับ ONEBOOK ภายหลัง — บัญชีค่าเสื่อม (expense) และ
+ *    ค่าเสื่อมสะสม (accum) ส่งมาจากหมวดของทรัพย์สินโดยตรง (ดู DepRunLine); ถ้าหมวดไม่ได้
+ *    ตั้งไว้ ONEBOOK จึงค่อยใช้ค่าเริ่มต้นเดิม (expense = 6170, accum = รหัสสินทรัพย์+1)
  */
 import type { OARecord } from './types';
 import type { OnebookCandidate } from './onebook';

@@ -22,6 +22,7 @@ import {
   RotateCcw,
   Settings,
   TrendingDown,
+  UserCog,
   Workflow,
   X,
 } from 'lucide-react';
@@ -59,6 +60,7 @@ const NAV = [
   {
     group: 'nav.groupGov',
     items: [
+      { href: '/admin/users', key: 'nav.users', icon: UserCog, adminOnly: true },
       { href: '/audit', key: 'nav.audit', icon: History },
       { href: '/settings', key: 'nav.settings', icon: Settings },
     ],
@@ -105,7 +107,7 @@ function Sidebar({
 }) {
   const path = usePathname();
   const { t } = useI18n();
-  const { state } = useStore();
+  const { state, role } = useStore();
   const oaPending = state.oa.filter((o) => ['NEW', 'REVIEWING', 'READY_TO_CREATE', 'ERROR'].includes(o.status)).length;
   return (
     <nav className="flex h-full flex-col">
@@ -134,7 +136,7 @@ function Sidebar({
             ) : (
               <div className="mb-1 px-2 text-[11px] font-semibold uppercase tracking-wider text-ink-4">{t(g.group)}</div>
             )}
-            {g.items.map((it) => {
+            {g.items.filter((it) => !('adminOnly' in it && it.adminOnly) || role === 'ADMIN').map((it) => {
               const active = it.href === '/' ? path === '/' : path.startsWith(it.href);
               const Icon = it.icon;
               const hasBadge = 'badge' in it && it.badge === 'oa' && oaPending > 0;
@@ -181,16 +183,23 @@ function Sidebar({
 }
 
 function UserMenu() {
-  const { userName, role, signOut, resetDemo } = useStore();
+  const { userName, role, state, signOut, resetDemo } = useStore();
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
+  const [imgErr, setImgErr] = useState(false);
   const router = useRouter();
+  const avatar = state.session?.avatarUrl;
   return (
     <div className="relative">
       <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-2 rounded-md px-1.5 py-1 hover:bg-canvas">
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-[12px] font-semibold text-brand-700">
-          {userName.slice(0, 2).toUpperCase()}
-        </span>
+        {avatar && !imgErr ? (
+          <img src={avatar} alt={userName} referrerPolicy="no-referrer" onError={() => setImgErr(true)}
+               className="h-8 w-8 rounded-full object-cover ring-1 ring-line" />
+        ) : (
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-[12px] font-semibold text-brand-700">
+            {userName.slice(0, 2).toUpperCase()}
+          </span>
+        )}
         <span className="hidden text-left leading-tight md:block">
           <span className="block text-[13px] font-medium text-ink">{userName}</span>
           <span className="block text-[11.5px] text-ink-3">{t(`role.${role}`)}</span>
@@ -214,7 +223,8 @@ function UserMenu() {
             <button
               onClick={() => {
                 signOut();
-                router.push('/login');
+                // เคลียร์ session cookie ฝั่งเซิร์ฟเวอร์ด้วย (ถ้าไม่เปิด SSO route นี้จะพากลับ /login เอง)
+                window.location.href = '/api/auth/sso/logout';
               }}
               className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-ink-2 hover:bg-canvas"
             >

@@ -231,6 +231,15 @@
               "sort_order": 4
             }
           ]
+        },
+        {
+          "field_key": "amount",
+          "label": "มูลค่ารวม (บาท)",
+          "type": "TOTAL",
+          "field_role": "AMOUNT",
+          "sum_of": "items.qty*unit_price",
+          "sort_order": 22,
+          "help": "รวม จำนวน × ราคา/หน่วย ของทุกรายการให้อัตโนมัติ — ใช้กำหนดสายอนุมัติ"
         }
       ],
       "flow": [
@@ -423,6 +432,15 @@
           "type": "IMAGE",
           "sort_order": 21,
           "help": "แนบรูปใบเสร็จให้ครบทุกรายการ"
+        },
+        {
+          "field_key": "amount",
+          "label": "ยอดเบิกรวม (บาท)",
+          "type": "TOTAL",
+          "field_role": "AMOUNT",
+          "sum_of": "expenses.amount",
+          "sort_order": 22,
+          "help": "รวมจากตารางรายการค่าใช้จ่ายให้อัตโนมัติ — ใช้กำหนดสายอนุมัติ"
         }
       ],
       "flow": [

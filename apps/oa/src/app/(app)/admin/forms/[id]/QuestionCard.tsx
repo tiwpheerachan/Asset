@@ -226,14 +226,21 @@ export default function QuestionCard({
   const isHeading = type === "HEADING";
   const isTotal = type === "TOTAL";
 
-  // ยอดรวมบวกได้เฉพาะคอลัมน์ตัวเลขของตารางในฟอร์มเดียวกัน
+  // ยอดรวมบวกได้เฉพาะคอลัมน์ตัวเลขของตารางในฟอร์มเดียวกัน — ทั้งคอลัมน์เดี่ยว
+  // และผลคูณของสองคอลัมน์ (เช่น จำนวน × ราคา/หน่วย) สำหรับตารางที่ไม่มีคอลัมน์ยอดรวมต่อแถว
   const sumSources = fields
     .filter((f) => f.type === "TABLE" && f.active)
-    .flatMap((f) =>
-      f.columns
-        .filter((c) => c.type === "NUMBER" || c.type === "MONEY")
-        .map((c) => ({ value: `${f.field_key}.${c.col_key}`, label: `${f.label} → ${c.label}` })),
-    );
+    .flatMap((f) => {
+      const nums = f.columns.filter((c) => c.type === "NUMBER" || c.type === "MONEY");
+      const single = nums.map((c) => ({ value: `${f.field_key}.${c.col_key}`, label: `${f.label} → ${c.label}` }));
+      const products: { value: string; label: string }[] = [];
+      for (let i = 0; i < nums.length; i++)
+        for (let j = i + 1; j < nums.length; j++)
+          products.push({ value: `${f.field_key}.${nums[i].col_key}*${nums[j].col_key}`, label: `${f.label} → ${nums[i].label} × ${nums[j].label}` });
+      return [...single, ...products];
+    });
+  // ค่าที่ตั้งไว้ปัจจุบันต้องมีในรายการเสมอ ไม่งั้นดรอปดาวน์จะแสดงว่างทั้งที่มีค่าอยู่
+  if (sumOf && !sumSources.some((o) => o.value === sumOf)) sumSources.unshift({ value: sumOf, label: sumOf });
 
   // เลือกได้เฉพาะช่องตัวเลือกที่อยู่ก่อนหน้า — ดูเหตุผลใน src/lib/visibility.ts
   const sources = conditionSources(fields, field);

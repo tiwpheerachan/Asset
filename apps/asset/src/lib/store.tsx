@@ -21,6 +21,7 @@ import type {
   Department,
   DepPolicy,
   DepRun,
+  DepRunLine,
   DisposalType,
   Location,
   MaintenanceType,
@@ -46,7 +47,7 @@ import {
   USERS,
 } from '@/data/masters';
 import { buildSeedAssets, buildSeedDocuments, SEED_AUDIT, SEED_OA, SEED_RUNS } from '@/data/seed';
-import { can, type Permission } from './rbac';
+import { canWith, defaultRolePerms, type Permission, type RolePermsMap } from './rbac';
 
 export const CURRENT_PERIOD = '2026-09';
 export const TODAY = '2026-10-01';
@@ -98,10 +99,11 @@ type SavedSnapshot = {
   revs: Record<string, Map<string, number>>; // collection → (id → version ใน DB)
   oaIntegration: string;
   version: string;
+  rolePerms: string;
 };
 
 function emptySnapshot(): SavedSnapshot {
-  return { colls: {}, revs: {}, oaIntegration: '', version: '' };
+  return { colls: {}, revs: {}, oaIntegration: '', version: '', rolePerms: '' };
 }
 
 /** สร้าง snapshot จาก state + เวอร์ชันจาก server (ใช้ตอนโหลดเสร็จ/หลัง reconcile) */
@@ -125,6 +127,7 @@ function buildSnapshot(state: Partial<Record<string, unknown>>, rev?: RevMap): S
     revs,
     oaIntegration: JSON.stringify(state.oaIntegration ?? null),
     version: JSON.stringify(state.version ?? null),
+    rolePerms: JSON.stringify(state.rolePerms ?? null),
   };
 }
 
@@ -133,6 +136,7 @@ type DiffBody = {
   changes: Record<string, { upserts: Upsert[]; deletes: string[] }>;
   oaIntegration?: unknown;
   version?: unknown;
+  rolePerms?: unknown;
 };
 
 /**
@@ -173,14 +177,19 @@ function computeDiff(
   }
   const oaStr = JSON.stringify(state.oaIntegration ?? null);
   const verStr = JSON.stringify(state.version ?? null);
+  const rpStr = JSON.stringify(state.rolePerms ?? null);
   const body: DiffBody = { changes };
   if (oaStr !== last.oaIntegration) body.oaIntegration = state.oaIntegration;
   if (verStr !== last.version) body.version = state.version;
+  if (rpStr !== last.rolePerms) body.rolePerms = state.rolePerms;
   const empty =
-    Object.keys(changes).length === 0 && body.oaIntegration === undefined && body.version === undefined;
+    Object.keys(changes).length === 0 &&
+    body.oaIntegration === undefined &&
+    body.version === undefined &&
+    body.rolePerms === undefined;
   return {
     body,
-    snapshot: { colls: snapColls, revs: snapRevs, oaIntegration: oaStr, version: verStr },
+    snapshot: { colls: snapColls, revs: snapRevs, oaIntegration: oaStr, version: verStr, rolePerms: rpStr },
     empty,
   };
 }
@@ -202,6 +211,7 @@ function mergeServerWithAttempt(
   }
   if (body.oaIntegration !== undefined) merged.oaIntegration = body.oaIntegration;
   if (body.version !== undefined) merged.version = body.version;
+  if (body.rolePerms !== undefined) merged.rolePerms = body.rolePerms;
   return merged;
 }
 
@@ -230,6 +240,7 @@ function seedState(): State {
     running: RUNNING_NUMBERS,
     oaIntegration: OA_INTEGRATION,
     users: USERS,
+    rolePerms: defaultRolePerms(),
   };
 }
 
@@ -248,6 +259,12 @@ interface StoreApi {
   signIn: (userId: string) => void;
   signOut: () => void;
   resetDemo: () => void;
+  upsertUser: (u: { name: string; email: string; role: Role; avatarUrl?: string | null; title?: string | null; department?: string | null }) => void;
+  setUserRole: (id: string, role: Role) => void;
+  setUserActive: (id: string, active: boolean) => void;
+  removeUser: (id: string) => void;
+  setRolePerm: (role: Role, perm: Permission, on: boolean) => void;
+  resetRolePerms: () => void;
   audit: (e: Omit<AuditLog, 'id' | 'at' | 'user' | 'role' | 'source'> & { source?: AuditSource }) => void;
   previewCode: (companyId: string, categoryId?: string, date?: string) => string;
   previewCodes: (companyId: string, categoryId: string, n: number, date?: string) => string[];
@@ -267,7 +284,7 @@ interface StoreApi {
   syncOnebook: () => Promise<number>;
   syncPeak: () => Promise<number>;
   addDocument: (d: Omit<AssetDocument, 'id' | 'uploadedAt' | 'uploadedBy'>) => void;
-  setRunStatus: (period: string, status: RunStatus, totals?: { assetCount: number; amount: number }) => void;
+  setRunStatus: (period: string, status: RunStatus, totals?: { assetCount: number; amount: number; lines?: DepRunLine[] }) => void;
   createRun: (period: string) => void;
   upsertMaster: <K extends MasterKey>(key: K, item: State[K][number], reason?: string) => void;
   updateRunning: (cfg: RunningNumberConfig) => void;
@@ -350,11 +367,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     (async () => {
       let session: State['session'] = null;
+      // SSO: ยึดผู้ใช้จาก session cookie ฝั่งเซิร์ฟเวอร์ก่อน (ถ้าล็อกอินผ่านระบบกลางไว้)
       try {
-        const raw = localStorage.getItem(KEY);
-        if (raw) session = JSON.parse(raw) as State['session'];
+        const me = await fetch('/api/auth/me', { cache: 'no-store' });
+        if (me.ok) {
+          const { user } = (await me.json()) as { user: { userId: string; role: Role; name: string; avatarUrl?: string | null; title?: string | null; department?: string | null } | null };
+          if (user) session = { userId: user.userId, role: user.role, name: user.name, avatarUrl: user.avatarUrl ?? null, title: user.title ?? null, department: user.department ?? null };
+        }
       } catch {
         /* ignore */
+      }
+      // fallback: โหมดจำลอง (dev ที่ยังไม่เปิด SSO) อ่าน session จาก browser
+      if (!session) {
+        try {
+          const raw = localStorage.getItem(KEY);
+          if (raw) session = JSON.parse(raw) as State['session'];
+        } catch {
+          /* ignore */
+        }
       }
       try {
         const res = await fetch('/api/fa/state', { cache: 'no-store' });
@@ -453,17 +483,46 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       role,
       userName,
       accounts: ACCOUNTS,
-      can: (p) => can(role, p),
+      can: (p) => canWith(stateRef.current.rolePerms, role, p),
       signIn: (userId) =>
         commit((s) => {
           const u = s.users.find((x) => x.id === userId)!;
-          return { ...s, session: { userId: u.id, role: u.role, name: u.name } };
+          return { ...s, session: { userId: u.id, role: u.role, name: u.name, avatarUrl: u.avatarUrl ?? null, title: u.title ?? null, department: u.department ?? null } };
         }),
       signOut: () => commit((s) => ({ ...s, session: null })),
       resetDemo: () => {
         const fresh = seedState();
         commit((s) => ({ ...fresh, session: s.session }));
       },
+      upsertUser: ({ name, email, role, avatarUrl, title, department }) =>
+        commit((s) => {
+          const key = email.trim().toLowerCase();
+          const idx = s.users.findIndex((u) => u.email.toLowerCase() === key);
+          const extra = {
+            ...(avatarUrl !== undefined ? { avatarUrl } : {}),
+            ...(title !== undefined ? { title } : {}),
+            ...(department !== undefined ? { department } : {}),
+          };
+          if (idx >= 0) {
+            return { ...s, users: s.users.map((u, i) => (i === idx ? { ...u, name, role, active: true, ...extra } : u)) };
+          }
+          const nu: AppUser = { id: uid('U'), name: name.trim() || key, email: key, role, active: true, ...extra };
+          return { ...s, users: [...s.users, nu] };
+        }),
+      setUserRole: (id, role) =>
+        commit((s) => ({ ...s, users: s.users.map((u) => (u.id === id ? { ...u, role } : u)) })),
+      setUserActive: (id, active) =>
+        commit((s) => ({ ...s, users: s.users.map((u) => (u.id === id ? { ...u, active } : u)) })),
+      removeUser: (id) =>
+        commit((s) => ({ ...s, users: s.users.filter((u) => u.id !== id) })),
+      setRolePerm: (r, perm, on) =>
+        commit((s) => {
+          const base = s.rolePerms ?? defaultRolePerms();
+          const cur = base[r] ?? [];
+          const next = on ? (cur.includes(perm) ? cur : [...cur, perm]) : cur.filter((p) => p !== perm);
+          return { ...s, rolePerms: { ...base, [r]: next } };
+        }),
+      resetRolePerms: () => commit((s) => ({ ...s, rolePerms: defaultRolePerms() })),
       audit,
       previewCode: (companyId, categoryId, date = TODAY) => {
         const { cfg, companyCode, catCode, start } = codeParts(state, companyId, categoryId ?? '');

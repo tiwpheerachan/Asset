@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
-import { loadDashboard } from "@/lib/dashboard";
+import { loadDashboard, monthRange } from "@/lib/dashboard";
+import { listActiveDepartments, listTemplates } from "@/lib/queries";
 import {
   KpiCard, AttentionCard, Donut, HBar, Funnel, DualTrend, LineChart, AgingBar, Empty, PALETTE, PANEL, fmtNum,
 } from "@/components/dashboard/widgets";
 import { StatusBadge } from "@/components/ui";
 import {
-  IconInbox, IconClock, IconCheckCircle, IconChart, IconAlert, IconArrowRight, IconForm, IconBell,
+  IconInbox, IconClock, IconCheckCircle, IconChart, IconAlert, IconArrowRight, IconForm, IconBell, IconSearch,
 } from "@/components/icons";
 
 export const dynamic = "force-dynamic";
@@ -36,18 +37,60 @@ const PRI: Record<string, { label: string; cls: string }> = {
   normal: { label: "ปกติ", cls: "bg-surface-2 text-text-soft" },
 };
 
-export default async function DashboardPage() {
+const pad = (n: number) => String(n).padStart(2, "0");
+const ymd = (x: Date) => `${x.getFullYear()}-${pad(x.getMonth() + 1)}-${pad(x.getDate())}`;
+const localeDate = (s: string) =>
+  new Date(s + "T00:00:00").toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "2-digit" });
+
+type SP = { from?: string; to?: string; dept?: string; tpl?: string };
+
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<SP> }) {
   const user = await requireUser();
-  const d = await loadDashboard(user);
+  const sp = await searchParams;
+
+  const def = monthRange();
+  const range = { from: sp.from || def.from, to: sp.to || def.to };
+  const filters = {
+    deptId: sp.dept ? Number(sp.dept) : undefined,
+    templateId: sp.tpl ? Number(sp.tpl) : undefined,
+  };
+
+  const [d, depts, templates] = await Promise.all([
+    loadDashboard(user, range, filters),
+    listActiveDepartments(),
+    listTemplates(),
+  ]);
+
+  const canFilterDept = d.canSeeAll || user.role === "MANAGER";
+  const hasFilter = Boolean(sp.from || sp.to || sp.dept || sp.tpl);
+
+  // ช่วงเวลาสำเร็จรูป
+  const now = new Date();
+  const q0 = Math.floor(now.getMonth() / 3) * 3;
+  const presets = [
+    { k: "month", label: "เดือนนี้", from: ymd(new Date(now.getFullYear(), now.getMonth(), 1)), to: ymd(new Date(now.getFullYear(), now.getMonth() + 1, 0)) },
+    { k: "7d", label: "7 วัน", from: ymd(new Date(now.getTime() - 6 * 86400000)), to: ymd(now) },
+    { k: "30d", label: "30 วัน", from: ymd(new Date(now.getTime() - 29 * 86400000)), to: ymd(now) },
+    { k: "quarter", label: "ไตรมาสนี้", from: ymd(new Date(now.getFullYear(), q0, 1)), to: ymd(new Date(now.getFullYear(), q0 + 3, 0)) },
+    { k: "year", label: "ปีนี้", from: ymd(new Date(now.getFullYear(), 0, 1)), to: ymd(new Date(now.getFullYear(), 11, 31)) },
+  ];
+  const qs = (patch: Record<string, string | undefined>) => {
+    const m: Record<string, string | undefined> = { from: range.from, to: range.to, dept: sp.dept, tpl: sp.tpl, ...patch };
+    const u = new URLSearchParams();
+    for (const [key, v] of Object.entries(m)) if (v) u.set(key, v);
+    const qstr = u.toString();
+    return qstr ? `/dashboard?${qstr}` : "/dashboard";
+  };
 
   const attn = d.attention;
-  const todo = attn.waitingMe + attn.overdueSla + attn.overdueClear;
   const sub =
     attn.overdueSla > 0 ? `${attn.overdueSla} คำขอเกิน SLA แล้ว`
     : attn.waitingMe > 0 ? `คุณมี ${attn.waitingMe} รายการที่ต้องดำเนินการ`
     : "ไม่มีงานค้างของคุณ 🎉";
 
   const k = d.kpi;
+  const activeDept = filters.deptId ? depts.find((x) => x.id === filters.deptId)?.name : null;
+  const activeTpl = filters.templateId ? templates.find((x) => x.id === filters.templateId)?.name : null;
 
   return (
     <div className="mx-auto max-w-[1600px] space-y-4 px-4 py-5 md:px-6">
@@ -57,11 +100,60 @@ export default async function DashboardPage() {
           <h1 className="text-[22px] font-bold text-text">👋 สวัสดีครับ คุณ{user.name}</h1>
           <p className="mt-0.5 text-[13px] text-muted">{sub} · มุมมอง: {d.scopeLabel}</p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-xl bg-surface px-3 py-2 text-[12.5px] text-text-soft ring-1 ring-border/70">
-            <IconClock className="h-3.5 w-3.5 text-muted" /> เดือนนี้ · {d.range.from} – {d.range.to}
-          </span>
-          <Link href="/" className="rounded-xl bg-primary px-4 py-2 text-[13px] font-semibold text-white shadow-sm transition hover:bg-primary-hover hover:shadow">+ สร้างคำขอใหม่</Link>
+        <Link href="/" className="rounded-xl bg-primary px-4 py-2 text-[13px] font-semibold text-white shadow-sm transition hover:bg-primary-hover hover:shadow">+ สร้างคำขอใหม่</Link>
+      </div>
+
+      {/* Filter toolbar */}
+      <div className={`${PANEL} p-3`}>
+        <div className="mb-3 flex flex-wrap items-center gap-1.5">
+          <span className="mr-1 text-[11.5px] font-medium text-muted">ช่วงเวลา</span>
+          {presets.map((pr) => {
+            const on = range.from === pr.from && range.to === pr.to;
+            return (
+              <Link key={pr.k} href={qs({ from: pr.from, to: pr.to })}
+                className={`rounded-lg px-2.5 py-1 text-[12px] font-medium transition ${on ? "bg-primary text-white shadow-sm" : "bg-surface-2 text-text-soft hover:bg-surface-3"}`}>
+                {pr.label}
+              </Link>
+            );
+          })}
+        </div>
+        <form action="/dashboard" className="flex flex-wrap items-end gap-2.5">
+          <label className="flex flex-col gap-1">
+            <span className="text-[11px] text-muted">ตั้งแต่</span>
+            <input type="date" name="from" defaultValue={range.from} className="rounded-lg border border-border bg-surface px-2.5 py-1.5 text-[12.5px]" />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-[11px] text-muted">ถึง</span>
+            <input type="date" name="to" defaultValue={range.to} className="rounded-lg border border-border bg-surface px-2.5 py-1.5 text-[12.5px]" />
+          </label>
+          {canFilterDept && (
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] text-muted">แผนก</span>
+              <select name="dept" defaultValue={sp.dept ?? ""} className="min-w-[150px] rounded-lg border border-border bg-surface px-2.5 py-1.5 text-[12.5px]">
+                <option value="">ทุกแผนก</option>
+                {depts.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+              </select>
+            </label>
+          )}
+          <label className="flex flex-col gap-1">
+            <span className="text-[11px] text-muted">ประเภทฟอร์ม</span>
+            <select name="tpl" defaultValue={sp.tpl ?? ""} className="min-w-[160px] rounded-lg border border-border bg-surface px-2.5 py-1.5 text-[12.5px]">
+              <option value="">ทุกประเภท</option>
+              {templates.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+            </select>
+          </label>
+          <button className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-[12.5px] font-semibold text-white shadow-sm transition hover:bg-primary-hover">
+            <IconSearch className="h-3.5 w-3.5" /> กรอง
+          </button>
+          {hasFilter && (
+            <Link href="/dashboard" className="rounded-lg bg-surface-2 px-3 py-2 text-[12.5px] font-medium text-text-soft transition hover:bg-surface-3">ล้าง</Link>
+          )}
+        </form>
+        <div className="mt-2.5 flex flex-wrap items-center gap-2 border-t border-border/60 pt-2.5 text-[11.5px] text-muted">
+          <IconClock className="h-3.5 w-3.5" />
+          <span>{localeDate(range.from)} – {localeDate(range.to)}</span>
+          {activeDept && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-primary">แผนก: {activeDept}</span>}
+          {activeTpl && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-primary">ฟอร์ม: {activeTpl}</span>}
         </div>
       </div>
 
@@ -88,13 +180,13 @@ export default async function DashboardPage() {
         <KpiCard label="เกิน SLA" value={fmtNum(k.overdueSla)} tone={k.overdueSla > 0 ? "rose" : "ink"} sub="รายการ" icon={<IconAlert className="h-5 w-5" />} />
       </div>
 
-      {/* Funnel — เต็มความกว้าง เพื่อให้ทุกขั้นแสดงครบในแถวเดียว */}
+      {/* Funnel */}
       <div className={`${PANEL} p-4`}>
         <div className="mb-3 text-[13px] font-semibold text-text">สถานะงานอนุมัติ (Funnel)</div>
         <Funnel stages={d.funnel.map((s) => ({ ...s, href: "/requests" }))} />
       </div>
 
-      {/* Row A: trend · form dist */}
+      {/* Row A */}
       <div className="grid gap-4 xl:grid-cols-2">
         <div className={`${PANEL} p-4`}>
           <div className="mb-2 text-[13px] font-semibold text-text">แนวโน้มคำขอรายวัน</div>
@@ -110,11 +202,11 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Row B: value by dept · monthly value · SLA */}
+      {/* Row B */}
       <div className="grid gap-4 xl:grid-cols-3">
         <div className={`${PANEL} p-4`}>
           <div className="mb-3 text-[13px] font-semibold text-text">มูลค่าแยกตามแผนก</div>
-          <HBar items={d.valueByDept.map((x) => ({ label: x.dept, value: x.value }))} />
+          {d.valueByDept.length ? <HBar items={d.valueByDept.map((x) => ({ label: x.dept, value: x.value }))} /> : <Empty>ไม่มีมูลค่าในช่วงนี้</Empty>}
         </div>
         <div className={`${PANEL} p-4`}>
           <div className="mb-2 text-[13px] font-semibold text-text">มูลค่ารายเดือน</div>
@@ -138,7 +230,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Row C: queue · recent */}
+      {/* Row C */}
       <div className="grid gap-4 xl:grid-cols-2">
         <div className={`${PANEL} p-4`}>
           <div className="mb-2 flex items-center justify-between">

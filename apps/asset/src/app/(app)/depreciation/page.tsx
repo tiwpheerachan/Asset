@@ -8,7 +8,7 @@ import { CURRENT_PERIOD, useStore } from '@/lib/store';
 import { useLookups } from '@/lib/hooks';
 import { addMonths, depIssues, isDepreciable, prorationFor, valuate } from '@/lib/depreciation';
 import { exportXlsx } from '@/lib/excel';
-import type { DepPolicy, RunStatus } from '@/lib/types';
+import type { DepPolicy, DepRunLine, RunStatus } from '@/lib/types';
 import { RunStatusBadge } from '@/components/badges';
 import { PostDepreciationButton } from '@/components/post-depreciation-button';
 import { Badge, Button, Card, CardHeader, Drawer, FormField, Input, Notice, PageHeader, Select, Table, Tabs, Td, Textarea, Th, Toggle, cx } from '@/components/ui';
@@ -26,9 +26,37 @@ function usePeriodCalc(period: string) {
         return { a, v, issues };
       });
     const ok = rows.filter((r) => !r.issues.length && isDepreciable(r.a));
+    const catById = new Map(state.categories.map((c) => [c.id, c]));
+    // บัญชีในหมวดเก็บเป็น "รหัส - ชื่อ" (เช่น "530707 - ค่าเสื่อมราคา - ...") — ส่ง ONEBOOK ต้องเป็นรหัสล้วน
+    const acctCode = (s?: string | null): string | null => {
+      const v = (s ?? '').trim();
+      if (!v) return null;
+      return v.split(/\s+-\s+/)[0].trim() || null;
+    };
+    const lines: DepRunLine[] = ok
+      .filter((r) => r.v.periodDep > 0)
+      .map((r) => {
+        const cat = catById.get(r.a.subcategoryId);
+        return {
+          assetId: r.a.id,
+          assetCode: r.a.code,
+          assetName: r.a.nameTh || r.a.nameEn || r.a.code,
+          subcategoryId: r.a.subcategoryId,
+          cost: r.v.cost,
+          periodDep: r.v.periodDep,
+          accumulated: r.v.accumulated,
+          nbv: r.v.nbv,
+          glAccountCode: r.a.source?.glAccountCode ?? null,
+          glCompanyId: r.a.source?.glCompanyId ?? null,
+          // บัญชีค่าเสื่อม/ค่าเสื่อมสะสม จากหมวด — ว่าง = ให้ ONEBOOK ใช้ค่าเริ่มต้นเดิม (6170 / รหัส+1)
+          expenseAccountCode: acctCode(cat?.expenseAccount),
+          accumAccountCode: acctCode(cat?.accumAccount),
+        };
+      });
     return {
       rows,
-      count: ok.filter((r) => r.v.periodDep > 0).length,
+      lines,
+      count: lines.length,
       amount: ok.reduce((s, r) => s + r.v.periodDep, 0),
       accum: rows.reduce((s, r) => s + r.v.accumulated, 0),
       nbv: rows.reduce((s, r) => s + r.v.nbv, 0),
@@ -113,10 +141,10 @@ function RunsTab({ onPreview }: { onPreview: (p: string) => void }) {
                   <Td>
                     <div className="flex justify-end gap-1.5">
                       <Button size="sm" variant="ghost" onClick={() => onPreview(r.period)}>{t('dep.preview')}</Button>
-                      {r.status === 'DRAFT' && can('runDep') && <Button size="sm" variant="primary" icon={<Calculator size={14} />} onClick={() => setRunStatus(r.period, 'CALCULATED', { assetCount: c.count, amount: c.amount })}>{t('dep.calculate')}</Button>}
-                      {r.status === 'CALCULATED' && can('runDep') && <Button size="sm" icon={<Calculator size={14} />} onClick={() => setRunStatus(r.period, 'CALCULATED', { assetCount: c.count, amount: c.amount })}>{t('dep.calculate')}</Button>}
+                      {r.status === 'DRAFT' && can('runDep') && <Button size="sm" variant="primary" icon={<Calculator size={14} />} onClick={() => setRunStatus(r.period, 'CALCULATED', { assetCount: c.count, amount: c.amount, lines: c.lines })}>{t('dep.calculate')}</Button>}
+                      {r.status === 'CALCULATED' && can('runDep') && <Button size="sm" icon={<Calculator size={14} />} onClick={() => setRunStatus(r.period, 'CALCULATED', { assetCount: c.count, amount: c.amount, lines: c.lines })}>{t('dep.calculate')}</Button>}
                       {r.status === 'CALCULATED' && can('approveAsset') && <Button size="sm" variant="primary" icon={<CheckCheck size={14} />} disabled={c.errors > 0} onClick={() => setRunStatus(r.period, 'REVIEWED')}>{t('dep.review')}</Button>}
-                      {r.status === 'REVIEWED' && can('lockDep') && <Button size="sm" variant="success" icon={<Lock size={14} />} onClick={() => setRunStatus(r.period, 'LOCKED', { assetCount: c.count, amount: c.amount })}>{t('dep.lock')}</Button>}
+                      {r.status === 'REVIEWED' && can('lockDep') && <Button size="sm" variant="success" icon={<Lock size={14} />} onClick={() => setRunStatus(r.period, 'LOCKED', { assetCount: c.count, amount: c.amount, lines: c.lines })}>{t('dep.lock')}</Button>}
                     </div>
                   </Td>
                 </tr>
@@ -145,17 +173,30 @@ function PreviewTab({ period: p, setPeriod }: { period: string; setPeriod: (p: s
   const c = usePeriodCalc(p);
   const [onlyErr, setOnlyErr] = useState(false);
   const periods = Array.from({ length: 15 }, (_, i) => addMonths(CURRENT_PERIOD, 3 - i));
+  const run = state.runs.find((r) => r.period === p);
+
+  // งวดที่ล็อก/ส่งบัญชีแล้ว → ใช้ "snapshot" ที่ตรึงไว้ ณ วันที่ล็อก ไม่คำนวณสดใหม่
+  const locked = run?.status === 'LOCKED' || run?.status === 'POSTED';
+  const snap = locked && run?.lines && run.lines.length ? run.lines : null;
+  const effLines: DepRunLine[] = snap ?? c.lines;
+  const effCount = effLines.length;
+  const effAmount = effLines.reduce((s, l) => s + l.periodDep, 0);
+
+  // ตรวจส่วนต่าง: ยอดคำนวณสดปัจจุบัน vs ยอดที่ตรึงไว้ (มีการแก้ทรัพย์สินหลังล็อก?)
+  const driftAmt = snap ? Math.round((c.amount - effAmount) * 100) / 100 : 0;
+  const driftCnt = snap ? c.lines.length - effCount : 0;
+  const hasDrift = !!snap && (Math.abs(driftAmt) >= 0.01 || driftCnt !== 0);
+
   const rows = (onlyErr ? c.rows.filter((r) => r.issues.length) : c.rows).sort((a, b) => b.issues.length - a.issues.length || b.v.periodDep - a.v.periodDep);
   const byCat = useMemo(() => {
-    const m = new Map<string, { n: number; dep: number; accum: number; nbv: number }>();
-    for (const r of c.rows) {
-      const g = m.get(r.a.subcategoryId) ?? { n: 0, dep: 0, accum: 0, nbv: 0 };
-      g.n++; g.dep += r.v.periodDep; g.accum += r.v.accumulated; g.nbv += r.v.nbv;
-      m.set(r.a.subcategoryId, g);
+    const m = new Map<string, { n: number; dep: number; nbv: number }>();
+    for (const l of effLines) {
+      const g = m.get(l.subcategoryId) ?? { n: 0, dep: 0, nbv: 0 };
+      g.n++; g.dep += l.periodDep; g.nbv += l.nbv;
+      m.set(l.subcategoryId, g);
     }
     return [...m.entries()].sort((a, b) => b[1].dep - a[1].dep);
-  }, [c.rows]);
-  const run = state.runs.find((r) => r.period === p);
+  }, [effLines]);
 
   return (
     <div className="space-y-4 p-4">
@@ -170,19 +211,29 @@ function PreviewTab({ period: p, setPeriod }: { period: string; setPeriod: (p: s
           disabled={!can('exportReport')}
           onClick={() =>
             exportXlsx(`Depreciation_Preview_${p}`, [
-              { name: p, rows: c.rows.map((r) => ({ [t('field.assetCode')]: r.a.code, [t('field.assetName')]: lk.assetName(r.a), [t('field.subcategory')]: lk.category(r.a.subcategoryId), [t('field.cost')]: r.v.cost, [t('field.periodDep')]: r.v.periodDep, [t('field.accumDep')]: r.v.accumulated, [t('field.nbv')]: r.v.nbv, Issues: r.issues.map((i) => t(`issue.${i}`)).join('; ') })) },
+              snap
+                ? { name: p, rows: snap.map((l) => ({ [t('field.assetCode')]: l.assetCode, [t('field.assetName')]: l.assetName, [t('field.subcategory')]: lk.category(l.subcategoryId), [t('field.cost')]: l.cost, [t('field.periodDep')]: l.periodDep, [t('field.accumDep')]: l.accumulated, [t('field.nbv')]: l.nbv, Issues: '' })) }
+                : { name: p, rows: c.rows.map((r) => ({ [t('field.assetCode')]: r.a.code, [t('field.assetName')]: lk.assetName(r.a), [t('field.subcategory')]: lk.category(r.a.subcategoryId), [t('field.cost')]: r.v.cost, [t('field.periodDep')]: r.v.periodDep, [t('field.accumDep')]: r.v.accumulated, [t('field.nbv')]: r.v.nbv, Issues: r.issues.map((i) => t(`issue.${i}`)).join('; ') })) },
             ])
           }
         >
           {t('common.exportExcel')}
         </Button>
-        <PostDepreciationButton period={p} rows={c.rows} disabled={!can('runDep') || run?.status !== 'LOCKED'} />
+        <PostDepreciationButton period={p} lines={effLines} alreadyPosted={run?.status === 'POSTED'} disabled={!can('runDep') || (run?.status !== 'LOCKED' && run?.status !== 'POSTED')} />
       </div>
+
+      {snap && (
+        <Notice tone={hasDrift ? 'amber' : 'gray'} icon={hasDrift ? <AlertTriangle size={14} /> : <Lock size={14} />}>
+          {hasDrift
+            ? `${t('dep.snapshotDrift')} — ${driftCnt !== 0 ? `${driftCnt > 0 ? '+' : ''}${num(driftCnt)} ${t('common.count')}, ` : ''}${driftAmt > 0 ? '+' : ''}${money(driftAmt)}`
+            : t('dep.snapshotNote')}
+        </Notice>
+      )}
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
         {[
-          [t('dep.assetsCalculated'), num(c.count)],
-          [t('dep.depThisPeriod'), money(c.amount)],
+          [t('dep.assetsCalculated'), num(effCount)],
+          [t('dep.depThisPeriod'), money(effAmount)],
           [t('field.accumDep'), money(c.accum, 0)],
           [t('field.nbv'), money(c.nbv, 0)],
           [t('dep.errors'), num(c.errors), c.errors > 0],
@@ -211,21 +262,32 @@ function PreviewTab({ period: p, setPeriod }: { period: string; setPeriod: (p: s
         <div className="rounded-md border border-line">
           <div className="flex items-center justify-between border-b border-line px-3 py-2">
             <span className="text-[13px] font-semibold text-ink">{t('dep.drill')}</span>
-            <label className="flex items-center gap-2 text-[12.5px] text-ink-3"><Toggle checked={onlyErr} onChange={setOnlyErr} /> {t('dep.onlyErrors')}</label>
+            {snap ? <Badge tone="gray" dot>{t('dep.snapshotTag')}</Badge> : <label className="flex items-center gap-2 text-[12.5px] text-ink-3"><Toggle checked={onlyErr} onChange={setOnlyErr} /> {t('dep.onlyErrors')}</label>}
           </div>
           <Table className="max-h-[460px] overflow-y-auto">
             <thead><tr><Th>{t('field.assetCode')}</Th><Th>{t('field.assetName')}</Th><Th right>{t('field.periodDep')}</Th><Th right>{t('field.accumDep')}</Th><Th right>{t('field.nbv')}</Th><Th /></tr></thead>
             <tbody>
-              {rows.slice(0, 200).map((r) => (
-                <tr key={r.a.id}>
-                  <Td mono><Link href={`/assets/${r.a.id}`} className="text-brand-700 hover:underline">{r.a.code}</Link></Td>
-                  <Td className="max-w-[260px] truncate">{lk.assetName(r.a)}</Td>
-                  <Td right>{money(r.v.periodDep)}</Td>
-                  <Td right>{money(r.v.accumulated)}</Td>
-                  <Td right className="text-ink">{money(r.v.nbv)}</Td>
-                  <Td>{r.issues.length ? <Badge tone="red">{r.issues.map((i) => t(`issue.${i}`)).join(', ')}</Badge> : r.v.fullyDepreciated ? <Badge>{t('field.endDate')}</Badge> : null}</Td>
-                </tr>
-              ))}
+              {snap
+                ? snap.slice(0, 500).map((l) => (
+                    <tr key={l.assetId}>
+                      <Td mono><Link href={`/assets/${l.assetId}`} className="text-brand-700 hover:underline">{l.assetCode}</Link></Td>
+                      <Td className="max-w-[260px] truncate">{l.assetName}</Td>
+                      <Td right>{money(l.periodDep)}</Td>
+                      <Td right>{money(l.accumulated)}</Td>
+                      <Td right className="text-ink">{money(l.nbv)}</Td>
+                      <Td>{l.glAccountCode ? null : <Badge tone="amber">{t('dep.noGl')}</Badge>}</Td>
+                    </tr>
+                  ))
+                : rows.slice(0, 200).map((r) => (
+                    <tr key={r.a.id}>
+                      <Td mono><Link href={`/assets/${r.a.id}`} className="text-brand-700 hover:underline">{r.a.code}</Link></Td>
+                      <Td className="max-w-[260px] truncate">{lk.assetName(r.a)}</Td>
+                      <Td right>{money(r.v.periodDep)}</Td>
+                      <Td right>{money(r.v.accumulated)}</Td>
+                      <Td right className="text-ink">{money(r.v.nbv)}</Td>
+                      <Td>{r.issues.length ? <Badge tone="red">{r.issues.map((i) => t(`issue.${i}`)).join(', ')}</Badge> : r.v.fullyDepreciated ? <Badge>{t('field.endDate')}</Badge> : null}</Td>
+                    </tr>
+                  ))}
             </tbody>
           </Table>
         </div>

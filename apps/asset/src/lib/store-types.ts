@@ -3,11 +3,12 @@ import type {
   CostCenter, Department, DepPolicy, DepRun, Location, OAIntegration,
   OARecord, Role, RunningNumberConfig, VerifyCampaign, VerifyRecord,
 } from './types';
+import type { RolePermsMap } from './rbac';
 
 /** รูปข้อมูลทั้งระบบ (ใช้ร่วมกันทั้ง client store และ server repo) */
 export interface State {
   version: number;
-  session: { userId: string; role: Role; name: string } | null;
+  session: { userId: string; role: Role; name: string; avatarUrl?: string | null; title?: string | null; department?: string | null } | null;
   assets: Asset[];
   oa: OARecord[];
   documents: AssetDocument[];
@@ -28,4 +29,6 @@ export interface State {
   running: RunningNumberConfig[];
   oaIntegration: OAIntegration;
   users: AppUser[];
+  /** เมทริกซ์สิทธิ์ต่อบทบาทที่แอดมินปรับได้ (ติ๊กในหน้า /admin/users) */
+  rolePerms: RolePermsMap;
 }

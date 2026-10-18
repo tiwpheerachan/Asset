@@ -38,7 +38,15 @@ export async function fetchAssetCandidates(): Promise<OnebookCandidate[]> {
   return Array.isArray(body.data) ? body.data : [];
 }
 
-export interface DepLine { asset_account_code: string; amount: number; description: string }
+export interface DepLine {
+  asset_account_code: string;
+  amount: number;
+  description: string;
+  /** บัญชีค่าเสื่อม (Dr) จากหมวดทรัพย์สิน — ไม่ส่ง/ว่าง = ONEBOOK ใช้ค่าเริ่มต้นเดิม (6170) */
+  expense_account_code?: string | null;
+  /** บัญชีค่าเสื่อมสะสม (Cr) จากหมวดทรัพย์สิน — ไม่ส่ง/ว่าง = ONEBOOK ใช้ค่าเริ่มต้นเดิม (รหัสสินทรัพย์+1) */
+  accum_account_code?: string | null;
+}
 
 /** ส่งค่าเสื่อมราคาของงวดกลับไปลงสมุดรายวัน GL ของ ONEBOOK */
 export async function postDepreciation(companyId: string, periodEnd: string, lines: DepLine[]): Promise<any> {

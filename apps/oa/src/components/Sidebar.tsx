@@ -86,6 +86,14 @@ export default function Sidebar({
           accent: "accent-violet",
           match: (p) => p.startsWith("/requests/table"),
         },
+        {
+          // ภาพรวมรออนุมัติ — ทุกคนเข้าได้ แต่เห็นเฉพาะที่ตัวเองมีสิทธิ์ (ADMIN เห็นทั้งหมด)
+          href: "/requests/pending",
+          label: t("pending.nav"),
+          icon: IconClock,
+          accent: "accent-orange",
+          match: (p) => p.startsWith("/requests/pending"),
+        },
       ],
     },
   ];
@@ -98,6 +106,7 @@ export default function Sidebar({
       title: t("nav.group.admin"),
       icon: IconBuilding,
       items: [
+        { href: "/admin/users", label: t("users.nav"), icon: IconUsers, accent: "accent-violet", match: startsWith("/admin/users") },
         { href: "/admin/forms", label: t("nav.forms"), icon: IconForm, accent: "accent-sky", match: startsWith("/admin/forms") },
         { href: "/admin/analytics", label: t("analytics.title"), icon: IconChart, accent: "accent-emerald", match: startsWith("/admin/analytics") },
       ],

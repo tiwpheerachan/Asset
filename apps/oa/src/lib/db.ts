@@ -50,7 +50,7 @@ async function setMeta(key: string, value: string): Promise<void> {
 
 type SeedField = {
   field_key: string; label: string; type?: string; field_role?: string;
-  required?: number; help?: string; options?: string[]; sort_order?: number;
+  required?: number; help?: string; options?: string[]; sort_order?: number; sum_of?: string;
   columns?: { col_key: string; label: string; type?: string; required?: number; options?: string[]; sort_order?: number }[];
 };
 
@@ -115,8 +115,8 @@ async function seedForms(): Promise<void> {
     );
     const insField = db.prepare(
       `INSERT INTO form_fields
-         (template_id, field_key, label, type, field_role, required, help, options, sort_order)
-       VALUES (?,?,?,?,?,?,?,?,?)`,
+         (template_id, field_key, label, type, field_role, required, help, options, sort_order, sum_of)
+       VALUES (?,?,?,?,?,?,?,?,?,?)`,
     );
     const insCol = db.prepare(
       `INSERT INTO form_table_columns (field_id, col_key, label, type, required, options, sort_order)
@@ -137,12 +137,17 @@ async function seedForms(): Promise<void> {
         (await insTpl.run(t.code, t.name, cat, t.icon, t.description, t.sort_order)).lastInsertRowid,
       );
 
-      for (const f of [...seed.base_fields, ...t.extra_fields]) {
+      // ฟิลด์เสริมของแม่แบบที่ใช้ field_key ซ้ำกับฟิลด์พื้นฐาน = ตั้งใจเขียนทับ
+      // (เช่น ใบขอซื้อ/เบิกจ่ายเปลี่ยน "มูลค่า" จากกรอกเองเป็นยอดรวมอัตโนมัติจากตาราง)
+      const merged = new Map<string, SeedField>();
+      for (const f of [...seed.base_fields, ...t.extra_fields]) merged.set(f.field_key, f);
+
+      for (const f of merged.values()) {
         const fieldId = Number(
           (
             await insField.run(
               tplId, f.field_key, f.label, f.type ?? "TEXT", f.field_role ?? "",
-              f.required ?? 0, f.help ?? "", JSON.stringify(f.options ?? []), f.sort_order ?? 0,
+              f.required ?? 0, f.help ?? "", JSON.stringify(f.options ?? []), f.sort_order ?? 0, f.sum_of ?? "",
             )
           ).lastInsertRowid,
         );
@@ -220,11 +225,32 @@ async function migrateSelectToDropdown(): Promise<void> {
   await setMeta("select_to_dropdown", "1");
 }
 
+/**
+ * ผูกช่อง "มูลค่า" (ตัวกำหนดสายอนุมัติ) เข้ากับยอดรวมของตารางรายการ — ครั้งเดียว
+ *
+ * เดิมใบขอซื้อ/เบิกจ่ายมีตารางรายการ แต่ช่องมูลค่าที่ใช้ตัดสินสายอนุมัติเป็นช่องกรอกมือ
+ * แยกต่างหาก คนยื่นอาจกรอกไม่ตรง (หรือเว้นว่าง) แล้ววงเงินจริงข้ามขั้นอนุมัติที่ควรผ่าน
+ * เปลี่ยนเป็นชนิด TOTAL ให้ระบบรวมจากตารางเองและคิดซ้ำฝั่งเซิร์ฟเวอร์ แก้ให้ต่ำลงไม่ได้
+ * แตะเฉพาะช่องที่ยังเป็นชนิดกรอกเงิน (MONEY) เท่านั้น ไม่ทับที่ผู้ดูแลตั้งเองไว้แล้ว
+ */
+async function migrateAmountAutoTotal(): Promise<void> {
+  if ((await getMeta("amount_autototal")) === "1") return;
+  const bind = db.prepare(
+    `UPDATE form_fields SET type='TOTAL', sum_of=?, sort_order=22
+      WHERE field_key='amount' AND type='MONEY'
+        AND template_id IN (SELECT id FROM form_templates WHERE code=?)`,
+  );
+  await bind.run("expenses.amount", "REIMBURSE");
+  await bind.run("items.qty*unit_price", "PURCHASE");
+  await setMeta("amount_autototal", "1");
+}
+
 // ลงทะเบียนไว้ให้ pg.ts เรียกหลังสร้างตารางเสร็จ ก่อนคำสั่งแรกของแอปจะได้ทำงาน
 onSchemaReady(async () => {
   await seedForms();
   await mergeStages();
   await migrateSelectToDropdown();
+  await migrateAmountAutoTotal();
 });
 
 /**

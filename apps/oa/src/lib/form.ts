@@ -291,12 +291,20 @@ export function parseForm(
  * 1234.5600000000002 ซึ่งเอาไปแสดงเป็นจำนวนเงินไม่ได้
  */
 export function totalOf(field: Field, fields: Field[], values: FormValues): number {
-  const [tableKey, colKey] = String(field.sum_of ?? "").split(".");
-  if (!tableKey || !colKey) return 0;
+  // sum_of = "<ตาราง>.<คอลัมน์>" บวกคอลัมน์เดียว  หรือ  "<ตาราง>.<คอลัมน์>*<คอลัมน์>"
+  // บวกผลคูณรายแถว (เช่น จำนวน × ราคา/หน่วย) — ใบขอซื้อไม่มีคอลัมน์ยอดรวมต่อแถวให้บวกตรง ๆ
+  const [tableKey, expr] = String(field.sum_of ?? "").split(".");
+  if (!tableKey || !expr) return 0;
   const table = fields.find((f) => f.field_key === tableKey && f.type === "TABLE");
   if (!table) return 0;
+  const cols = expr.split("*").map((s) => s.trim()).filter(Boolean);
+  if (cols.length === 0) return 0;
   const rows = Array.isArray(values[tableKey]) ? (values[tableKey] as TableRow[]) : [];
-  const sum = rows.reduce((acc, r) => acc + (toNumber(r?.[colKey]) ?? 0), 0);
+  const sum = rows.reduce((acc, r) => {
+    // ช่องว่างในผลคูณ = แถวยังไม่สมบูรณ์ → นับเป็น 0 ไม่ใช่ปล่อยให้เพี้ยน
+    const rowVal = cols.reduce((p, c) => p * (toNumber(r?.[c]) ?? 0), 1);
+    return acc + rowVal;
+  }, 0);
   return Math.round(sum * 100) / 100;
 }
 

@@ -23,7 +23,8 @@ export interface DirectoryPerson {
 export function directoryConfig() {
   // ไม่ตั้ง CENTRAL_DIRECTORY_URL ก็ใช้ฐานเดียวกับ SSO ได้ (ปกติเป็นระบบกลางตัวเดียวกัน)
   const base = (process.env.CENTRAL_DIRECTORY_URL || process.env.SSO_ISSUER || "").replace(/\/+$/, "");
-  const key = process.env.DIRECTORY_API_KEY || "";
+  // รับทั้ง CENTRAL_API_KEY (ตามเอกสารระบบกลาง) และ DIRECTORY_API_KEY (ชื่อเดิม) — ใช้ตัวใดก็ได้
+  const key = process.env.CENTRAL_API_KEY || process.env.DIRECTORY_API_KEY || "";
   return { base, key, ready: Boolean(base && key) };
 }
 

@@ -12,7 +12,7 @@ import { IconSearch, IconChevron, IconLogout, IconUsers } from "@/components/ico
 import { logoutAction } from "@/lib/actions";
 import type { Role } from "@/lib/types";
 
-type User = { name: string; position: string; email: string; role: Role };
+type User = { name: string; position: string; email: string; role: Role; avatar_url?: string };
 
 /**
  * แถบบน — เลย์เอาต์เดียวกับระบบ Fixed Asset:
@@ -83,7 +83,7 @@ function UserMenu({ user }: { user: User }) {
         aria-haspopup="menu"
         aria-expanded={open}
       >
-        <Avatar name={user.name} size={32} />
+        <Avatar name={user.name} size={32} src={user.avatar_url} />
         <span className="hidden text-left leading-tight md:block">
           <span className="block text-[13px] font-medium text-text">{user.name}</span>
           <span className="block text-[11.5px] text-muted">{t(`role.${user.role}`)}</span>

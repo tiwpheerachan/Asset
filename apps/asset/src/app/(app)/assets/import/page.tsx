@@ -234,7 +234,14 @@ export default function ImportPage() {
         crumbs={<Link href="/assets" className="inline-flex items-center gap-1 hover:text-ink"><ArrowLeft size={13} /> {t('nav.assets')}</Link>}
         title={t('imp.title')}
         sub={t('imp.subtitle')}
-        actions={<Button icon={<Download size={15} />} onClick={downloadLegacyTemplate}>{t('imp.template')}</Button>}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Button icon={<Download size={15} />} onClick={downloadLegacyTemplate}>{t('imp.template')}</Button>
+            <Link href="/assets/import/peak">
+              <Button variant="primary" icon={<FileSpreadsheet size={15} />}>{t('imp.pk.openBtn')}</Button>
+            </Link>
+          </div>
+        }
       />
 
       <ol className="mb-4 grid grid-cols-3 gap-2">

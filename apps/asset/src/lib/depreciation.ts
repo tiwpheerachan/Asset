@@ -144,5 +144,7 @@ export function depIssues(a: Asset, policies: DepPolicy[]): string[] {
   else if (a.acquisitionDate && a.readyDate < a.acquisitionDate) issues.push('READY_BEFORE_ACQ');
   if (a.lifeMonths <= 0) issues.push('INVALID_LIFE');
   if (a.residual < 0 || a.residual >= totalCost(a)) issues.push('INVALID_RESIDUAL');
+  // Phase 1 รองรับเฉพาะเส้นตรง (SL) — ทรัพย์สินที่ตั้ง DB/UOP (เช่น ข้อมูลนำเข้า/ยกมา) ต้องเตือน ไม่คำนวณเงียบ ๆ เป็น SL
+  if (a.method && a.method !== 'SL') issues.push('UNSUPPORTED_METHOD');
   return issues;
 }

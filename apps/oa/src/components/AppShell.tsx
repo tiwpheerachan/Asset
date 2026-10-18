@@ -16,7 +16,7 @@ export default function AppShell({
   pending,
   children,
 }: {
-  user: { name: string; position: string; email: string; role: Role };
+  user: { name: string; position: string; email: string; role: Role; avatar_url?: string };
   pending: number;
   children: React.ReactNode;
 }) {

@@ -114,13 +114,20 @@ export interface RecentItem {
 
 /* ====================== ตัวโหลดหลัก ====================== */
 
-export async function loadDashboard(user: User, range?: Range): Promise<DashboardData> {
+export type DashFilters = { deptId?: number; templateId?: number };
+
+export async function loadDashboard(user: User, range?: Range, filters?: DashFilters): Promise<DashboardData> {
   const r = range ?? monthRange();
   const prev = prevMonthRange();
   const s = scopeOf(user);
+  // ฟิลเตอร์เพิ่มเติม (แผนก / ประเภทฟอร์ม) — AND เข้ากับ scope แล้วใช้กับทุก query ผ่าน W
+  const extra: string[] = [];
+  if (filters?.deptId) { extra.push("ru.department_id = @fdept"); (s.params as Record<string, unknown>).fdept = filters.deptId; }
+  if (filters?.templateId) { extra.push("r.template_id = @ftpl"); (s.params as Record<string, unknown>).ftpl = filters.templateId; }
+  const baseSql = extra.length ? `(${s.sql}) AND ${extra.join(" AND ")}` : s.sql;
   const p = { ...s.params, from: r.from, to: r.to };
   const pPrev = { ...s.params, from: prev.from, to: prev.to };
-  const W = `WHERE ${s.sql}`;
+  const W = `WHERE ${baseSql}`;
   const join = "LEFT JOIN users ru ON ru.id = r.requester_id LEFT JOIN departments rd ON rd.id = ru.department_id";
   const warnings: string[] = [];
 

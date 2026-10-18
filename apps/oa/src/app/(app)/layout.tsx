@@ -13,6 +13,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         position: user.position || user.department,
         email: user.email,
         role: user.role,
+        avatar_url: user.avatar_url,
       }}
       pending={pending}
     >

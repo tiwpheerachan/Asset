@@ -260,6 +260,77 @@ export async function listRequestsForTable(
   };
 }
 
+/**
+ * ภาพรวม "ทุกใบที่ยังรออนุมัติ" สำหรับผู้ดูแล — ใบที่สถานะยังค้างในสายอนุมัติ
+ * (PENDING = รอ FINAL, PRELIM_APPROVED = ผ่านเบื้องต้นแล้วรอขั้นต่อ) พร้อม "ตอนนี้รอใคร"
+ *
+ * คืนทั้งหมดไม่แบ่งหน้า เพราะหน้าภาพรวมต้องจัดกลุ่มตามประเภทเอกสารให้เห็นครบในจอเดียว
+ * เคารพสิทธิ์การมองเห็นชุดเดียวกับทุกหน้า (ADMIN/ผู้ตรวจสอบเห็นทุกใบ)
+ */
+const PENDING_SELECT = `
+  SELECT r.*,
+         u.name                AS requester_name,
+         COALESCE(d.name, '')  AS requester_department,
+         u.avatar_url          AS requester_avatar,
+         t.name                AS template_name,
+         t.code                AS template_code,
+         t.icon                AS template_icon,
+         t.category_id         AS category_id,
+         COALESCE(c.name, 'ทั่วไป') AS category_name
+    FROM requests r
+    JOIN users u ON u.id = r.requester_id
+    JOIN form_templates t ON t.id = r.template_id
+    LEFT JOIN departments d ON d.id = u.department_id
+    LEFT JOIN form_categories c ON c.id = t.category_id
+`;
+
+export type PendingHandler = { id: number; name: string };
+export type PendingOverviewRow = RequestWithMeta & {
+  category_id: number | null;
+  category_name: string;
+  current_node: string;
+  current_handlers: PendingHandler[];
+};
+
+export async function listPendingOverview(user: User): Promise<PendingOverviewRow[]> {
+  const vis = (await visibilityWhere(user)).replace(/^\s*WHERE\s*/i, "");
+  const where = ["r.status IN ('PENDING','PRELIM_APPROVED')"];
+  if (vis) where.push(`(${vis})`);
+
+  const rows = (await db
+    .prepare(`${PENDING_SELECT} WHERE ${where.join(" AND ")} ORDER BY r.submitted_at ASC NULLS LAST, r.id`)
+    .all(scopeParams(user))) as PendingOverviewRow[];
+  if (rows.length === 0) return [];
+
+  // "รอใครอยู่" = ผู้อนุมัติ status PENDING ของขั้นปัจจุบัน — ดึงทั้งหน้าในคำสั่งเดียว
+  const ids = rows.map((r) => r.id);
+  const pending = (await db
+    .prepare(
+      `SELECT a.request_id, a.node_name, a.user_id, u.name
+         FROM request_approvers a
+         JOIN requests r ON r.id = a.request_id
+         JOIN users u    ON u.id = a.user_id
+        WHERE a.request_id = ANY(?)
+          AND a.status = 'PENDING' AND a.kind = 'APPROVE'
+          AND a.stage = r.stage AND a.step_no = r.current_step
+        ORDER BY a.id`,
+    )
+    .all<{ request_id: number; node_name: string; user_id: number; name: string }>(ids));
+
+  const byRequest = new Map<number, { node: string; who: PendingHandler[] }>();
+  for (const p of pending) {
+    const hit = byRequest.get(p.request_id) ?? { node: p.node_name, who: [] };
+    hit.who.push({ id: p.user_id, name: p.name });
+    byRequest.set(p.request_id, hit);
+  }
+
+  return rows.map((r) => ({
+    ...r,
+    current_node: byRequest.get(r.id)?.node ?? "",
+    current_handlers: byRequest.get(r.id)?.who ?? [],
+  }));
+}
+
 /** คำขอที่ถึงคิวให้ user คนนี้อนุมัติตอนนี้ */
 export async function listAwaitingMe(userId: number): Promise<RequestWithMeta[]> {
   const ids = [userId, ...(await actableUserIds(userId))];
@@ -899,6 +970,13 @@ export async function flowRolesMissingHolders(): Promise<string[]> {
 
 export async function listActiveUsers(): Promise<User[]> {
   return (await db.prepare(`${USER_SELECT} WHERE u.active = 1 ORDER BY u.name`).all()) as User[];
+}
+
+/** ผู้ใช้ทั้งหมด (รวมที่ปิดใช้งาน) — หน้าจัดการสิทธิ์ของแอดมิน · active ก่อน แล้วเรียงชื่อ */
+export async function listAllUsers(): Promise<User[]> {
+  return (await db
+    .prepare(`${USER_SELECT} ORDER BY u.active DESC, u.name`)
+    .all()) as User[];
 }
 
 /**

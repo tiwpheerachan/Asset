@@ -5,11 +5,25 @@
  *   - ไม่งั้น → บันทึกทั้งก้อน (ใช้ตอน seed/ย้ายข้อมูล)
  */
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { getState, saveState, saveStateDiff, ConflictError } from '@/lib/fa-repo';
+import { ssoReady, verifySessionToken, SESSION_COOKIE } from '@/lib/sso';
 
 export const dynamic = 'force-dynamic';
 
+/** เมื่อเปิด SSO แล้ว ต้องมี session ที่ถูกต้องถึงเข้าถึงข้อมูลได้ (dev ที่ยังไม่เปิด SSO ไม่บังคับ) */
+async function denyIfUnauth(): Promise<NextResponse | null> {
+  if (!ssoReady()) return null;
+  const jar = await cookies();
+  if (!verifySessionToken(jar.get(SESSION_COOKIE)?.value)) {
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  }
+  return null;
+}
+
 export async function GET() {
+  const deny = await denyIfUnauth();
+  if (deny) return deny;
   try {
     const state = await getState();
     return NextResponse.json(state, { headers: { 'Cache-Control': 'no-store' } });
@@ -19,6 +33,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const deny = await denyIfUnauth();
+  if (deny) return deny;
   try {
     const body = await request.json();
     if (body && typeof body === 'object' && 'changes' in body) {
