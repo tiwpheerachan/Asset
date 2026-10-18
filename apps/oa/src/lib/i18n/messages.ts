@@ -1146,6 +1146,12 @@ export const MESSAGES = {
   "decide.comment": { th: "ความเห็น", en: "Comment", zh: "意见" },
   "decide.approve": { th: "✓ อนุมัติ", en: "✓ Approve", zh: "✓ 通过" },
   "decide.confirmApprove": { th: "ยืนยันอนุมัติเอกสารนี้?", en: "Approve this request?", zh: "确认通过此申请？" },
+  "decide.titleAdmin": { th: "อนุมัติแทน (ผู้ดูแลระบบ)", en: "Approve on behalf (admin)", zh: "代为审批（管理员）" },
+  "decide.adminOverride": { th: "คุณกำลังพิจารณาแทนในฐานะผู้ดูแลระบบ — การกระทำจะถูกบันทึกว่า “อนุมัติแทน … โดยผู้ดูแลระบบ”", en: "You are acting as system administrator on behalf of the assigned approver — this will be logged as “on behalf of … by admin”.", zh: "您正以系统管理员身份代为处理 — 操作将记录为“代 … 审批（管理员）”。" },
+  "decide.actForWhom": { th: "เลือกผู้อนุมัติที่จะทำแทน", en: "Act on behalf of", zh: "代哪位审批人处理" },
+  "decide.actingFor": { th: "อนุมัติแทน", en: "On behalf of", zh: "代替" },
+  "decide.approveFor": { th: "✓ อนุมัติแทน", en: "✓ Approve on behalf", zh: "✓ 代为通过" },
+  "decide.confirmApproveFor": { th: "ยืนยันอนุมัติแทนในฐานะผู้ดูแลระบบ?", en: "Approve on behalf as admin?", zh: "确认以管理员身份代为通过？" },
   "decide.reject": { th: "✕ ไม่อนุมัติ", en: "✕ Reject", zh: "✕ 拒绝" },
   "decide.rejectWarn": {
     th: "ไม่อนุมัติจะปิดเอกสารทันที ผู้จัดทำต้องเปิดคำขอใหม่ — ถ้าแค่ต้องการให้แก้แล้วส่งกลับมา ให้ใช้ “ส่งกลับให้แก้”",

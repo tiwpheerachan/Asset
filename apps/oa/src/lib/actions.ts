@@ -484,7 +484,9 @@ export async function decideAction(_prev: ActionState, form: FormData): Promise<
     if (file.size > MAX_UPLOAD) return { error: `${file.name} ใหญ่เกิน 10 MB` };
   }
 
-  const result = await applyDecision({ user, requestId: id, decision, comment });
+  // ผู้ดูแลระบบเลือกอนุมัติแทนผู้อนุมัติรายใดในขั้นปัจจุบัน (ไม่ส่ง = คนแรกที่ค้าง)
+  const approverRowId = Number(form.get("approver_row")) || undefined;
+  const result = await applyDecision({ user, requestId: id, decision, comment, approverRowId });
   if (!result.ok) {
     const message = {
       NOT_FOUND: "ไม่พบคำขอ",

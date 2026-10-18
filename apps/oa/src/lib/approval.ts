@@ -147,6 +147,7 @@ export async function applyDecision({
   // การตรวจสิทธิ์รับแทนต้องถามฐานข้อมูล จึงใส่ใน .find() ไม่ได้ — Promise เป็นค่าจริง
   // เสมอ ถ้าใส่ไปทุกคนจะกลายเป็นผู้มีสิทธิ์อนุมัติแทนโดยไม่มีอะไรฟ้อง
   let mine = eligible.find((r) => r.user_id === user.id);
+  let viaAdmin = false;
   if (!mine) {
     for (const r of eligible) {
       if (await canActFor(user.id, r.user_id)) {
@@ -155,13 +156,20 @@ export async function applyDecision({
       }
     }
   }
+  // ผู้ดูแลระบบอนุมัติ/ไม่อนุมัติแทนได้แม้ไม่มีการมอบหมาย — เลือกรายตัวผ่าน approverRowId
+  // (ถ้าไม่ระบุ จะทำแทนผู้อนุมัติคนแรกที่ยังค้างในขั้นนี้) · บันทึก audit ว่า "โดยผู้ดูแลระบบ"
+  if (!mine && user.role === "ADMIN" && eligible.length > 0) {
+    mine = eligible[0];
+    viaAdmin = true;
+  }
   if (!mine) return { ok: false, reason: "NOT_YOUR_TURN" };
 
   const onBehalf = mine.user_id !== user.id;
+  const behalfNote = onBehalf ? `อนุมัติแทน ${mine.name}${viaAdmin ? " โดยผู้ดูแลระบบ" : ""}` : "";
 
-  // ห้ามใช้สิทธิ์แทนมาอนุมัติเอกสารของตัวเอง
-  // ไม่งั้นคนยื่นที่บังเอิญรับแทนผู้อนุมัติอยู่ จะอนุมัติเรื่องตัวเองได้
-  if (onBehalf && req.requester_id === user.id) return { ok: false, reason: "NOT_YOUR_TURN" };
+  // ห้ามใช้สิทธิ์ "รับมอบหมาย" มาอนุมัติเอกสารของตัวเอง — คนยื่นที่บังเอิญรับแทนผู้อนุมัติ
+  // อยู่ จะอนุมัติเรื่องตัวเองไม่ได้ · ยกเว้นผู้ดูแลระบบ (viaAdmin) ที่อนุมัติเอกสารตัวเองได้
+  if (onBehalf && req.requester_id === user.id && !viaAdmin) return { ok: false, reason: "NOT_YOUR_TURN" };
 
   const stage = req.stage;
   let stageDone = false;
@@ -189,7 +197,7 @@ export async function applyDecision({
         requestId,
         user.id,
         "REJECT",
-        `${STAGE_LABEL[stage]}: ${comment}${onBehalf ? ` (อนุมัติแทน ${mine.name})` : ""}`,
+        `${STAGE_LABEL[stage]}: ${comment}${behalfNote ? ` (${behalfNote})` : ""}`,
         req.amount,
       ));
       (await enqueue(requestId, req.requester_id, "RESULT", { note: comment }));
@@ -217,7 +225,7 @@ export async function applyDecision({
       requestId,
       user.id,
       "APPROVE",
-      onBehalf ? `${comment}${comment ? " " : ""}(อนุมัติแทน ${mine.name})` : comment,
+      behalfNote ? `${comment}${comment ? " " : ""}(${behalfNote})` : comment,
       req.amount,
     ));
     if (stillPending.n > 0) return;

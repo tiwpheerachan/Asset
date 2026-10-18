@@ -90,11 +90,20 @@ export default async function RequestDetailPage({
   const draw = await (await referencing.length > 0 ? drawdownFor(req.id) : null);
 
   const isOwner = req.requester_id === user.id || user.role === "ADMIN";
-  const myTurn =
+  const curApprovers =
+    req.status === "PENDING"
+      ? (await currentStepApprovers(req.id, req.stage, req.current_step)).filter(
+          (a) => a.status === "PENDING" && a.kind === "APPROVE",
+        )
+      : [];
+  const myTurn = curApprovers.some((a) => a.user_id === user.id);
+  // ผู้ดูแลระบบอนุมัติ/ไม่อนุมัติแทนได้ แม้ไม่อยู่ในสายอนุมัติ — รวมถึงเอกสารของตัวเอง
+  const adminOverride =
+    !myTurn &&
+    user.role === "ADMIN" &&
     req.status === "PENDING" &&
-    (await currentStepApprovers(req.id, req.stage, req.current_step)).some(
-      (a) => a.user_id === user.id && a.status === "PENDING" && a.kind === "APPROVE",
-    );
+    curApprovers.length > 0;
+  const pendingApprovers = curApprovers.map((a) => ({ rowId: a.id, name: a.name }));
   const waited = req.status === "PENDING" ? waitingDays(req.submitted_at) : 0;
   // "ไฟล์แนบอื่น ๆ" = ไฟล์ที่ไม่ได้อยู่กับช่องไหน — ไฟล์ในเซลล์ของตารางแสดงอยู่ในตาราง
   // ของมันอยู่แล้ว ถ้านับรวมมาตรงนี้ด้วยก็จะเห็นไฟล์เดียวกันสองที่
@@ -166,8 +175,15 @@ export default async function RequestDetailPage({
         </div>
       )}
 
-      {myTurn && <DecidePanel requestId={req.id} stage={req.stage}
-                              users={users.filter((u) => u.id !== user.id && u.id !== req.requester_id)} />}
+      {(myTurn || adminOverride) && (
+        <DecidePanel
+          requestId={req.id}
+          stage={req.stage}
+          users={users.filter((u) => u.id !== user.id && u.id !== req.requester_id)}
+          adminOverride={adminOverride}
+          pendingApprovers={pendingApprovers}
+        />
+      )}
       {isOwner && req.status === "PRELIM_APPROVED" && (
         <FinalRequestPanel requestId={req.id} amount={req.amount} />
       )}
