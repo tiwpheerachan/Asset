@@ -46,6 +46,12 @@ export function DecidePanel({
 }) {
   const t = useT();
   const [actRow, setActRow] = useState<number | "">(pendingApprovers[0]?.rowId ?? "");
+  // หลังอนุมัติขั้นหนึ่งแล้วหน้า re-render เป็นขั้นถัดไป — ถ้าแถวที่เลือกไว้ไม่อยู่ในขั้น
+  // ปัจจุบันแล้ว ให้ย้อนกลับไปใช้ผู้อนุมัติคนแรกของขั้นใหม่ กันส่งรหัสแถวเก่าที่หมดคิวไป
+  // (อาการเดิม: กดขั้นถัดไปทันทีแล้วขึ้น "ยังไม่ถึงคิว" ต้องรีโหลดก่อน)
+  const effectiveRow = pendingApprovers.some((p) => p.rowId === actRow)
+    ? actRow
+    : (pendingApprovers[0]?.rowId ?? "");
   const [decide, decideForm] = useActionState(decideAction, initial);
   const [back, backForm] = useActionState(sendBackAction, initial);
   const [transfer, transferForm] = useActionState(transferAction, initial);
@@ -95,7 +101,7 @@ export function DecidePanel({
           {pendingApprovers.length > 1 ? (
             <label className="block">
               <span className="mb-1 block text-xs text-text-soft">{t("decide.actForWhom")}</span>
-              <select className="input" value={actRow} onChange={(e) => setActRow(Number(e.target.value))}>
+              <select className="input" value={effectiveRow} onChange={(e) => setActRow(Number(e.target.value))}>
                 {pendingApprovers.map((p) => (
                   <option key={p.rowId} value={p.rowId}>{p.name}</option>
                 ))}
@@ -118,7 +124,7 @@ export function DecidePanel({
       <form id={`approve-${requestId}`} action={decideForm}>
         <input type="hidden" name="request_id" value={requestId} />
         <input type="hidden" name="decision" value="APPROVE" />
-        {adminOverride && <input type="hidden" name="approver_row" value={actRow} />}
+        {adminOverride && <input type="hidden" name="approver_row" value={effectiveRow} />}
         {/* ป้ายช่องความเห็นไม่ต้องมีบรรทัดของตัวเอง — ข้อความจาง ๆ ในช่องบอกอยู่แล้ว
             ว่าพิมพ์อะไรลงไป และมันไม่บังคับกรอก */}
         <label className="sr-only" htmlFor="approve_comment">
@@ -200,7 +206,7 @@ export function DecidePanel({
         <form action={decideForm} className="tone-rose space-y-2 rounded-xl p-3">
           <input type="hidden" name="request_id" value={requestId} />
           <input type="hidden" name="decision" value="REJECT" />
-          {adminOverride && <input type="hidden" name="approver_row" value={actRow} />}
+          {adminOverride && <input type="hidden" name="approver_row" value={effectiveRow} />}
           <p className="text-sm">{t("decide.rejectWarn")}</p>
           <textarea name="comment" rows={2} required className="input"
                     placeholder={t("decide.rejectReason")} />

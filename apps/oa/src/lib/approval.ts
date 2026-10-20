@@ -157,10 +157,12 @@ export async function applyDecision({
     }
   }
   // ผู้ดูแลระบบอนุมัติ/ไม่อนุมัติแทนได้แม้ไม่มีการมอบหมาย — เลือกรายตัวผ่าน approverRowId
-  // (ถ้าไม่ระบุ จะทำแทนผู้อนุมัติคนแรกที่ยังค้างในขั้นนี้) · บันทึก audit ว่า "โดยผู้ดูแลระบบ"
-  if (!mine && user.role === "ADMIN" && eligible.length > 0) {
-    mine = eligible[0];
-    viaAdmin = true;
+  // บันทึก audit ว่า "โดยผู้ดูแลระบบ" · ถ้ารหัสแถวที่ส่งมาไม่อยู่ในคิวแล้ว (ฟอร์มส่งรหัส
+  // ของขั้นก่อนมาเพราะเพิ่งเปลี่ยนขั้น) ให้ย้อนไปทำแทนผู้อนุมัติที่ยังค้างคนแรกของขั้นปัจจุบัน
+  if (!mine && user.role === "ADMIN") {
+    const pendingNow = rows.filter((r) => r.status === "PENDING" && r.kind === "APPROVE");
+    mine = eligible[0] ?? pendingNow[0];
+    if (mine) viaAdmin = true;
   }
   if (!mine) return { ok: false, reason: "NOT_YOUR_TURN" };
 
