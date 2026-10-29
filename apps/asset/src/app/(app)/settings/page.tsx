@@ -166,6 +166,7 @@ function RunningTab({ editable }: { editable: boolean }) {
   const { state, updateRunning } = useStore();
   const [cfg, setCfg] = useState(state.running[0]);
   const [y, m, d] = TODAY.split('-');
+  if (!cfg) return <Notice tone="amber" icon={<Info size={14} />}>ยังไม่มีการตั้งค่าเลขที่เอกสาร — รีโหลดหน้าอีกครั้ง หรือติดต่อผู้ดูแลระบบ</Notice>;
   const preview = `${cfg.prefix}${cfg.includeYear ? y.slice(2) : ''}${cfg.includeMonth ? m : ''}${cfg.includeDay ? d : ''}${String(cfg.nextSeq).padStart(cfg.seqDigits, '0')}`;
   return (
     <div className="grid gap-6 lg:grid-cols-2">
