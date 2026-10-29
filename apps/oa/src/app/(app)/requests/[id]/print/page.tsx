@@ -38,6 +38,15 @@ export default async function PrintRequestPage({
   if (!(await canView(req, user))) redirect("/requests");
 
   const data = parseJson<FormValues>(req.data, {});
+
+  // ข้อมูลกิจการ (โลโก้/ชื่อ/ที่อยู่) จาก ตั้งค่า → ข้อมูลกิจการ — fallback เป็น env เดิม
+  const cpRow = await db
+    .prepare("SELECT value FROM app_meta WHERE key = 'company_profile'")
+    .get<{ value: string }>();
+  let cp: Record<string, string> = {};
+  try { cp = cpRow?.value ? JSON.parse(cpRow.value) : {}; } catch { cp = {}; }
+  const compTh = cp.name_th || COMPANY;
+  const compEn = cp.name_en || COMPANY_EN;
   // ช่องที่ไม่เข้าเงื่อนไขไม่เคยถูกกรอกและไม่ได้เป็นส่วนหนึ่งของเอกสารใบนี้ —
   // แสดงเป็นบรรทัดว่างเปล่าจะทำให้อ่านเหมือนว่ามีคนลืมกรอก
   const fields = visibleFields((await getActiveFields(req.template_id)), data);
@@ -125,8 +134,10 @@ export default async function PrintRequestPage({
         } as React.CSSProperties}
       >
         <div className="mb-4 text-center">
-          {print.showCompany && COMPANY && <div className="text-lg font-bold">{COMPANY}</div>}
-          {print.showCompany && COMPANY_EN && <div className="text-sm">{COMPANY_EN}</div>}
+          {print.showCompany && cp.logo && <img src={cp.logo} alt="" className="mx-auto mb-2 h-16 object-contain" />}
+          {print.showCompany && compTh && <div className="text-lg font-bold">{compTh}</div>}
+          {print.showCompany && compEn && <div className="text-sm">{compEn}</div>}
+          {print.showCompany && cp.address && <div className="mt-0.5 text-xs text-gray-500">{cp.address}</div>}
           <div className="mt-3 text-2xl font-bold">{req.template_name}</div>
           {/* เลขนี้คือตัวอ้างอิงที่ต้องกรอกใน OA — ต้องอ่านออกจากกระดาษที่ปรินต์มา */}
           <div className="mt-1 font-mono text-sm font-bold">{t("print.docNo", { no: req.doc_no })}</div>

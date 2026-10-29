@@ -106,6 +106,7 @@ export default function Sidebar({
       title: t("nav.group.admin"),
       icon: IconBuilding,
       items: [
+        { href: "/admin/company", label: "ข้อมูลกิจการ", icon: IconBuilding, accent: "accent-amber", match: startsWith("/admin/company") },
         { href: "/admin/users", label: t("users.nav"), icon: IconUsers, accent: "accent-violet", match: startsWith("/admin/users") },
         { href: "/admin/forms", label: t("nav.forms"), icon: IconForm, accent: "accent-sky", match: startsWith("/admin/forms") },
         { href: "/admin/analytics", label: t("analytics.title"), icon: IconChart, accent: "accent-emerald", match: startsWith("/admin/analytics") },

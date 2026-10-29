@@ -2109,3 +2109,17 @@ export async function addUserFromDirectoryAction(form: FormData): Promise<void> 
   redirect("/admin/users?ok=added");
 }
 
+/** บันทึกข้อมูลกิจการ (ชื่อ/ที่อยู่/โลโก้/ตราประทับ) เก็บเป็น JSON ใน app_meta.company_profile */
+export async function saveCompanyProfile(form: Record<string, unknown>) {
+  await requireAdmin();
+  const json = JSON.stringify(form ?? {});
+  await db
+    .prepare(
+      "INSERT INTO app_meta (key, value) VALUES ('company_profile', ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value",
+    )
+    .run(json);
+  revalidatePath("/admin/company");
+  revalidatePath("/requests");
+  return { ok: true as const };
+}
+
