@@ -1,0 +1,36 @@
+{
+  "PeakGeneralLedger": {
+    "fromDate": "20260101",
+    "toDate": "20261029",
+    "generalLedgers": [
+      {
+        "account": {
+          "accountCode": "124107",
+          "accountName": "เครื่องตกแต่งสำนักงาน",
+          "subAccountCode": null,
+          "subAccountName": null,
+          "isSubAccount": false
+        },
+        "summary": {
+          "beginningBalance": { "debit": 851303.74, "credit": 0.0 },
+          "change": { "debit": 13850.47, "credit": 0.0 },
+          "endingBalance": { "debit": 865154.21, "credit": 0.0 }
+        },
+        "transactions": [
+          {
+            "date": "20260210",
+            "journalNumber": "UV-202602115",
+            "description": "เครื่องตกแต่งสำนักงาน - CHR-00002 - บริษัท โมดิน่า คอร์ปอเรชั่น จำกัด - #PA-20260200004",
+            "debit": 13850.47,
+            "credit": 0.0
+          }
+        ],
+        "totalTransactions": 1
+      }
+    ],
+    "resCode": "200",
+    "resDesc": "Success"
+  },
+  "eventType": "Retrieve",
+  "apiType": "ApiFinancialReports"
+}

@@ -31,6 +31,12 @@ export interface PeakCandidate {
   amount: number;
   account_code: string;
   account_sub_code: string;
+  /** (เฉพาะ MCP/GL) รหัสทรัพย์สินของ PEAK เช่น OEQ-00014, COM-00009 */
+  asset_code?: string;
+  /** (เฉพาะ MCP/GL) ชื่อบัญชีสินทรัพย์ เช่น "อุปกรณ์สำนักงาน" */
+  account_name?: string;
+  /** (เฉพาะ MCP/GL) เลข journal ของ PEAK เช่น UV-202601053 */
+  journal_number?: string;
 }
 
 function cfg() {
@@ -46,7 +52,8 @@ function cfg() {
     userToken,
     // เอกสาร PEAK: Time-Signature เป็น HMAC-SHA1 hex (ตัวอย่าง 40 ตัวอักษร) → default hex
     sigEnc: (process.env.PEAK_SIG_ENCODING === 'base64' ? 'base64' : 'hex') as 'hex' | 'base64',
-    prefixes: (process.env.PEAK_ASSET_ACCOUNT_PREFIXES || '12')
+    // ทรัพย์สินถาวรจริงคือ 1241xx — ไม่รวม 121/122/123 (เงินลงทุน/เงินกู้) และ 1242xx (ค่าเสื่อมสะสม)
+    prefixes: (process.env.PEAK_ASSET_ACCOUNT_PREFIXES || '1241')
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean),

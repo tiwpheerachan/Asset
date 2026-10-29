@@ -1,0 +1,696 @@
+{
+  "PeakGeneralLedger": {
+    "fromDate": "20260101",
+    "toDate": "20261029",
+    "generalLedgers": [
+      {
+        "account": {
+          "accountCode": "124106",
+          "accountName": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19",
+          "subAccountCode": null,
+          "subAccountName": null,
+          "isSubAccount": false
+        },
+        "summary": {
+          "beginningBalance": {
+            "debit": 7084771.83,
+            "credit": 0.0
+          },
+          "change": {
+            "debit": 2256168.24,
+            "credit": 0.0
+          },
+          "endingBalance": {
+            "debit": 9340940.07,
+            "credit": 0.0
+          }
+        },
+        "transactions": [
+          {
+            "date": "20260107",
+            "journalNumber": "UV-202601053",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - OEQ-00014 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260100003",
+            "debit": 5635.51,
+            "credit": 0.0
+          },
+          {
+            "date": "20260107",
+            "journalNumber": "UV-202601232",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - OEQ-00017 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E04\u0E2D\u0E21\u0E40\u0E0B\u0E40\u0E27\u0E48\u0E19 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260100008",
+            "debit": 2607.48,
+            "credit": 0.0
+          },
+          {
+            "date": "20260109",
+            "journalNumber": "UV-202601054",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00009 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260100004",
+            "debit": 33626.17,
+            "credit": 0.0
+          },
+          {
+            "date": "20260112",
+            "journalNumber": "UV-202601033",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - OEQ-00013 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260100001",
+            "debit": 1308.41,
+            "credit": 0.0
+          },
+          {
+            "date": "20260114",
+            "journalNumber": "UV-202601052",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00008 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260100002",
+            "debit": 63514.02,
+            "credit": 0.0
+          },
+          {
+            "date": "20260116",
+            "journalNumber": "UV-202601231",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - OEQ-00016 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E0B\u0E35\u0E2D\u0E32\u0E23\u0E4C\u0E0B\u0E35 \u0E44\u0E17\u0E27\u0E31\u0E2A\u0E14\u0E38 \u0E08\u0E33\u0E01\u0E31\u0E14 - #PA-20260100007",
+            "debit": 3299.07,
+            "credit": 0.0
+          },
+          {
+            "date": "20260120",
+            "journalNumber": "UV-202601229",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - OEQ-00015 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260100006",
+            "debit": 3261.68,
+            "credit": 0.0
+          },
+          {
+            "date": "20260126",
+            "journalNumber": "UV-202601055",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00010 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260100005",
+            "debit": 59775.7,
+            "credit": 0.0
+          },
+          {
+            "date": "20260202",
+            "journalNumber": "PV-2026021046",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00010 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260200002",
+            "debit": 29887.85,
+            "credit": 0.0
+          },
+          {
+            "date": "20260204",
+            "journalNumber": "UV-202602027",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - PRT-00005 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260200001",
+            "debit": 3542.06,
+            "credit": 0.0
+          },
+          {
+            "date": "20260227",
+            "journalNumber": "UV-202602028",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - PRT-00006 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260200003",
+            "debit": 12785.05,
+            "credit": 0.0
+          },
+          {
+            "date": "20260302",
+            "journalNumber": "UV-202603014",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00013 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260300002",
+            "debit": 15411.21,
+            "credit": 0.0
+          },
+          {
+            "date": "20260302",
+            "journalNumber": "UV-202603015",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00014 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E22\u0E39\u0E19\u0E34\u0E15\u0E35\u0E49 \u0E44\u0E2D\u0E17\u0E35 \u0E0B\u0E34\u0E2A\u0E40\u0E15\u0E47\u0E21 \u0E08\u0E33\u0E01\u0E31\u0E14 - #PA-20260300003",
+            "debit": 14943.93,
+            "credit": 0.0
+          },
+          {
+            "date": "20260311",
+            "journalNumber": "UV-202603011",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00011 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E1B\u0E40\u0E1B\u0E34\u0E49\u0E25 \u0E40\u0E0B\u0E32\u0E17\u0E4C \u0E40\u0E2D\u0E40\u0E0A\u0E35\u0E22 (\u0E1B\u0E23\u0E30\u0E40\u0E17\u0E28\u0E44\u0E17\u0E22) \u0E08\u0E33\u0E01\u0E31\u0E14 - #PA-20260300001",
+            "debit": 38224.3,
+            "credit": 0.0
+          },
+          {
+            "date": "20260311",
+            "journalNumber": "UV-202603011",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00012 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E1B\u0E40\u0E1B\u0E34\u0E49\u0E25 \u0E40\u0E0B\u0E32\u0E17\u0E4C \u0E40\u0E2D\u0E40\u0E0A\u0E35\u0E22 (\u0E1B\u0E23\u0E30\u0E40\u0E17\u0E28\u0E44\u0E17\u0E22) \u0E08\u0E33\u0E01\u0E31\u0E14 - #PA-20260300001",
+            "debit": 76448.6,
+            "credit": 0.0
+          },
+          {
+            "date": "20260311",
+            "journalNumber": "UV-202603179",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - OEQ-00016 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E0B\u0E35\u0E2D\u0E32\u0E23\u0E4C\u0E0B\u0E35 \u0E44\u0E17\u0E27\u0E31\u0E2A\u0E14\u0E38 \u0E08\u0E33\u0E01\u0E31\u0E14 - #PA-20260300005",
+            "debit": 2971.96,
+            "credit": 0.0
+          },
+          {
+            "date": "20260325",
+            "journalNumber": "PV-2026031016",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00015 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260300004",
+            "debit": 46233.64,
+            "credit": 0.0
+          },
+          {
+            "date": "20260416",
+            "journalNumber": "UV-202604092",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - MOB-00002 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E1B\u0E40\u0E1B\u0E34\u0E49\u0E25 \u0E40\u0E0B\u0E32\u0E17\u0E4C \u0E40\u0E2D\u0E40\u0E0A\u0E35\u0E22 (\u0E1B\u0E23\u0E30\u0E40\u0E17\u0E28\u0E44\u0E17\u0E22) \u0E08\u0E33\u0E01\u0E31\u0E14 - #PA-20260400003",
+            "debit": 27943.93,
+            "credit": 0.0
+          },
+          {
+            "date": "20260416",
+            "journalNumber": "UV-202604092",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - MOB-00003 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E1B\u0E40\u0E1B\u0E34\u0E49\u0E25 \u0E40\u0E0B\u0E32\u0E17\u0E4C \u0E40\u0E2D\u0E40\u0E0A\u0E35\u0E22 (\u0E1B\u0E23\u0E30\u0E40\u0E17\u0E28\u0E44\u0E17\u0E22) \u0E08\u0E33\u0E01\u0E31\u0E14 - #PA-20260400003",
+            "debit": 27943.93,
+            "credit": 0.0
+          },
+          {
+            "date": "20260416",
+            "journalNumber": "UV-202604092",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - MOB-00004 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E1B\u0E40\u0E1B\u0E34\u0E49\u0E25 \u0E40\u0E0B\u0E32\u0E17\u0E4C \u0E40\u0E2D\u0E40\u0E0A\u0E35\u0E22 (\u0E1B\u0E23\u0E30\u0E40\u0E17\u0E28\u0E44\u0E17\u0E22) \u0E08\u0E33\u0E01\u0E31\u0E14 - #PA-20260400003",
+            "debit": 27943.93,
+            "credit": 0.0
+          },
+          {
+            "date": "20260428",
+            "journalNumber": "UV-202604025",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - PRT-00005 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260400001",
+            "debit": 7084.11,
+            "credit": 0.0
+          },
+          {
+            "date": "20260430",
+            "journalNumber": "UV-202604026",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00016 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E40\u0E08.\u0E44\u0E2D.\u0E1A\u0E35. \u0E04\u0E2D\u0E21\u0E1E\u0E34\u0E27\u0E40\u0E15\u0E2D\u0E23\u0E4C \u0E01\u0E23\u0E38\u0E4A\u0E1B \u0E08\u0E33\u0E01\u0E31\u0E14 - #PA-20260400002",
+            "debit": 79392.52,
+            "credit": 0.0
+          },
+          {
+            "date": "20260508",
+            "journalNumber": "PV-202605201",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00018 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260500001",
+            "debit": 11962.62,
+            "credit": 0.0
+          },
+          {
+            "date": "20260512",
+            "journalNumber": "UV-202605005",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00017 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260500002",
+            "debit": 14476.64,
+            "credit": 0.0
+          },
+          {
+            "date": "20260522",
+            "journalNumber": "UV-202605161",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00026 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260500004",
+            "debit": 100878.5,
+            "credit": 0.0
+          },
+          {
+            "date": "20260522",
+            "journalNumber": "UV-202605286",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00028 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260500007",
+            "debit": 5598.13,
+            "credit": 0.0
+          },
+          {
+            "date": "20260522",
+            "journalNumber": "UV-202605286",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00030 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260500007",
+            "debit": 27093.46,
+            "credit": 0.0
+          },
+          {
+            "date": "20260525",
+            "journalNumber": "UV-202605163",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00027 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260500005",
+            "debit": 13551.4,
+            "credit": 0.0
+          },
+          {
+            "date": "20260526",
+            "journalNumber": "UV-202605177",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00028 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260500006",
+            "debit": 5598.13,
+            "credit": 0.0
+          },
+          {
+            "date": "20260526",
+            "journalNumber": "UV-202605177",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00029 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260500006",
+            "debit": 28962.62,
+            "credit": 0.0
+          },
+          {
+            "date": "20260527",
+            "journalNumber": "UV-202605153",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00019 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260500003",
+            "debit": 6345.79,
+            "credit": 0.0
+          },
+          {
+            "date": "20260527",
+            "journalNumber": "UV-202605153",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00024 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260500003",
+            "debit": 14000.0,
+            "credit": 0.0
+          },
+          {
+            "date": "20260527",
+            "journalNumber": "UV-202605153",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00020 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260500003",
+            "debit": 2981.31,
+            "credit": 0.0
+          },
+          {
+            "date": "20260527",
+            "journalNumber": "UV-202605153",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00023 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260500003",
+            "debit": 8869.16,
+            "credit": 0.0
+          },
+          {
+            "date": "20260527",
+            "journalNumber": "UV-202605153",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00025 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260500003",
+            "debit": 1392.52,
+            "credit": 0.0
+          },
+          {
+            "date": "20260527",
+            "journalNumber": "UV-202605153",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00021 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260500003",
+            "debit": 1448.6,
+            "credit": 0.0
+          },
+          {
+            "date": "20260527",
+            "journalNumber": "UV-202605153",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00022 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260500003",
+            "debit": 4626.17,
+            "credit": 0.0
+          },
+          {
+            "date": "20260611",
+            "journalNumber": "UV-202606443",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00034 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260600003",
+            "debit": 10822.44,
+            "credit": 0.0
+          },
+          {
+            "date": "20260611",
+            "journalNumber": "UV-202606443",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00035 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260600003",
+            "debit": 14000.0,
+            "credit": 0.0
+          },
+          {
+            "date": "20260618",
+            "journalNumber": "UV-202606444",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00033 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E1B\u0E40\u0E1B\u0E34\u0E49\u0E25 \u0E40\u0E0B\u0E32\u0E17\u0E4C \u0E40\u0E2D\u0E40\u0E0A\u0E35\u0E22 (\u0E1B\u0E23\u0E30\u0E40\u0E17\u0E28\u0E44\u0E17\u0E22) \u0E08\u0E33\u0E01\u0E31\u0E14 - #PA-20260600004",
+            "debit": 34485.98,
+            "credit": 0.0
+          },
+          {
+            "date": "20260619",
+            "journalNumber": "UV-202606480",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00019 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260600006",
+            "debit": 6345.79,
+            "credit": 0.0
+          },
+          {
+            "date": "20260619",
+            "journalNumber": "UV-202606480",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00037 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260600006",
+            "debit": 1859.81,
+            "credit": 0.0
+          },
+          {
+            "date": "20260619",
+            "journalNumber": "UV-202606480",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00038 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260600006",
+            "debit": 13626.17,
+            "credit": 0.0
+          },
+          {
+            "date": "20260619",
+            "journalNumber": "UV-202606480",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00020 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260600006",
+            "debit": 2887.85,
+            "credit": 0.0
+          },
+          {
+            "date": "20260619",
+            "journalNumber": "UV-202606480",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00039 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260600006",
+            "debit": 10467.29,
+            "credit": 0.0
+          },
+          {
+            "date": "20260619",
+            "journalNumber": "UV-202606480",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00040 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260600006",
+            "debit": 1205.61,
+            "credit": 0.0
+          },
+          {
+            "date": "20260619",
+            "journalNumber": "UV-202606480",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00021 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260600006",
+            "debit": 1448.6,
+            "credit": 0.0
+          },
+          {
+            "date": "20260619",
+            "journalNumber": "UV-202606480",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00041 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260600006",
+            "debit": 2242.99,
+            "credit": 0.0
+          },
+          {
+            "date": "20260619",
+            "journalNumber": "UV-202606480",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00022 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260600006",
+            "debit": 4626.17,
+            "credit": 0.0
+          },
+          {
+            "date": "20260622",
+            "journalNumber": "UV-202606479",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00036 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260600005",
+            "debit": 18504.67,
+            "credit": 0.0
+          },
+          {
+            "date": "20260701",
+            "journalNumber": "UV-202607110",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - PRT-00008 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260700002",
+            "debit": 7280.37,
+            "credit": 0.0
+          },
+          {
+            "date": "20260701",
+            "journalNumber": "UV-202607110",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - PRT-00009 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260700002",
+            "debit": 4102.8,
+            "credit": 0.0
+          },
+          {
+            "date": "20260703",
+            "journalNumber": "PV-2026071012",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - PRT-00011 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260700003",
+            "debit": 16056.07,
+            "credit": 0.0
+          },
+          {
+            "date": "20260703",
+            "journalNumber": "PV-2026071012",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - OEQ-00018 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260700003",
+            "debit": 3719.63,
+            "credit": 0.0
+          },
+          {
+            "date": "20260703",
+            "journalNumber": "PV-2026071012",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00043 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260700003",
+            "debit": 44841.12,
+            "credit": 0.0
+          },
+          {
+            "date": "20260703",
+            "journalNumber": "PV-2026071014",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - PRT-00011 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260700004",
+            "debit": 16056.07,
+            "credit": 0.0
+          },
+          {
+            "date": "20260703",
+            "journalNumber": "PV-2026071014",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - OEQ-00018 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260700004",
+            "debit": 3719.63,
+            "credit": 0.0
+          },
+          {
+            "date": "20260703",
+            "journalNumber": "PV-2026071014",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00043 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260700004",
+            "debit": 44841.12,
+            "credit": 0.0
+          },
+          {
+            "date": "20260708",
+            "journalNumber": "UV-202607099",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - PRT-00007 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260700001",
+            "debit": 4102.8,
+            "credit": 0.0
+          },
+          {
+            "date": "20260708",
+            "journalNumber": "UV-202607099",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00042 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260700001",
+            "debit": 219532.71,
+            "credit": 0.0
+          },
+          {
+            "date": "20260731",
+            "journalNumber": "UV-202607460",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00044 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260700005",
+            "debit": 6532.71,
+            "credit": 0.0
+          },
+          {
+            "date": "20260731",
+            "journalNumber": "UV-202607460",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00042 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260700005",
+            "debit": 219532.71,
+            "credit": 0.0
+          },
+          {
+            "date": "20260731",
+            "journalNumber": "UV-202607460",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00045 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260700005",
+            "debit": 33551.4,
+            "credit": 0.0
+          },
+          {
+            "date": "20260804",
+            "journalNumber": "UV-202608033",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00046 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260800001",
+            "debit": 8878.5,
+            "credit": 0.0
+          },
+          {
+            "date": "20260810",
+            "journalNumber": "UV-202608143",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - PRT-00009 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260800002",
+            "debit": 8205.61,
+            "credit": 0.0
+          },
+          {
+            "date": "20260810",
+            "journalNumber": "UV-202608143",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00043 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260800002",
+            "debit": 42971.96,
+            "credit": 0.0
+          },
+          {
+            "date": "20260817",
+            "journalNumber": "UV-202608204",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - PRT-00009 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260800005",
+            "debit": 8205.61,
+            "credit": 0.0
+          },
+          {
+            "date": "20260817",
+            "journalNumber": "UV-202608204",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - OEQ-00021 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260800005",
+            "debit": 7271.03,
+            "credit": 0.0
+          },
+          {
+            "date": "20260817",
+            "journalNumber": "UV-202608204",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00043 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260800005",
+            "debit": 42971.96,
+            "credit": 0.0
+          },
+          {
+            "date": "20260820",
+            "journalNumber": "UV-202608231",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00050 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260800006",
+            "debit": 8401.87,
+            "credit": 0.0
+          },
+          {
+            "date": "20260820",
+            "journalNumber": "UV-202608231",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00051 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260800006",
+            "debit": 1205.61,
+            "credit": 0.0
+          },
+          {
+            "date": "20260820",
+            "journalNumber": "UV-202608231",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00052 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260800006",
+            "debit": 1299.07,
+            "credit": 0.0
+          },
+          {
+            "date": "20260820",
+            "journalNumber": "UV-202608231",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00053 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260800006",
+            "debit": 5878.5,
+            "credit": 0.0
+          },
+          {
+            "date": "20260820",
+            "journalNumber": "UV-202608231",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00044 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260800006",
+            "debit": 13626.17,
+            "credit": 0.0
+          },
+          {
+            "date": "20260820",
+            "journalNumber": "UV-202608231",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00054 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260800006",
+            "debit": 2289.72,
+            "credit": 0.0
+          },
+          {
+            "date": "20260820",
+            "journalNumber": "UV-202608231",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00055 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260800006",
+            "debit": 13457.94,
+            "credit": 0.0
+          },
+          {
+            "date": "20260820",
+            "journalNumber": "UV-202608231",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00056 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260800006",
+            "debit": 1299.07,
+            "credit": 0.0
+          },
+          {
+            "date": "20260820",
+            "journalNumber": "UV-202608231",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00057 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260800006",
+            "debit": 1588.79,
+            "credit": 0.0
+          },
+          {
+            "date": "20260827",
+            "journalNumber": "UV-202608184",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - OEQ-00021 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260800003",
+            "debit": 18177.57,
+            "credit": 0.0
+          },
+          {
+            "date": "20260831",
+            "journalNumber": "UV-202608185",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - OEQ-00022 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260800004",
+            "debit": 4813.08,
+            "credit": 0.0
+          },
+          {
+            "date": "20260831",
+            "journalNumber": "UV-202608185",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - OEQ-00023 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260800004",
+            "debit": 13738.32,
+            "credit": 0.0
+          },
+          {
+            "date": "20260907",
+            "journalNumber": "PV-202609134",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00047 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E04\u0E2D\u0E21\u0E40\u0E0B\u0E40\u0E27\u0E48\u0E19 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260900001",
+            "debit": 41962.62,
+            "credit": 0.0
+          },
+          {
+            "date": "20260916",
+            "journalNumber": "PV-202609405",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00044 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260900002",
+            "debit": 7093.46,
+            "credit": 0.0
+          },
+          {
+            "date": "20260916",
+            "journalNumber": "PV-202609405",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00048 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260900002",
+            "debit": 38224.3,
+            "credit": 0.0
+          },
+          {
+            "date": "20260916",
+            "journalNumber": "PV-202609409",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00049 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E40\u0E08.\u0E44\u0E2D.\u0E1A\u0E35. \u0E04\u0E2D\u0E21\u0E1E\u0E34\u0E27\u0E40\u0E15\u0E2D\u0E23\u0E4C \u0E01\u0E23\u0E38\u0E4A\u0E1B \u0E08\u0E33\u0E01\u0E31\u0E14 - #PA-20260900003",
+            "debit": 31766.36,
+            "credit": 0.0
+          },
+          {
+            "date": "20260916",
+            "journalNumber": "UV-202609152",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - PRT-00012 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260900004",
+            "debit": 8401.87,
+            "credit": 0.0
+          },
+          {
+            "date": "20260922",
+            "journalNumber": "UV-202609153",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00058 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260900005",
+            "debit": 233551.4,
+            "credit": 0.0
+          },
+          {
+            "date": "20260925",
+            "journalNumber": "UV-202609155",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00044 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260900006",
+            "debit": 7149.53,
+            "credit": 0.0
+          },
+          {
+            "date": "20260925",
+            "journalNumber": "UV-202609155",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - PRT-00013 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260900006",
+            "debit": 2953.27,
+            "credit": 0.0
+          },
+          {
+            "date": "20260930",
+            "journalNumber": "UV-202609191",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - PRT-00009 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260900007",
+            "debit": 4009.35,
+            "credit": 0.0
+          },
+          {
+            "date": "20260930",
+            "journalNumber": "UV-202609191",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00059 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20260900007",
+            "debit": 23355.14,
+            "credit": 0.0
+          },
+          {
+            "date": "20261024",
+            "journalNumber": "UV-202610023",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00060 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20261000001",
+            "debit": 700.93,
+            "credit": 0.0
+          },
+          {
+            "date": "20261024",
+            "journalNumber": "UV-202610023",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00061 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20261000001",
+            "debit": 28962.62,
+            "credit": 0.0
+          },
+          {
+            "date": "20261024",
+            "journalNumber": "UV-202610023",
+            "description": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E2A\u0E33\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 - COM-00062 - \u0E1A\u0E23\u0E34\u0E29\u0E31\u0E17 \u0E41\u0E2D\u0E14\u0E44\u0E27\u0E0B\u0E4C \u0E44\u0E2D\u0E17\u0E35 \u0E2D\u0E34\u0E19\u0E1F\u0E34\u0E19\u0E34\u0E17 \u0E08\u0E33\u0E01\u0E31\u0E14 (\u0E21\u0E2B\u0E32\u0E0A\u0E19) - #PA-20261000001",
+            "debit": 45794.39,
+            "credit": 0.0
+          }
+        ],
+        "totalTransactions": 94
+      }
+    ],
+    "resCode": "200",
+    "resDesc": "Success"
+  },
+  "eventType": "Retrieve",
+  "apiType": "ApiFinancialReports"
+}
