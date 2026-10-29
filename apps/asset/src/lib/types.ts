@@ -39,6 +39,17 @@ export interface Company {
   name: Localized;
   taxId: string;
   active: boolean;
+  /** โปรไฟล์กิจการ (ใช้บนป้าย/รายงาน/เอกสาร) — เพิ่มได้โดยไม่ต้องแก้ schema (เก็บใน JSON) */
+  branchName?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  authorizedSigner?: string;
+  footerNote?: string;
+  /** รูปภาพ base64 data URL (อัปโหลดจากหน้าตั้งค่า) */
+  logo?: string;
+  stamp?: string;
 }
 export interface Branch {
   id: string;
