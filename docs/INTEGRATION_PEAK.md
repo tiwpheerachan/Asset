@@ -29,38 +29,52 @@
 - แปลงเป็น `OARecord` (`templateCode: 'PEAK'`) เข้าคิวหน้า **OA Import** → รีวิว → ขึ้นทะเบียน + คิดค่าเสื่อม
 
 ## 4. ไฟล์ในระบบ (ฝั่ง `apps/asset`)
+
+**แหล่งข้อมูล 2 ทาง เลือกด้วย env `PEAK_SOURCE`:**
+- **`mcp` (ค่าเริ่มต้น, ที่ใช้งานจริง)** — อ่านจาก snapshot ที่ Claude ดึงผ่าน **PEAK MCP** (read-only) · ไม่ต้องตั้ง credential · ใช้ **General Ledger ของบัญชีทรัพย์สิน 1241xx** เป็นต้นทาง (สะอาดกว่า Expense เพราะเจอเฉพาะที่ลงเป็นทรัพย์สินจริง + คำอธิบายฝังรหัสทรัพย์สิน/ผู้ขาย/เลข PA ของ PEAK มาให้)
+- **`rest`** — ยิง PEAK Open API สด (HMAC + token 2 ชั้น) ตามข้อ 2 · ต้องมี credential
+
 | ไฟล์ | หน้าที่ |
 |---|---|
-| `src/lib/peak.ts` | auth (token + HMAC sign) + `fetchAssetCandidates()` ดึง Expenses กรอง 12xx |
-| `src/lib/peak-mapping.ts` | `mapPeakCandidates()` → `OARecord[]` (`templateCode:'PEAK'`) |
-| `src/app/api/peak/sync/route.ts` | `GET /api/peak/sync` (ถือ token ฝั่ง server) `?from=&to=` |
+| `src/data/peak/asset-candidates.json` | **snapshot** ที่ดึงผ่าน MCP (candidate การซื้อทรัพย์สิน 1241xx) |
+| `scripts/build-peak-snapshot.mjs` | แปลง raw GL (`scripts/peak-raw/*.json`) → snapshot + parse รหัสทรัพย์สิน/ผู้ขาย/PA |
+| `src/lib/peak-mcp.ts` | `loadSnapshotCandidates()` อ่าน snapshot กรอง 1241xx + ช่วงวัน · `peakSnapshotMeta()` |
+| `src/lib/peak.ts` | (โหมด rest) auth (token + HMAC) + `fetchAssetCandidates()` ดึง Expenses กรอง 1241 |
+| `src/lib/peak-mapping.ts` | `mapPeakCandidates()` → `OARecord[]` (`templateCode:'PEAK'`) ใช้ร่วมทั้ง 2 โหมด |
+| `src/app/api/peak/sync/route.ts` | `GET /api/peak/sync?from=&to=` เลือกแหล่งตาม `PEAK_SOURCE` |
 | `src/lib/store.tsx` | `syncPeak()` ดึง + merge คิว (dedupe `docNo`), audit `PEAK_IMPORT` |
 | `src/app/(app)/oa-import/page.tsx` | ปุ่ม **"นำเข้าจาก PEAK"** |
 | `src/lib/types.ts` | `SourceRef.sourceSystem: 'OA'\|'ONEBOOK'\|'PEAK'` |
+
+**วิธีรีเฟรช snapshot:** ใน Claude Code (ต่อ PEAK MCP แล้ว) เรียก `get_general_ledger` บัญชี 124101–124109 ช่วงที่ต้องการ → เซฟ response ดิบลง `apps/asset/scripts/peak-raw/<code>.json` → `node scripts/build-peak-snapshot.mjs`
 
 ทรัพย์สินที่สร้างจะเก็บ `source.sourceSystem='PEAK'` และ `source.glAccountCode` (รหัสบัญชี PEAK เช่น 124106) ไว้อ้างอิง
 
 ## 5. ตั้งค่า (env — `apps/asset/.env.local`)
 ```
-PEAK_BASE_URL=            # host จริง (ขอจาก PEAK/UAT)
+PEAK_SOURCE=mcp                  # mcp (ค่าเริ่มต้น, อ่าน snapshot) | rest (ยิง API สด)
+# --- ใช้เฉพาะ PEAK_SOURCE=rest ---
+PEAK_BASE_URL=                   # host จริง (ขอจาก PEAK/UAT)
 PEAK_CONNECT_ID=
-PEAK_APP_PASSWORD=        # Application Code
-PEAK_USER_TOKEN=          # จาก consent (24h)
-PEAK_ASSET_ACCOUNT_PREFIXES=12   # ปรับได้ เช่น 121,122,124
-PEAK_SIG_ENCODING=base64         # base64 | hex
+PEAK_APP_PASSWORD=               # Application Code
+PEAK_USER_TOKEN=                 # จาก consent (24h)
+PEAK_ASSET_ACCOUNT_PREFIXES=1241 # ทรัพย์สินถาวร 1241xx (ไม่รวม 121-123 เงินลงทุน, 1242xx ค่าเสื่อมสะสม)
+PEAK_SIG_ENCODING=hex            # hex | base64
 ```
+> โหมด `mcp` ไม่ต้องตั้ง credential ใด ๆ — snapshot ถูกคอมมิตมากับโค้ด
 
 ## 6. ข้อมูลผังบัญชี PEAK ที่ตรวจพบ (บริษัท เอสเอชดี)
 - บัญชีสินทรัพย์: **`124xxx`** (เช่น `124106` อุปกรณ์สำนักงาน)
 - ค่าเสื่อมสะสม: `124206` · ค่าเสื่อม(ค่าใช้จ่าย): `530706`
 - วิธีค่าเสื่อมเริ่มต้น: เส้นตรง · ซาก 1 บาท · อายุ 5 ปี
 
-## 7. สิ่งที่ยังต้องทำ/ยืนยัน
-- [ ] ขอ **Connect ID + Application Code + เปิด UAT** จากทีม PEAK แล้วเสียบ env → เทสต์จริง
-- [ ] ยืนยัน **encoding ของ Time-Signature** (base64/hex) กับ UAT
-- [ ] ยืนยันว่าการซื้อทรัพย์สินใน PEAK ลงเป็นเอกสาร **Expense** (ถ้าซื้อผ่านโมดูล Asset เป็น `PA-xxx` อาจต้องดึงจาก Daily Journal เพิ่ม)
-- [ ] (ออปชัน) ต่อ **Webhook ของ Expense** เพื่อ near-realtime แทน poll
-- [ ] (lead) PEAK ประกาศรองรับ **"จัดการข้อมูลผ่าน MCP" (14 ต.ค. 2026)** — สอบถามว่ามี MCP ให้ดึงข้อมูลทรัพย์สินตรง ๆ ไหม (สะอาดกว่า)
+## 7. สถานะ / สิ่งที่ยังต้องทำ
+- [x] **ต่อ PEAK ผ่าน MCP สำเร็จ (29 ต.ค. 2026)** — ดึง GL 1241xx จริงผ่าน `get_general_ledger` (read-only) → snapshot → `/api/peak/sync?PEAK_SOURCE=mcp` → คิว OA Import · typecheck + build compile ผ่าน · เทสต์ endpoint คืน 95 รายการจริง (ปี 2026: 124106 อุปกรณ์สำนักงาน 94 + 124107 เก้าอี้ 1)
+- [x] แก้ prefix เป็น **1241** (เดิม 12 กว้างเกิน รวมเงินลงทุน/เงินกู้)
+- [ ] รีเฟรช snapshot เป็นระยะ (ดูวิธีท้ายข้อ 4) — หรือทำ bridge อัตโนมัติ
+- [ ] (ถ้าต้องการ live จริงในแอปโดยไม่พึ่ง Claude) ทำ **MCP client ฝั่งแอป** (OAuth เอง)/หรือใช้โหมด `rest` เมื่อได้ production credential
+- [ ] **ค่าเสื่อมสะสม/NBV รายชิ้น** ของทรัพย์สินเดิม — ยังดึงตรงไม่ได้ (PEAK ไม่เปิด API โมดูล Asset) · GL 1242xx ให้ยอดรวมได้ · รายชิ้นยังต้อง Excel export
+- [ ] ยืนยันกับ accounting: รายการ Dr 1241xx ทุกบรรทัด = "ซื้อทรัพย์สินใหม่" (ไม่มี reclass/โอนเข้าปน)
 
 ## 8. หมายเหตุสถาปัตยกรรม
 เทียบกับ ONEBOOK: ต่างแค่ (1) auth (PEAK ต้องเซ็น HMAC + token 2 ชั้น), (2) การกรอง 12xx ทำฝั่งเรา (PEAK ส่งทุกบรรทัดมา),

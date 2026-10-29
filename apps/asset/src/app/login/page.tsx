@@ -1,14 +1,14 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { Boxes, KeyRound, ScanLine, ShieldCheck, TrendingDown } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { useStore } from '@/lib/store';
 import { Button, cx } from '@/components/ui';
 import { LangSwitch } from '@/components/shell';
 
-export default function LoginPage() {
+function LoginInner() {
   const { t } = useI18n();
   const { state, signIn } = useStore();
   const router = useRouter();
@@ -129,5 +129,14 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// useSearchParams ต้องอยู่ใน Suspense boundary (Next.js 15 static export)
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-white" />}>
+      <LoginInner />
+    </Suspense>
   );
 }

@@ -63,6 +63,28 @@ export function buildSchedule(a: Asset, proration: Proration = 'FULL_MONTH'): Sc
   const annual = (base / a.lifeMonths) * 12;
   const monthly = r2(base / a.lifeMonths);
 
+  // ── สินทรัพย์ที่ "ยกมา" จากระบบเดิม (เช่น ทะเบียน PEAK) ──
+  // ตั้งค่าเสื่อมสะสมเริ่มต้น = ค่าที่ยกมา (closingAccum ของ PEAK ณ วันโอนย้าย = readyDate)
+  // แล้วคิดค่าเสื่อมเดินหน้าจาก NBV คงเหลือด้วยอัตราเส้นตรงเดิม — ไม่ต้องรู้วันที่ซื้อจริง
+  if (a.legacy) {
+    const already = Math.min(Math.max(r2(a.legacy.closingAccum), 0), base);
+    let acc = already;
+    // งวดวันโอนย้าย: แสดงยอดยกมา ไม่คิดค่าเสื่อมเพิ่มในงวดนั้น
+    rows.push({ period: readyPeriod, opening: r2(cost - acc), depreciation: 0, accumulated: acc, closing: r2(cost - acc) });
+    let p = addMonths(readyPeriod, 1);
+    let guard = 0;
+    while (acc < base - 0.005 && guard < a.lifeMonths + 2) {
+      let dep = monthly;
+      if (acc + dep > base) dep = r2(base - acc);
+      const opening = r2(cost - acc);
+      acc = r2(acc + dep);
+      rows.push({ period: p, opening, depreciation: dep, accumulated: acc, closing: r2(cost - acc) });
+      p = addMonths(p, 1);
+      guard++;
+    }
+    return rows;
+  }
+
   if (proration === 'ACTUAL_DAYS') {
     const readyDay = Number(a.readyDate.slice(8, 10));
     let p = readyPeriod;

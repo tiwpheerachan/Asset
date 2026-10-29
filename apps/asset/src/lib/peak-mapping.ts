@@ -28,10 +28,13 @@ export function mapPeakCandidates(rows: PeakCandidate[]): OARecord[] {
         templateCode: 'PEAK',
         rawFields: {
           peakAccountCode: str(c.account_code),
+          peakAccountName: str(c.account_name),
           peakAccountSubCode: str(c.account_sub_code),
           peakDocId: str(c.document_id),
           peakLineId: str(c.line_id),
           peakDocNumber: str(c.doc_number),
+          peakAssetCode: str(c.asset_code),
+          peakJournalNo: str(c.journal_number),
         },
         companyId: 'C-SHD', // บริษัทเดียวในระบบ Asset
         branchId: '',
@@ -39,8 +42,10 @@ export function mapPeakCandidates(rows: PeakCandidate[]): OARecord[] {
         costCenterId: '',
         requester: '',
         approvedDate: str(c.doc_date).slice(0, 10),
-        itemName: str(c.description) || str(c.doc_number),
-        itemDescription: `PEAK ${str(c.account_code)} · ${str(c.doc_number)}`,
+        // ชื่อทรัพย์สิน: "ชื่อบัญชี (รหัสทรัพย์สิน PEAK)" เช่น "อุปกรณ์สำนักงาน (OEQ-00014)"
+        itemName:
+          (str(c.account_name) || 'ทรัพย์สิน') + (c.asset_code ? ` (${str(c.asset_code)})` : ''),
+        itemDescription: str(c.description) || `PEAK ${str(c.account_code)} · ${str(c.doc_number)}`,
         quantity: qty,
         unit: 'unit',
         amount: num(c.amount),

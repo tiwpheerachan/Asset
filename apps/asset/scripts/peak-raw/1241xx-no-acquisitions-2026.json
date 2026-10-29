@@ -1,0 +1,19 @@
+{
+  "PeakGeneralLedger": {
+    "fromDate": "20260101",
+    "toDate": "20261029",
+    "generalLedgers": [
+      { "account": { "accountCode": "124101", "accountName": "ที่ดิน" }, "summary": { "beginningBalance": { "debit": 0.0, "credit": 0.0 }, "change": { "debit": 0.0, "credit": 0.0 }, "endingBalance": { "debit": 0.0, "credit": 0.0 } }, "transactions": [], "totalTransactions": 0 },
+      { "account": { "accountCode": "124102", "accountName": "งานระหว่างก่อสร้าง" }, "summary": { "beginningBalance": { "debit": 0.0, "credit": 0.0 }, "change": { "debit": 0.0, "credit": 0.0 }, "endingBalance": { "debit": 0.0, "credit": 0.0 } }, "transactions": [], "totalTransactions": 0 },
+      { "account": { "accountCode": "124103", "accountName": "อาคาร" }, "summary": { "beginningBalance": { "debit": 0.0, "credit": 0.0 }, "change": { "debit": 0.0, "credit": 0.0 }, "endingBalance": { "debit": 0.0, "credit": 0.0 } }, "transactions": [], "totalTransactions": 0 },
+      { "account": { "accountCode": "124104", "accountName": "ส่วนปรับปรุงอาคาร" }, "summary": { "beginningBalance": { "debit": 0.0, "credit": 0.0 }, "change": { "debit": 0.0, "credit": 0.0 }, "endingBalance": { "debit": 0.0, "credit": 0.0 } }, "transactions": [], "totalTransactions": 0 },
+      { "account": { "accountCode": "124105", "accountName": "เครื่องจักร และอุปกรณ์" }, "summary": { "beginningBalance": { "debit": 0.0, "credit": 0.0 }, "change": { "debit": 0.0, "credit": 0.0 }, "endingBalance": { "debit": 0.0, "credit": 0.0 } }, "transactions": [], "totalTransactions": 0 },
+      { "account": { "accountCode": "124108", "accountName": "ยานพาหนะ" }, "summary": { "beginningBalance": { "debit": 1692523.37, "credit": 0.0 }, "change": { "debit": 0.0, "credit": 0.0 }, "endingBalance": { "debit": 1692523.37, "credit": 0.0 } }, "transactions": [], "totalTransactions": 0 },
+      { "account": { "accountCode": "124109", "accountName": "เครื่องมือเครื่องใช้" }, "summary": { "beginningBalance": { "debit": 264334.57, "credit": 0.0 }, "change": { "debit": 0.0, "credit": 0.0 }, "endingBalance": { "debit": 264334.57, "credit": 0.0 } }, "transactions": [], "totalTransactions": 0 }
+    ],
+    "resCode": "200",
+    "resDesc": "Success"
+  },
+  "eventType": "Retrieve",
+  "apiType": "ApiFinancialReports"
+}
