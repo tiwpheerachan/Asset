@@ -1091,6 +1091,11 @@ export const MESSAGES = {
     en: "This request was sent back for changes — see the reason under “Approval record”, then resubmit.",
     zh: "此申请已退回修改 — 请在“审批记录”中查看原因，修改后可重新提交。",
   },
+  "detail.selfApproveBlocked": {
+    th: "คุณอนุมัติเอกสารของตัวเองไม่ได้ — ต้องให้ผู้อนุมัติท่านอื่นพิจารณา (แยกผู้จัดทำกับผู้อนุมัติ)",
+    en: "You cannot approve your own request — it must be reviewed by another approver (maker ≠ checker).",
+    zh: "您不能审批自己的申请 — 须由其他审批人处理（制单与审批分离）。",
+  },
   "detail.summary": { th: "สรุป", en: "Summary", zh: "摘要" },
   "detail.type": { th: "ประเภท", en: "Type", zh: "类型" },
   "detail.department": { th: "แผนก", en: "Department", zh: "部门" },
@@ -1152,6 +1157,7 @@ export const MESSAGES = {
   "decide.actingFor": { th: "อนุมัติแทน", en: "On behalf of", zh: "代替" },
   "decide.approveFor": { th: "✓ อนุมัติแทน", en: "✓ Approve on behalf", zh: "✓ 代为通过" },
   "decide.confirmApproveFor": { th: "ยืนยันอนุมัติแทนในฐานะผู้ดูแลระบบ?", en: "Approve on behalf as admin?", zh: "确认以管理员身份代为通过？" },
+  "decide.reasonRequired": { th: "ระบุเหตุผล (จำเป็นสำหรับการอนุมัติแทน/เอกสารตัวเอง)", en: "Reason (required for approving on behalf / own request)", zh: "原因（代为/本人申请审批时必填）" },
   "decide.reject": { th: "✕ ไม่อนุมัติ", en: "✕ Reject", zh: "✕ 拒绝" },
   "decide.rejectWarn": {
     th: "ไม่อนุมัติจะปิดเอกสารทันที ผู้จัดทำต้องเปิดคำขอใหม่ — ถ้าแค่ต้องการให้แก้แล้วส่งกลับมา ให้ใช้ “ส่งกลับให้แก้”",

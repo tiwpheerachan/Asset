@@ -24,10 +24,19 @@ export function mapOnebookCandidates(rows: OnebookCandidate[]): OARecord[] {
       // อ้างด้วย document+line เพื่อกันนำเข้าซ้ำ (dedupe ด้วย docNo ใน store)
       const ref = `OB-${c.document_id}#${c.line_id}`;
       const qty = Math.max(1, num(c.quantity));
+      // เลขเอกสารของ ONEBOOK ไม่ใช่เลข OA — ต้องลงช่องตามชนิดเอกสาร (ใบรับสินค้า vs ใบซื้อ/ใบกำกับ)
+      // #3: เดิมถูกยัดลง oaNo ทำให้ Asset โชว์เลขใบซื้อเป็นเลข OA
+      const isGR = (c.kind ?? '').toLowerCase() === 'goods_receipt';
+      // #3b: เลขสายจัดซื้อ (PR/PO/GR) มาจาก chain ที่ ONEBOOK ส่งมา (ถ้ามี)
+      const grFromChain = c.gr_number ? str(c.gr_number) : undefined;
       return {
         id: ref,
         docNo: ref,
-        oaNo: str(c.doc_number),
+        oaNo: str(c.doc_number),      // ใช้แสดงในคิวนำเข้าเท่านั้น — ตอนสร้างทรัพย์สินจะไม่ลง source.oaNo (ดู store.createFromOA)
+        prNo: c.pr_number ? str(c.pr_number) : undefined,
+        poNo: c.po_number ? str(c.po_number) : undefined,
+        grNo: isGR ? str(c.doc_number) : grFromChain,
+        invoiceNo: isGR ? undefined : str(c.doc_number),
         templateCode: 'ONEBOOK',
         rawFields: {
           onebookAccountCode: str(c.account_code),

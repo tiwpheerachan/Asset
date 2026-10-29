@@ -34,6 +34,7 @@ export function DecidePanel({
   stage,
   users,
   adminOverride = false,
+  ownRequest = false,
   pendingApprovers = [],
 }: {
   requestId: number;
@@ -41,10 +42,14 @@ export function DecidePanel({
   users: User[];
   /** ผู้ดูแลระบบกำลังอนุมัติแทน (ไม่ได้อยู่ในสายอนุมัติ) */
   adminOverride?: boolean;
+  /** กำลังพิจารณาเอกสารของตัวเอง (ผู้ดูแลระบบเท่านั้นที่มาถึงจุดนี้ได้) */
+  ownRequest?: boolean;
   /** ผู้อนุมัติที่ยังค้างในขั้นปัจจุบัน — ให้ผู้ดูแลระบบเลือกว่าจะทำแทนใคร */
   pendingApprovers?: { rowId: number; name: string }[];
 }) {
   const t = useT();
+  // ต้องระบุเหตุผลเมื่อ: อนุมัติแทน หรือ อนุมัติเอกสารของตัวเอง
+  const needReason = adminOverride || ownRequest;
   const [actRow, setActRow] = useState<number | "">(pendingApprovers[0]?.rowId ?? "");
   // หลังอนุมัติขั้นหนึ่งแล้วหน้า re-render เป็นขั้นถัดไป — ถ้าแถวที่เลือกไว้ไม่อยู่ในขั้น
   // ปัจจุบันแล้ว ให้ย้อนกลับไปใช้ผู้อนุมัติคนแรกของขั้นใหม่ กันส่งรหัสแถวเก่าที่หมดคิวไป
@@ -127,15 +132,16 @@ export function DecidePanel({
         {adminOverride && <input type="hidden" name="approver_row" value={effectiveRow} />}
         {/* ป้ายช่องความเห็นไม่ต้องมีบรรทัดของตัวเอง — ข้อความจาง ๆ ในช่องบอกอยู่แล้ว
             ว่าพิมพ์อะไรลงไป และมันไม่บังคับกรอก */}
-        <label className="sr-only" htmlFor="approve_comment">
-          {t("decide.comment")} ({t("common.optional")})
+        <label className={needReason ? "label" : "sr-only"} htmlFor="approve_comment">
+          {t("decide.comment")} {needReason ? <span className="text-no">*</span> : `(${t("common.optional")})`}
         </label>
         <textarea
           id="approve_comment"
           name="comment"
           rows={2}
+          required={needReason}
           className="input py-2 text-sm"
-          placeholder={t("decide.commentHint")}
+          placeholder={needReason ? t("decide.reasonRequired") : t("decide.commentHint")}
         />
       </form>
 

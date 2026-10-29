@@ -42,9 +42,10 @@ export function mapOARequestToRecords(req: OARequest): OARecord[] {
 
   const base = {
     companyId: 'C-SHD',
-    // org จาก OA ยังเป็นชื่อแผนก (ไทย) — เฟสแรกปล่อยให้เจ้าหน้าที่เลือกตอน review
+    // org จาก OA เป็นชื่อแผนก (ไทย) — #10 ส่งต่อชื่อไว้ช่วยจับคู่/ตรวจทานตอน review
     branchId: '',
     departmentId: '',
+    departmentName: req.requester?.department ?? undefined,
     costCenterId: '',
     requester: req.requester?.name ?? '',
     approvedDate,

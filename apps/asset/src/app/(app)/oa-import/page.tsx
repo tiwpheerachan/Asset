@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
-import { AlertCircle, ArrowRight, BookOpen, Check, CheckCircle2, Copy, FileText, Landmark, RefreshCw, Split, XCircle } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { AlertCircle, ArrowRight, BookOpen, Check, CheckCircle2, Copy, FileText, Landmark, RefreshCw, Sparkles, Split, XCircle } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { useStore } from '@/lib/store';
 import { useLookups } from '@/lib/hooks';
+import { intakeChecklist, nearDuplicates, type DupMatch, type SubcatOption } from '@/lib/asset-intake';
 import type { OARecord, OAStatus } from '@/lib/types';
 import { OAStatusBadge } from '@/components/badges';
 import { SETTINGS } from '@/data/masters';
@@ -16,11 +17,15 @@ const ORDER: OAStatus[] = ['NEW', 'REVIEWING', 'READY_TO_CREATE', 'ERROR', 'DUPL
 
 export default function OAImportPage() {
   const { t, money, date, dateTime } = useI18n();
-  const { state, syncOA, syncOnebook, syncPeak, can } = useStore();
+  const { state, syncOA, syncOnebook, syncPeak, can, createFromOA } = useStore();
   const lk = useLookups();
   const [tab, setTab] = useState<'queue' | 'mapping'>('queue');
   const [status, setStatus] = useState<OAStatus | 'ALL' | 'PENDING'>('PENDING');
   const [open, setOpen] = useState<string | null>(null);
+  const [sel, setSel] = useState<Set<string>>(new Set());
+  const [bulkSub, setBulkSub] = useState('');
+  const [impResult, setImpResult] = useState<{ source: string; added: number; total: number } | null>(null);
+  const [impError, setImpError] = useState('');
   const [syncing, setSyncing] = useState(false);
   const [syncingOb, setSyncingOb] = useState(false);
   const [syncingPk, setSyncingPk] = useState(false);
@@ -34,6 +39,18 @@ export default function OAImportPage() {
   const rows = state.oa
     .filter((o) => (status === 'ALL' ? true : status === 'PENDING' ? ['NEW', 'REVIEWING', 'READY_TO_CREATE', 'ERROR'].includes(o.status) : o.status === status))
     .sort((a, b) => ORDER.indexOf(a.status) - ORDER.indexOf(b.status) || b.approvedDate.localeCompare(a.approvedDate));
+
+  // #11 จัดการเป็นชุด: เลือกหลายรายการ ตั้งหมวดร่วมกัน แล้วสร้างทีเดียว (Serial เติมรายเครื่องภายหลัง)
+  const canBulk = can('createAsset') && can('importOa');
+  const bulkable = (o: OARecord) => ['NEW', 'REVIEWING', 'READY_TO_CREATE'].includes(o.status);
+  const selRows = rows.filter((o) => sel.has(o.id) && bulkable(o));
+  const toggleSel = (id: string) => setSel((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const bulkCreate = () => {
+    if (!bulkSub) return;
+    for (const o of selRows) createFromOA(o.id, { split: o.quantity > 1, subcategoryId: bulkSub });
+    setSel(new Set());
+    setBulkSub('');
+  };
 
   return (
     <>
@@ -49,12 +66,13 @@ export default function OAImportPage() {
               icon={<BookOpen size={15} className={syncingOb ? 'animate-pulse' : ''} />}
               disabled={!can('importOa') || syncingOb}
               onClick={async () => {
-                setSyncingOb(true);
+                setSyncingOb(true); setImpError('');
                 try {
-                  await syncOnebook();
+                  const r = await syncOnebook();
+                  setImpResult({ source: 'ONEBOOK', added: r.added, total: r.total });
                   setStatus('PENDING');
                 } catch (e) {
-                  console.error('[ONEBOOK sync]', e);
+                  setImpError(String((e as Error)?.message || e));
                 } finally {
                   setSyncingOb(false);
                 }
@@ -66,12 +84,13 @@ export default function OAImportPage() {
               icon={<Landmark size={15} className={syncingPk ? 'animate-pulse' : ''} />}
               disabled={!can('importOa') || syncingPk}
               onClick={async () => {
-                setSyncingPk(true);
+                setSyncingPk(true); setImpError('');
                 try {
-                  await syncPeak();
+                  const r = await syncPeak();
+                  setImpResult({ source: 'PEAK', added: r.added, total: r.total });
                   setStatus('PENDING');
                 } catch (e) {
-                  console.error('[PEAK sync]', e);
+                  setImpError(String((e as Error)?.message || e));
                 } finally {
                   setSyncingPk(false);
                 }
@@ -84,12 +103,13 @@ export default function OAImportPage() {
               icon={<RefreshCw size={15} className={syncing ? 'animate-spin' : ''} />}
               disabled={!can('importOa') || syncing}
               onClick={async () => {
-                setSyncing(true);
+                setSyncing(true); setImpError('');
                 try {
-                  await syncOA();
+                  const r = await syncOA();
+                  setImpResult({ source: 'OA', added: r.added, total: r.total });
                   setStatus('PENDING');
                 } catch (e) {
-                  console.error('[OA sync]', e);
+                  setImpError(String((e as Error)?.message || e));
                 } finally {
                   setSyncing(false);
                 }
@@ -110,6 +130,12 @@ export default function OAImportPage() {
         ))}
       </div>
 
+      {impError && <Notice tone="red" icon={<AlertCircle size={15} />} className="mb-3">{t('oa.importFailed')}: {impError}</Notice>}
+      {impResult && (
+        <Notice tone={impResult.added > 0 ? 'green' : 'gray'} icon={<RefreshCw size={15} />} className="mb-3">
+          {t('oa.importDone', { src: impResult.source })} — {t('oa.importNew')}: <b>{impResult.added}</b> · {t('oa.importDup')}: <b>{impResult.total - impResult.added}</b> · {t('common.all')}: {impResult.total}
+        </Notice>
+      )}
       <Card>
         <div className="px-2">
           <Tabs value={tab} onChange={setTab} items={[{ id: 'queue', label: t('oa.queue'), count: pendingN }, { id: 'mapping', label: t('oa.mapping') }]} />
@@ -128,9 +154,25 @@ export default function OAImportPage() {
                 </button>
               ))}
             </div>
+            {canBulk && selRows.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 border-b border-brand-200 bg-brand-50/60 px-3 py-2.5">
+                <span className="text-[13px] font-medium text-brand-800">{t('oa.selected', { n: selRows.length })}</span>
+                <Select value={bulkSub} onChange={(e) => setBulkSub(e.target.value)} className="h-8 w-56">
+                  <option value="">{t('oa.bulkPickCat')}</option>
+                  {state.categories.filter((c) => !c.parentId).map((p) => (
+                    <optgroup key={p.id} label={lk.category(p.id)}>
+                      {state.categories.filter((c) => c.parentId === p.id).map((sc) => <option key={sc.id} value={sc.id}>{lk.category(sc.id)}</option>)}
+                    </optgroup>
+                  ))}
+                </Select>
+                <Button size="sm" variant="primary" disabled={!bulkSub} onClick={bulkCreate}>{t('oa.bulkCreate')}</Button>
+                <Button size="sm" variant="ghost" onClick={() => setSel(new Set())}>{t('common.cancel')}</Button>
+              </div>
+            )}
             <Table>
               <thead>
                 <tr>
+                  {canBulk && <Th />}
                   <Th>{t('field.oaNo')}</Th>
                   <Th>{t('field.approvedDate')}</Th>
                   <Th>{t('field.itemName')}</Th>
@@ -145,6 +187,15 @@ export default function OAImportPage() {
               <tbody>
                 {rows.map((o) => (
                   <tr key={o.id} className="cursor-pointer" onClick={() => setOpen(o.id)}>
+                    {canBulk && (
+                      <Td>
+                        {bulkable(o) && (
+                          <span onClick={(e) => e.stopPropagation()}>
+                            <input type="checkbox" checked={sel.has(o.id)} onChange={() => toggleSel(o.id)} className="h-4 w-4 cursor-pointer accent-brand-600" aria-label={t('oa.select')} />
+                          </span>
+                        )}
+                      </Td>
+                    )}
                     <Td mono className="whitespace-nowrap font-medium text-brand-700">{o.oaNo}</Td>
                     <Td className="whitespace-nowrap">{date(o.approvedDate)}</Td>
                     <Td className="min-w-[240px] text-ink">
@@ -228,7 +279,44 @@ function ReviewDrawer({ oa, onClose }: { oa: OARecord; onClose: () => void }) {
   const [reason, setReason] = useState('');
   const [rejecting, setRejecting] = useState(false);
   const [fixCC, setFixCC] = useState('');
+  const [aiSug, setAiSug] = useState<{ reason: string; source: string } | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
   const editable = can('importOa');
+
+  // ตัวเลือกหมวดย่อย (ใบ) สำหรับส่งให้ AI/heuristic เดาหมวด
+  const subOpts = useMemo<SubcatOption[]>(
+    () => state.categories.filter((c) => c.parentId).map((c) => {
+      const p = state.categories.find((x) => x.id === c.parentId);
+      return { id: c.id, path: `${p ? L(p.name) : ''} › ${L(c.name)}` };
+    }),
+    [state.categories, L],
+  );
+
+  // AI แนะนำหมวดเป็นค่าเริ่มต้น (ครั้งเดียวต่อรายการ) — พนักงานตรวจ/แก้ก่อนสร้าง
+  useEffect(() => {
+    if (sub || !editable || ['CREATED', 'REJECTED', 'DUPLICATE'].includes(oa.status) || subOpts.length === 0) return;
+    let cancelled = false;
+    setAiLoading(true);
+    const acct = String(oa.rawFields?.onebookAccountCode ?? oa.rawFields?.peakAccountCode ?? oa.rawFields?.onebookAccountName ?? '');
+    fetch('/api/assets/suggest-category', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: oa.itemName, description: oa.itemDescription, account: acct, subcategories: subOpts }),
+    })
+      .then((r) => r.json())
+      .then((d) => { if (!cancelled && d?.subcategoryId) { setSub(d.subcategoryId); setAiSug({ reason: d.reason || '', source: d.source || '' }); } })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setAiLoading(false); });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [oa.id]);
+
+  // หาทรัพย์สินที่ "ใกล้เคียง" เพื่อกันสร้างซ้ำ (เหมือน + คล้าย)
+  const nearDup: DupMatch[] = useMemo(() => {
+    if (['CREATED', 'REJECTED', 'DUPLICATE'].includes(oa.status)) return [];
+    const cand = { itemName: oa.itemName, unitCost: oa.quantity > 0 ? oa.amount / oa.quantity : oa.amount, serials: oa.serialNumbers ?? [] };
+    const pool = state.assets.filter((a) => a.oaId !== oa.id && !['ARCHIVED', 'DISPOSED'].includes(a.status));
+    return nearDuplicates(cand, pool);
+  }, [state.assets, oa]);
 
   const dup = useMemo(() => {
     const others = state.oa.filter((o) => o.id !== oa.id && !['REJECTED', 'DUPLICATE'].includes(o.status));
@@ -254,6 +342,14 @@ function ReviewDrawer({ oa, onClose }: { oa: OARecord; onClose: () => void }) {
   const belowThreshold = unitCost < SETTINGS.capitalizationThreshold;
   const policy = state.policies.find((p) => p.categoryId === parent?.id && p.active);
   const created = state.assets.filter((a) => oa.createdAssetIds.includes(a.id));
+
+  // เช็กความครบถ้วนของข้อมูลก่อนสร้าง
+  const checklist = useMemo(() => intakeChecklist({
+    subId: sub, hasPolicy: !!policy || !!subCat, amount: oa.amount, supplier: oa.supplier,
+    approvedDate: oa.approvedDate, documents: oa.documents.length, costCenterId: oa.costCenterId,
+    departmentId: oa.departmentId, serials: (oa.serialNumbers ?? []).length,
+  }), [sub, policy, subCat, oa]);
+  const chkReqMissing = checklist.filter((c) => c.required && !c.ok);
 
   const check = (label: string, found: boolean) => (
     <div className="flex items-center justify-between rounded border border-line px-3 py-2 text-[13px]">
@@ -404,14 +500,25 @@ function ReviewDrawer({ oa, onClose }: { oa: OARecord; onClose: () => void }) {
               <h3 className="mb-2.5 border-b border-line pb-2 text-[13.5px] font-semibold text-ink">{t('oa.target')}</h3>
               <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
                 <FormField label={t('oa.suggested')} required>
-                  <Select value={sub} disabled={!editable || oa.status === 'NEW'} onChange={(e) => setSub(e.target.value)}>
-                    <option value="">—</option>
-                    {state.categories.filter((c) => !c.parentId).map((p) => (
-                      <optgroup key={p.id} label={L(p.name)}>
-                        {state.categories.filter((c) => c.parentId === p.id).map((s) => <option key={s.id} value={s.id}>{L(s.name)}</option>)}
-                      </optgroup>
-                    ))}
-                  </Select>
+                  <>
+                    <Select value={sub} disabled={!editable || oa.status === 'NEW'} onChange={(e) => { setSub(e.target.value); setAiSug(null); }}>
+                      <option value="">—</option>
+                      {state.categories.filter((c) => !c.parentId).map((p) => (
+                        <optgroup key={p.id} label={L(p.name)}>
+                          {state.categories.filter((c) => c.parentId === p.id).map((s) => <option key={s.id} value={s.id}>{L(s.name)}</option>)}
+                        </optgroup>
+                      ))}
+                    </Select>
+                    {aiLoading && (
+                      <div className="mt-1 flex items-center gap-1 text-[11.5px] text-ink-4"><Sparkles size={12} className="animate-pulse" /> {t('oa.aiThinking')}</div>
+                    )}
+                    {!aiLoading && aiSug && sub && (
+                      <div className="mt-1 flex items-start gap-1 text-[11.5px] text-violet-700">
+                        <Sparkles size={12} className="mt-0.5 shrink-0" />
+                        <span>{t(aiSug.source === 'ai' ? 'oa.aiSuggested' : 'oa.aiSuggestedKw')}{aiSug.reason ? ` · ${aiSug.reason}` : ''} · {t('oa.aiVerify')}</span>
+                      </div>
+                    )}
+                  </>
                 </FormField>
                 <FormField label={t('field.policy')}>
                   <Input disabled value={subCat ? `เส้นตรง ${subCat.defaultLifeYears} ปี` : policy ? L(policy.name) : '—'} />
@@ -435,6 +542,43 @@ function ReviewDrawer({ oa, onClose }: { oa: OARecord; onClose: () => void }) {
                   จะตั้งค่าเสื่อม <b>{subCat.defaultLifeYears} ปี</b> (เส้นตรง) ตามหมวด “{L(subCat.name)}” — ปรับอายุ/ดูอ้างอิงกฎหมายได้ที่เมนู <b>หมวดหมู่</b>
                 </Notice>
               )}
+
+              {/* กันสร้างซ้ำ: ทรัพย์สินที่ใกล้เคียง (เหมือน/คล้าย) */}
+              {nearDup.length > 0 && (
+                <Notice tone="amber" icon={<Copy size={15} />} className="mt-2">
+                  <b>{t('oa.nearDupTitle')} ({nearDup.length})</b> — {t('oa.nearDupHint')}
+                  <ul className="mt-1.5 space-y-1">
+                    {nearDup.map((m) => (
+                      <li key={m.id}>
+                        <Link href={`/assets/${m.id}`} className="flex items-center justify-between gap-2 rounded border border-amber-200 bg-white/60 px-2.5 py-1.5 hover:bg-white">
+                          <span className="min-w-0 truncate"><span className="font-mono text-brand-700">{m.code}</span> · {m.name}</span>
+                          <Badge tone={m.reason === 'serial' ? 'red' : 'amber'}>{t(`oa.dupReason.${m.reason}`)}</Badge>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </Notice>
+              )}
+
+              {/* เช็กความครบถ้วนของข้อมูล */}
+              {chkReqMissing.length > 0 && (
+                <Notice tone="amber" icon={<AlertCircle size={15} />} className="mt-2">
+                  <b>{t('oa.chkMissing')}:</b> {chkReqMissing.map((c) => t(`oa.chk.${c.key}`)).join(' · ')}
+                </Notice>
+              )}
+              <div className="mt-3 rounded-md border border-line p-3">
+                <div className="mb-2 flex items-center gap-1.5 text-[13px] font-medium text-ink">
+                  <CheckCircle2 size={14} className="text-emerald-600" /> {t('oa.completeness')} {checklist.filter((c) => c.ok).length}/{checklist.length}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {checklist.map((c) => (
+                    <span key={c.key} className={cx('inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11.5px]',
+                      c.ok ? 'bg-emerald-50 text-emerald-700' : c.required ? 'bg-amber-50 text-amber-700' : 'bg-canvas text-ink-4')}>
+                      {c.ok ? <Check size={11} /> : <XCircle size={11} />}{t(`oa.chk.${c.key}`)}{c.required && !c.ok ? ' *' : ''}
+                    </span>
+                  ))}
+                </div>
+              </div>
 
               {oa.quantity > 1 && (
                 <div className="mt-4 rounded-md border border-line p-3">

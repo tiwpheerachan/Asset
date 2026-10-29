@@ -493,6 +493,8 @@ export async function decideAction(_prev: ActionState, form: FormData): Promise<
       NOT_PENDING: "เอกสารนี้ไม่ได้อยู่ระหว่างรออนุมัติ",
       NOT_YOUR_TURN: "ยังไม่ถึงคิวอนุมัติของคุณ",
       NEED_COMMENT: "กรุณาระบุเหตุผลที่ไม่อนุมัติ",
+      SELF_APPROVAL: "อนุมัติเอกสารของตัวเองไม่ได้ — ต้องให้ผู้อนุมัติท่านอื่นพิจารณา",
+      NEED_REASON: "การอนุมัติแทน/อนุมัติเอกสารตัวเอง ต้องระบุเหตุผล",
     }[result.reason];
     return { error: message };
   }

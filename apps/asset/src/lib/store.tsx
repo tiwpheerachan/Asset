@@ -280,9 +280,9 @@ interface StoreApi {
   importAssets: (rows: Asset[]) => number;
   setOAStatus: (id: string, status: OAStatus, extra?: Partial<OARecord>, reason?: string) => void;
   createFromOA: (id: string, opts: { split: boolean; subcategoryId: string }) => string[];
-  syncOA: () => Promise<number>;
-  syncOnebook: () => Promise<number>;
-  syncPeak: () => Promise<number>;
+  syncOA: () => Promise<{ added: number; total: number }>;
+  syncOnebook: () => Promise<{ added: number; total: number }>;
+  syncPeak: () => Promise<{ added: number; total: number }>;
   addDocument: (d: Omit<AssetDocument, 'id' | 'uploadedAt' | 'uploadedBy'>) => void;
   setRunStatus: (period: string, status: RunStatus, totals?: { assetCount: number; amount: number; lines?: DepRunLine[] }) => void;
   createRun: (period: string) => void;
@@ -692,6 +692,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           cbCodes = codes;
           cbAmount = o.amount;
           const policy = s.policies.find((p) => p.categoryId === parentId && p.active);
+          // #10: ถ้ายังไม่มี departmentId ให้ลองจับคู่จากชื่อแผนกที่ส่งมาจาก OA
+          const matchDept = (name?: string) => {
+            if (!name) return '';
+            const n0 = name.trim().toLowerCase();
+            return s.departments.find((dp) => [dp.name.th, dp.name.en, dp.name.zh].some((x) => (x ?? '').trim().toLowerCase() === n0))?.id ?? '';
+          };
+          const deptId = o.departmentId || matchDept(o.departmentName);
           const unitCost = Math.round((o.amount / o.quantity) * 100) / 100;
           const created: Asset[] = codes.map((code, i) => {
             const aid = uid('A');
@@ -708,7 +715,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
               subcategoryId,
               companyId: o.companyId,
               branchId: o.branchId,
-              departmentId: o.departmentId,
+              departmentId: deptId,
               costCenterId: o.costCenterId,
               locationId: o.locationId ?? null,
               holderId: null,
@@ -728,7 +735,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
               status: 'DRAFT',
               hasPhoto: false,
               source: {
-                oaNo: o.oaNo, poNo: o.poNo, grNo: o.grNo, invoiceNo: o.invoiceNo, supplier: o.supplier, purchaseDate: o.invoiceDate,
+                // #3: เลข OA ลงเฉพาะทรัพย์สินที่มาจาก OA จริง — ONEBOOK/PEAK เลขเอกสารอยู่ใน invoiceNo/grNo แล้ว
+                oaNo: o.templateCode === 'ONEBOOK' || o.templateCode === 'PEAK' ? '' : o.oaNo,
+                prNo: o.prNo, poNo: o.poNo, grNo: o.grNo, invoiceNo: o.invoiceNo, supplier: o.supplier, purchaseDate: o.invoiceDate,
                 // ระบุระบบต้นทางของทรัพย์สินชิ้นนี้ (OA/ONEBOOK/PEAK) เพื่ออ้างอิง/แยกกระบวนการบัญชี
                 sourceSystem: o.templateCode === 'ONEBOOK' ? 'ONEBOOK' : o.templateCode === 'PEAK' ? 'PEAK' : 'OA',
                 // ถ้ามาจากระบบบัญชี (นำเข้าจากบัญชี) เก็บรหัสบัญชีสินทรัพย์ไว้อ้างอิง
@@ -827,7 +836,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             ],
           };
         });
-        return added;
+        return { added, total: incoming.length };
       },
       syncOnebook: async () => {
         // ดึงบิลที่เป็นทรัพย์สิน (ลงบัญชีแล้ว) จากระบบบัญชี ONEBOOK ผ่าน server route
@@ -862,7 +871,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             ],
           };
         });
-        return added;
+        return { added, total: incoming.length };
       },
       syncPeak: async () => {
         // ดึงค่าใช้จ่ายที่เป็นทรัพย์สิน (บัญชี 12xx) จาก PEAK บัญชีหลัก ผ่าน server route
@@ -897,7 +906,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             ],
           };
         });
-        return added;
+        return { added, total: incoming.length };
       },
       addDocument: (d) =>
         commit((s) => {

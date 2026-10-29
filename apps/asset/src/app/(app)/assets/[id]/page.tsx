@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import {
-  Archive, ArrowLeft, Building2, CheckCircle2, Clock, Download, FileEdit, FileText, ImageIcon, Lock, MapPin, Pencil, Plus, Printer, RotateCcw, Send, Split, Trash2, Undo2, Upload, UserCheck, UserRound, X,
+  AlertTriangle, Archive, ArrowLeft, Building2, CheckCircle2, Clock, Download, FileEdit, FileText, ImageIcon, Lock, MapPin, Pencil, Plus, Printer, RotateCcw, Send, Split, Trash2, Undo2, Upload, UserCheck, UserRound, X,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { CURRENT_PERIOD, TODAY, useStore } from '@/lib/store';
@@ -198,17 +198,26 @@ function Detail({ asset }: { asset: Asset }) {
       </Card>
 
       {editOpen && <EditDrawer asset={asset} onClose={() => setEditOpen(false)} />}
-      {statusModal && (
-        <StatusModal
-          label={statusModal.label}
-          needReason={asset.status === 'ACTIVE' || statusModal.to === 'DRAFT' || statusModal.to === 'ARCHIVED' || statusModal.to === 'DISPOSAL_PENDING' || statusModal.to === 'DISPOSED'}
-          onClose={() => setStatusModal(null)}
-          onConfirm={(reason) => {
-            setAssetStatus(asset.id, statusModal.to, reason);
-            setStatusModal(null);
-          }}
-        />
-      )}
+      {statusModal && (() => {
+        // เปิดใช้งาน (→ ACTIVE) ต้องผ่านการตรวจรับมอบ/ราคาทุน/วันพร้อมใช้ก่อน
+        // ถ้าไม่ครบ ยังเปิดใช้ได้แต่ต้องเป็น "ข้อยกเว้น" พร้อมเหตุผล (เก็บ audit)
+        const gate = statusModal.to === 'ACTIVE' && asset.status !== 'DISPOSAL_PENDING' ? activationGate(asset, docs.length) : null;
+        const needReason = asset.status === 'ACTIVE' || statusModal.to === 'DRAFT' || statusModal.to === 'ARCHIVED'
+          || statusModal.to === 'DISPOSAL_PENDING' || statusModal.to === 'DISPOSED' || (!!gate && !gate.allOk);
+        return (
+          <StatusModal
+            label={statusModal.label}
+            needReason={needReason}
+            gate={gate}
+            onClose={() => setStatusModal(null)}
+            onConfirm={(reason) => {
+              const note = gate && !gate.allOk ? `[ข้อยกเว้นเปิดใช้] ${reason}` : reason;
+              setAssetStatus(asset.id, statusModal.to, note);
+              setStatusModal(null);
+            }}
+          />
+        );
+      })()}
       {transferOpen && (
         <TransferModal
           asset={asset}
@@ -316,9 +325,25 @@ function TransferModal({ asset, onClose, onConfirm }: { asset: Asset; onClose: (
   );
 }
 
-function StatusModal({ label, needReason, onClose, onConfirm }: { label: string; needReason: boolean; onClose: () => void; onConfirm: (r: string) => void }) {
+// #5 ตรวจก่อนเปิดใช้ทรัพย์สิน: ต้องมี "หลักฐานรับมอบ" ราคาทุน และวันพร้อมใช้
+function activationGate(asset: Asset, docCount: number) {
+  const cost = asset.originalCost + (asset.additionalCost || 0);
+  const items = [
+    { key: 'receipt', ok: docCount > 0 || !!asset.source?.grNo || !!asset.source?.invoiceNo },
+    { key: 'cost', ok: cost > 0 },
+    { key: 'readyDate', ok: !!asset.readyDate },
+  ];
+  return { items, allOk: items.every((i) => i.ok) };
+}
+
+function StatusModal({ label, needReason, gate, onClose, onConfirm }: {
+  label: string; needReason: boolean;
+  gate?: { items: { key: string; ok: boolean }[]; allOk: boolean } | null;
+  onClose: () => void; onConfirm: (r: string) => void;
+}) {
   const { t } = useI18n();
   const [reason, setReason] = useState('');
+  const exception = !!gate && !gate.allOk;
   return (
     <Modal
       open
@@ -331,8 +356,26 @@ function StatusModal({ label, needReason, onClose, onConfirm }: { label: string;
         </>
       }
     >
-      <FormField label={t('common.reason')} required={needReason}>
-        <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t('common.reasonPlaceholder')} />
+      {gate && (
+        <div className="mb-3 rounded-md border border-line p-3">
+          <div className="mb-2 text-[13px] font-medium text-ink">{t('detail.activateChecks')}</div>
+          <div className="space-y-1.5">
+            {gate.items.map((it) => (
+              <div key={it.key} className="flex items-center gap-2 text-[13px]">
+                {it.ok
+                  ? <CheckCircle2 size={14} className="shrink-0 text-emerald-600" />
+                  : <AlertTriangle size={14} className="shrink-0 text-amber-600" />}
+                <span className={it.ok ? 'text-ink-2' : 'text-amber-800'}>{t(`detail.chk.${it.key}`)}</span>
+              </div>
+            ))}
+          </div>
+          {exception && (
+            <div className="mt-2 rounded bg-amber-50 px-2.5 py-1.5 text-[12px] text-amber-800">{t('detail.activateException')}</div>
+          )}
+        </div>
+      )}
+      <FormField label={exception ? t('detail.exceptionReason') : t('common.reason')} required={needReason}>
+        <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder={exception ? t('detail.exceptionReasonHint') : t('common.reasonPlaceholder')} />
       </FormField>
     </Modal>
   );

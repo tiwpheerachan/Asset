@@ -19,6 +19,10 @@ export interface OnebookCandidate {
   amount: number;
   account_code: string;
   account_name: string;
+  /** เลขสายเอกสารจัดซื้อ (ถ้า ONEBOOK ส่งมา — จาก rpt_asset_candidates รุ่นใหม่) */
+  pr_number?: string | null;
+  po_number?: string | null;
+  gr_number?: string | null;
 }
 
 export async function fetchAssetCandidates(): Promise<OnebookCandidate[]> {

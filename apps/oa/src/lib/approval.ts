@@ -110,7 +110,7 @@ export async function closeStage(
 
 export type DecisionResult =
   | { ok: true; stageDone: boolean; stage: Stage; decision: "APPROVE" | "REJECT"; request: RequestWithMeta }
-  | { ok: false; reason: "NOT_FOUND" | "NOT_PENDING" | "NOT_YOUR_TURN" | "NEED_COMMENT" };
+  | { ok: false; reason: "NOT_FOUND" | "NOT_PENDING" | "NOT_YOUR_TURN" | "NEED_COMMENT" | "SELF_APPROVAL" | "NEED_REASON" };
 
 /**
  * บันทึกผลการพิจารณาของผู้อนุมัติหนึ่งคน แล้วเดินเอกสารต่อ
@@ -167,11 +167,16 @@ export async function applyDecision({
   if (!mine) return { ok: false, reason: "NOT_YOUR_TURN" };
 
   const onBehalf = mine.user_id !== user.id;
-  const behalfNote = onBehalf ? `อนุมัติแทน ${mine.name}${viaAdmin ? " โดยผู้ดูแลระบบ" : ""}` : "";
+  const isOwn = req.requester_id === user.id;
+  const behalfNote = onBehalf
+    ? `อนุมัติแทน ${mine.name}${viaAdmin ? " โดยผู้ดูแลระบบ" : ""}`
+    : (isOwn ? "อนุมัติเอกสารของตัวเอง (ผู้ดูแลระบบ)" : "");
 
-  // ห้ามใช้สิทธิ์ "รับมอบหมาย" มาอนุมัติเอกสารของตัวเอง — คนยื่นที่บังเอิญรับแทนผู้อนุมัติ
-  // อยู่ จะอนุมัติเรื่องตัวเองไม่ได้ · ยกเว้นผู้ดูแลระบบ (viaAdmin) ที่อนุมัติเอกสารตัวเองได้
-  if (onBehalf && req.requester_id === user.id && !viaAdmin) return { ok: false, reason: "NOT_YOUR_TURN" };
+  // maker ≠ checker: ผู้ใช้ทั่วไป "อนุมัติ/ไม่อนุมัติเอกสารของตัวเองไม่ได้" ไม่ว่าทางตรงหรือรับแทน
+  // ผู้ดูแลระบบทำได้ แต่ต้องระบุเหตุผลเสมอ (ดูด้านล่าง) และถูกบันทึกประวัติชัดเจน
+  if (isOwn && user.role !== "ADMIN") return { ok: false, reason: "SELF_APPROVAL" };
+  // ผู้ดูแลระบบอนุมัติแทน หรืออนุมัติเอกสารของตัวเอง → ต้องมีเหตุผลเสมอ
+  if ((viaAdmin || isOwn) && !comment.trim()) return { ok: false, reason: "NEED_REASON" };
 
   const stage = req.stage;
   let stageDone = false;

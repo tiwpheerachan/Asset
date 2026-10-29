@@ -104,6 +104,7 @@ export default async function RequestDetailPage({
     req.status === "PENDING" &&
     curApprovers.length > 0;
   const pendingApprovers = curApprovers.map((a) => ({ rowId: a.id, name: a.name }));
+  const ownRequest = req.requester_id === user.id;
   const waited = req.status === "PENDING" ? waitingDays(req.submitted_at) : 0;
   // "ไฟล์แนบอื่น ๆ" = ไฟล์ที่ไม่ได้อยู่กับช่องไหน — ไฟล์ในเซลล์ของตารางแสดงอยู่ในตาราง
   // ของมันอยู่แล้ว ถ้านับรวมมาตรงนี้ด้วยก็จะเห็นไฟล์เดียวกันสองที่
@@ -175,15 +176,18 @@ export default async function RequestDetailPage({
         </div>
       )}
 
-      {(myTurn || adminOverride) && (
+      {myTurn && ownRequest && user.role !== "ADMIN" ? (
+        <div className="rounded-xl tone-amber px-4 py-3 text-sm ring-1">{t("detail.selfApproveBlocked")}</div>
+      ) : (myTurn || adminOverride) ? (
         <DecidePanel
           requestId={req.id}
           stage={req.stage}
           users={users.filter((u) => u.id !== user.id && u.id !== req.requester_id)}
           adminOverride={adminOverride}
+          ownRequest={ownRequest}
           pendingApprovers={pendingApprovers}
         />
-      )}
+      ) : null}
       {isOwner && req.status === "PRELIM_APPROVED" && (
         <FinalRequestPanel requestId={req.id} amount={req.amount} />
       )}

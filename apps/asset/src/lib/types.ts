@@ -233,6 +233,8 @@ export interface OARecord {
   companyId: string;
   branchId: string;
   departmentId: string;
+  /** ชื่อแผนกจากต้นทาง (OA) — ใช้ช่วยจับคู่/ตรวจทานตอน review ถ้ายังไม่มี departmentId */
+  departmentName?: string;
   costCenterId: string;
   requester: string;
   approvedDate: string;
@@ -244,6 +246,7 @@ export interface OARecord {
   supplier: string;
   invoiceNo?: string;
   invoiceDate?: string;
+  prNo?: string;
   poNo?: string;
   grNo?: string;
   locationId?: string;
