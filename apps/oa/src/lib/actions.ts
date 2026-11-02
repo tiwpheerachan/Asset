@@ -26,6 +26,7 @@ import { createRequest, notifyMentions, overDrawMessage } from "./create-request
 import { advanceFrom, applyDecision, closeStage } from "./approval";
 import { enqueueWebhook } from "./integration";
 import { closeCards, enqueue, flushInBackground } from "./lark/notify";
+import { pushNewRequestToLark } from "./lark/approval-bridge";
 import { rolesAreLocal, ssoConfig, ssoReady } from "./sso/config";
 import { endSessionUrl } from "./sso/oidc";
 import {
@@ -408,6 +409,11 @@ export async function submitRequestAction(
   }
 
   flushInBackground();
+  // สะพาน Lark Approval (ปิดเป็นค่าเริ่มต้น · ทำงานเฉพาะเมื่อเปิด flag LARK_APPROVAL_BRIDGE + มี mapping ที่ active)
+  void pushNewRequestToLark(
+    { id, template_id: req.template_id, data: req.data, serial: (req as any).serial_no },
+    (requester as any)?.lark_user_id || "",
+  );
   revalidatePath(`/requests/${id}`);
   revalidatePath("/");
   return { ok: `ส่ง${STAGE_LABEL[stage]}เรียบร้อย` };

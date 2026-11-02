@@ -105,6 +105,52 @@ export async function resolveLarkIds(users: User[]): Promise<Map<number, string>
   return out;
 }
 
+/**
+ * ดึงรูปโปรไฟล์จาก Lark (Contact API) ด้วย open_id แล้วเก็บลง users.avatar_url
+ * - ใช้ scope อ่าน contact เดียวกับ batch_get_id ที่ใช้อยู่แล้ว (ไม่ต้องขอสิทธิ์เพิ่ม)
+ * - ทำเฉพาะคนที่ "มี open_id แต่ยังไม่มีรูป" · Lark จำกัด 50 ต่อครั้ง
+ * - คืนจำนวนคนที่อัปเดตรูปสำเร็จ
+ */
+export async function syncLarkAvatars(users: User[]): Promise<number> {
+  const byOpenId = new Map<string, number[]>();
+  for (const u of users) {
+    if (!u.lark_user_id || u.avatar_url) continue;
+    const ids = byOpenId.get(u.lark_user_id) ?? [];
+    ids.push(u.id);
+    byOpenId.set(u.lark_user_id, ids);
+  }
+  const openIds = [...byOpenId.keys()];
+  if (openIds.length === 0) return 0;
+
+  const save = db.prepare("UPDATE users SET avatar_url = ? WHERE id = ?");
+  let updated = 0;
+
+  for (let i = 0; i < openIds.length; i += 50) {
+    const chunk = openIds.slice(i, i + 50);
+    const qs = new URLSearchParams();
+    qs.set("user_id_type", "open_id");
+    for (const id of chunk) qs.append("user_ids", id);
+
+    const data = await call<{
+      items?: {
+        open_id?: string;
+        avatar?: { avatar_240?: string; avatar_640?: string; avatar_origin?: string; avatar_72?: string };
+      }[];
+    }>(`/open-apis/contact/v3/users/batch?${qs.toString()}`);
+
+    for (const row of data.items ?? []) {
+      const url =
+        row.avatar?.avatar_640 || row.avatar?.avatar_240 || row.avatar?.avatar_origin || row.avatar?.avatar_72;
+      if (!row.open_id || !url) continue;
+      for (const uid of byOpenId.get(row.open_id) ?? []) {
+        await save.run(url, uid);
+        updated++;
+      }
+    }
+  }
+  return updated;
+}
+
 export async function getUserByLarkId(openId: string): Promise<User | null> {
   return (
     ((await db.prepare(`${USER_SELECT} WHERE u.lark_user_id = ? AND u.active = 1`).get(openId)) as User) ??

@@ -763,3 +763,9 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--c-primary); }
 
 /* หัวข้อ section ไม่ต้องมีขีดสีนำหน้า — Asset ใช้หัวข้อเปล่า ๆ */
 .section-bar::before { display: none; }
+
+/* ── animation สำหรับหน้าเอกสาร OA ── */
+@keyframes oa-slide-down { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.oa-anim-in { animation: oa-slide-down 0.28s cubic-bezier(0.2, 0.7, 0.3, 1) both; }
+@keyframes oa-spin { to { transform: rotate(360deg); } }
+.oa-spin { animation: oa-spin 0.9s linear infinite; }

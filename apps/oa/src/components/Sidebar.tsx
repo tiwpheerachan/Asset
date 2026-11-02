@@ -10,7 +10,7 @@ import {
   IconTypeTable, IconLink,
   IconSend, IconSettings, IconShield, IconUsers,
 } from "@/components/icons";
-import { useT } from "@/components/I18nProvider";
+import { useT, useI18n } from "@/components/I18nProvider";
 
 type Item = {
   href: string;
@@ -37,6 +37,8 @@ export default function Sidebar({
   onNavigate?: () => void;
 }) {
   const t = useT();
+  const { locale } = useI18n();
+  const nav = (th: string, en: string, zh: string) => (locale === "en" ? en : locale === "zh" ? zh : th);
   const path = usePathname();
   const tab = useSearchParams().get("tab");
   const [collapsed, setCollapsed] = useState(false);
@@ -47,7 +49,7 @@ export default function Sidebar({
       title: t("nav.group.mine"),
       icon: IconHome,
       items: [
-        { href: "/dashboard", label: "แดชบอร์ด", icon: IconChart, accent: "accent-sky", match: (p) => p.startsWith("/dashboard") },
+        { href: "/dashboard", label: nav("แดชบอร์ด","Dashboard","仪表盘"), icon: IconChart, accent: "accent-sky", match: (p) => p.startsWith("/dashboard") },
         { href: "/", label: t("nav.submit"), icon: IconSend, accent: "accent-primary", match: (p) => p === "/" },
         {
           href: "/requests?tab=awaiting",
@@ -106,7 +108,7 @@ export default function Sidebar({
       title: t("nav.group.admin"),
       icon: IconBuilding,
       items: [
-        { href: "/admin/company", label: "ข้อมูลกิจการ", icon: IconBuilding, accent: "accent-amber", match: startsWith("/admin/company") },
+        { href: "/admin/company", label: nav("ข้อมูลกิจการ","Company","企业信息"), icon: IconBuilding, accent: "accent-amber", match: startsWith("/admin/company") },
         { href: "/admin/users", label: t("users.nav"), icon: IconUsers, accent: "accent-violet", match: startsWith("/admin/users") },
         { href: "/admin/forms", label: t("nav.forms"), icon: IconForm, accent: "accent-sky", match: startsWith("/admin/forms") },
         { href: "/admin/analytics", label: t("analytics.title"), icon: IconChart, accent: "accent-emerald", match: startsWith("/admin/analytics") },
@@ -118,6 +120,11 @@ export default function Sidebar({
       items: [
         { href: "/admin/reminders", label: t("remind.title"), icon: IconClock, accent: "accent-orange", match: startsWith("/admin/reminders") },
         { href: "/admin/api", label: t("api.title"), icon: IconLink, accent: "accent-teal", match: startsWith("/admin/api") },
+        { href: "/admin/oa-overview", label: nav("ภาพรวมเอกสาร","Document overview","单据总览"), icon: IconChart, accent: "accent-violet", match: startsWith("/admin/oa-overview") },
+        { href: "/admin/oa-documents", label: nav("เอกสาร OA (Feishu)","OA Documents (Feishu)","OA 单据（飞书）"), icon: IconForm, accent: "accent-sky", match: startsWith("/admin/oa-documents") },
+        { href: "/admin/oa-history", label: nav("ประวัติการซิงก์","Sync history","同步历史"), icon: IconClock, accent: "accent-orange", match: startsWith("/admin/oa-history") },
+        { href: "/admin/accounting", label: nav("ลงบัญชี (ตรวจ+โพสต์)","Accounting (review+post)","入账（审核+过账）"), icon: IconChart, accent: "accent-emerald", match: startsWith("/admin/accounting") },
+        { href: "/admin/feishu", label: nav("เชื่อม Feishu Base","Feishu Base link","连接 Feishu 多维表"), icon: IconLink, accent: "accent-sky", match: startsWith("/admin/feishu") },
         { href: "/admin/backup", label: t("backup.title"), icon: IconDownload, accent: "accent-emerald", match: startsWith("/admin/backup") },
         { href: "/admin/sso", label: t("sso.title"), icon: IconShield, accent: "accent-violet", match: startsWith("/admin/sso") },
       ],

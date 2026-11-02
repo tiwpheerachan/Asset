@@ -462,3 +462,185 @@ CREATE TABLE IF NOT EXISTS app_meta (
   key   TEXT PRIMARY KEY,
   value TEXT NOT NULL DEFAULT ''
 );
+
+-- ==================== เชื่อม Feishu Base (อ่านอย่างเดียว) ====================
+--
+-- เก็บ "สำเนา" ข้อมูลจาก Feishu Base ไว้ใน OA เพื่อแสดง/ค้นหาได้เร็วโดยไม่ต้องยิง
+-- API ทุกครั้ง การซิงก์เป็นทางเดียว (Base -> OA) เท่านั้น ไม่มีการเขียนกลับ Base
+-- จาก OA โดยเด็ดขาด ตารางเหล่านี้จึงเป็นแคชอ่านอย่างเดียวของข้อมูลต้นทาง
+
+-- ตารางใน Base ที่เราเลือกมาซิงก์ (1 แถว = 1 ตารางต้นทาง)
+CREATE TABLE IF NOT EXISTS feishu_tables (
+  table_id       TEXT PRIMARY KEY,         -- tblXXXX จาก Feishu
+  app_token      TEXT NOT NULL,            -- Base ที่ตารางนี้อยู่
+  name           TEXT NOT NULL DEFAULT '',
+  enabled        BOOLEAN NOT NULL DEFAULT TRUE,
+  last_synced_at TEXT NOT NULL DEFAULT '',
+  last_cursor    BIGINT NOT NULL DEFAULT 0, -- last_modified_time สูงสุดที่ซิงก์แล้ว (ซิงก์เฉพาะใหม่/เปลี่ยน)
+  record_count   INTEGER NOT NULL DEFAULT 0,
+  created_at     TEXT NOT NULL DEFAULT utc_now_text()
+);
+
+-- เรคคอร์ดที่ดึงมาจาก Base (สำเนาอ่านอย่างเดียว)
+CREATE TABLE IF NOT EXISTS feishu_records (
+  table_id      TEXT NOT NULL REFERENCES feishu_tables(table_id) ON DELETE CASCADE,
+  record_id     TEXT NOT NULL,             -- recXXXX จาก Feishu (คู่กับ table_id = กุญแจ)
+  fields        JSONB NOT NULL DEFAULT '{}'::jsonb,  -- ค่าทุกคอลัมน์ตามต้นทาง
+  modified_time BIGINT NOT NULL DEFAULT 0, -- ใช้ตรวจว่าเปลี่ยนไหม + เดิน cursor
+  origin        TEXT NOT NULL DEFAULT 'lark', -- 'lark' = มาจากฟอร์ม Lark, 'oa' = OA สร้าง (เฟส 2)
+  oa_request_id INTEGER,                    -- ผูกกับคำขอใน OA ถ้ามี (เฟส 2 กันซ้ำ)
+  synced_at     TEXT NOT NULL DEFAULT utc_now_text(),
+  PRIMARY KEY (table_id, record_id)
+);
+CREATE INDEX IF NOT EXISTS idx_feishu_rec_table ON feishu_records(table_id, modified_time);
+CREATE INDEX IF NOT EXISTS idx_feishu_rec_oareq ON feishu_records(oa_request_id);
+
+-- คอลัมน์ scalar (precompute จาก fields) + index → dashboard เร็ว ไม่ต้องแกะ JSONB ทุก query
+-- เติมค่าอัตโนมัติด้วย trigger ด้านล่าง (ยอดเงินอ่านช่องตาม app_meta 'oa_amount_map')
+ALTER TABLE feishu_records
+  ADD COLUMN IF NOT EXISTS r_status text,
+  ADD COLUMN IF NOT EXISTS r_sday   text,
+  ADD COLUMN IF NOT EXISTS r_dday   text,
+  ADD COLUMN IF NOT EXISTS r_cycle  int,
+  ADD COLUMN IF NOT EXISTS r_dept   text,
+  ADD COLUMN IF NOT EXISTS r_node   text,
+  ADD COLUMN IF NOT EXISTS r_files  int,
+  ADD COLUMN IF NOT EXISTS r_amount numeric,
+  ADD COLUMN IF NOT EXISTS r_search text;
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE INDEX IF NOT EXISTS fr_status ON feishu_records(r_status);
+CREATE INDEX IF NOT EXISTS fr_sday   ON feishu_records(r_sday);
+CREATE INDEX IF NOT EXISTS fr_dept   ON feishu_records(r_dept);
+CREATE INDEX IF NOT EXISTS fr_tbl    ON feishu_records(table_id);
+CREATE INDEX IF NOT EXISTS fr_search ON feishu_records USING gin (r_search gin_trgm_ops);
+
+CREATE OR REPLACE FUNCTION feishu_records_scalars() RETURNS trigger AS $BODY$
+DECLARE amt_key text; sdig text; ddig text;
+BEGIN
+  NEW.r_status := NEW.fields->>'status';
+  NEW.r_dept := NULLIF(NEW.fields->'fields'->>'发起人部门','');
+  NEW.r_node := COALESCE(NULLIF(NEW.fields->'fields'->>'当前处理人',''), NULLIF(NEW.fields->'fields'->>'审批节点',''));
+  NEW.r_files := jsonb_array_length(COALESCE(NEW.fields->'attachments'->'files','[]'::jsonb));
+  -- ข้อความไว้ค้นหา (เลขที่ + ชื่อฟอร์ม + ทุกช่องในฟอร์ม) — เล็กกว่า fields เต็ม ค้นเร็วด้วย trigram
+  NEW.r_search := lower(concat_ws(' ', NEW.fields->>'serial', NEW.fields->>'form_name', (NEW.fields->'fields')::text));
+  sdig := regexp_replace(COALESCE(NEW.fields->'fields'->>'发起时间',''),'[^0-9]','','g');
+  ddig := regexp_replace(COALESCE(NEW.fields->'fields'->>'完成时间',''),'[^0-9]','','g');
+  NEW.r_sday := CASE WHEN length(sdig)>=8 AND substr(sdig,5,2) BETWEEN '01' AND '12' THEN substr(sdig,1,8) END;
+  NEW.r_dday := CASE WHEN length(ddig)>=8 AND substr(ddig,5,2) BETWEEN '01' AND '12' THEN substr(ddig,1,8) END;
+  NEW.r_cycle := CASE WHEN length(sdig)>=8 AND length(ddig)>=8
+      AND substr(sdig,5,2) BETWEEN '01' AND '12' AND substr(sdig,7,2) BETWEEN '01' AND '28'
+      AND substr(ddig,5,2) BETWEEN '01' AND '12' AND substr(ddig,7,2) BETWEEN '01' AND '28'
+      AND (to_date(substr(ddig,1,8),'YYYYMMDD')-to_date(substr(sdig,1,8),'YYYYMMDD')) BETWEEN 0 AND 365
+    THEN (to_date(substr(ddig,1,8),'YYYYMMDD')-to_date(substr(sdig,1,8),'YYYYMMDD')) END;
+  SELECT value::jsonb->>NEW.table_id INTO amt_key FROM app_meta WHERE key='oa_amount_map';
+  IF amt_key IS NOT NULL THEN
+    NEW.r_amount := COALESCE(NULLIF(replace((regexp_match(NEW.fields->'fields'->>amt_key,'[0-9][0-9,]*\.?[0-9]*'))[1],',',''),'')::numeric,0);
+  ELSE NEW.r_amount := 0; END IF;
+  RETURN NEW;
+END $BODY$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS trg_feishu_scalars ON feishu_records;
+CREATE TRIGGER trg_feishu_scalars BEFORE INSERT OR UPDATE OF fields ON feishu_records FOR EACH ROW EXECUTE FUNCTION feishu_records_scalars();
+
+-- ประวัติการซิงก์ (แต่ละรอบ ดึงเข้ามากี่ใบ)
+CREATE TABLE IF NOT EXISTS oa_sync_log (
+  id BIGSERIAL PRIMARY KEY,
+  at timestamptz NOT NULL DEFAULT now(),
+  source text NOT NULL DEFAULT 'cron',   -- cron | manual | api
+  pages int NOT NULL DEFAULT 0,
+  fetched int NOT NULL DEFAULT 0,        -- จำนวนใบที่อัปเซิร์ตในรอบนี้
+  changed int NOT NULL DEFAULT 0,        -- จำนวนที่สถานะ/ขั้นเปลี่ยน (จาก change log)
+  total int NOT NULL DEFAULT 0,          -- จำนวนรวมในฐานข้อมูลหลังรอบนี้
+  ms int NOT NULL DEFAULT 0,
+  ok boolean NOT NULL DEFAULT true,
+  error text
+);
+CREATE INDEX IF NOT EXISTS oa_sync_log_at ON oa_sync_log(at DESC);
+
+-- ประวัติการเปลี่ยนแปลงเอกสาร (เอกสารใหม่ / เปลี่ยนสถานะอนุมัติ / เปลี่ยนขั้น) — เติมด้วย trigger
+CREATE TABLE IF NOT EXISTS oa_change_log (
+  id BIGSERIAL PRIMARY KEY,
+  at timestamptz NOT NULL DEFAULT now(),
+  oa_key text NOT NULL,
+  table_id text,
+  serial text,
+  form_name text,
+  kind text NOT NULL,     -- new | status | node
+  old_val text,
+  new_val text
+);
+CREATE INDEX IF NOT EXISTS oa_change_log_at ON oa_change_log(at DESC);
+
+-- สะพานเชื่อม "สร้างในเว็บ OA → สร้าง instance ใน Lark Approval + อนุมัติ 2 ทาง"
+-- ต่อฟอร์มเว็บ (template) กับ approval definition ของ Lark + วิธี map ช่องข้อมูล
+-- ปิดไว้ (active=false) จนกว่าจะเปิด scope approval และตั้งค่า map ครบ
+CREATE TABLE IF NOT EXISTS oa_approval_bridge (
+  template_id   integer PRIMARY KEY,
+  approval_code text NOT NULL,                        -- approval definition ของ Lark
+  id_type       text NOT NULL DEFAULT 'open_id',      -- open_id | user_id | email (ชนิด id ผู้ยื่นที่ Lark รับ)
+  field_map     jsonb NOT NULL DEFAULT '{}'::jsonb,   -- { "<oa field key>": {"widget_id":"...","type":"input"} }
+  active        boolean NOT NULL DEFAULT false,
+  created_at    text NOT NULL DEFAULT ''
+);
+
+-- โปรไฟล์พนักงาน (cache จาก Lark directory ผ่าน SSO gateway) — จับคู่ด้วยชื่อแบบตรงเป๊ะเท่านั้น
+CREATE TABLE IF NOT EXISTS oa_people (
+  user_id text PRIMARY KEY,       -- user_id จาก approval (คงที่ข้ามแอป Lark)
+  name text,                      -- ชื่อที่ใช้จับคู่ (ตามที่ approval ให้มา)
+  union_id text,
+  avatar_url text,
+  title text,
+  dept text,
+  email text,
+  found boolean NOT NULL DEFAULT false,   -- true = จับคู่รูปได้ / false = ไม่พบ (กันค้นซ้ำ)
+  resolved_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE OR REPLACE FUNCTION feishu_records_changelog() RETURNS trigger AS $CL$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    INSERT INTO oa_change_log(oa_key, table_id, serial, form_name, kind, old_val, new_val)
+    VALUES (NEW.record_id, NEW.table_id, NEW.fields->>'serial', NEW.fields->>'form_name', 'new', NULL, NEW.r_status);
+  ELSE
+    IF COALESCE(NEW.r_status,'') IS DISTINCT FROM COALESCE(OLD.r_status,'') THEN
+      INSERT INTO oa_change_log(oa_key, table_id, serial, form_name, kind, old_val, new_val)
+      VALUES (NEW.record_id, NEW.table_id, NEW.fields->>'serial', NEW.fields->>'form_name', 'status', OLD.r_status, NEW.r_status);
+    END IF;
+    IF COALESCE(NEW.r_node,'') IS DISTINCT FROM COALESCE(OLD.r_node,'') THEN
+      INSERT INTO oa_change_log(oa_key, table_id, serial, form_name, kind, old_val, new_val)
+      VALUES (NEW.record_id, NEW.table_id, NEW.fields->>'serial', NEW.fields->>'form_name', 'node', OLD.r_node, NEW.r_node);
+    END IF;
+  END IF;
+  RETURN NULL;
+END $CL$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS trg_feishu_changelog ON feishu_records;
+CREATE TRIGGER trg_feishu_changelog AFTER INSERT OR UPDATE OF fields ON feishu_records FOR EACH ROW EXECUTE FUNCTION feishu_records_changelog();
+
+-- ผูกคำขอ OA กับ instance ของ Lark Approval (เฉพาะเอกสารที่ "สร้างจากเว็บ OA")
+-- ใช้ซิงก์สถานะ 2 ทาง: อนุมัติใน Lark -> event เข้ามาอัปเดต OA / อนุมัติใน OA -> ยิง task เข้า Lark
+CREATE TABLE IF NOT EXISTS feishu_approvals (
+  instance_code TEXT PRIMARY KEY,            -- instance ของ Lark Approval
+  approval_code TEXT NOT NULL DEFAULT '',    -- นิยามฟอร์มอนุมัติ
+  oa_request_id INTEGER REFERENCES requests(id) ON DELETE SET NULL,
+  status        TEXT NOT NULL DEFAULT 'PENDING', -- PENDING/APPROVED/REJECTED/CANCELED
+  serial_number TEXT NOT NULL DEFAULT '',    -- เลขคำขอฝั่ง Lark
+  updated_at    TEXT NOT NULL DEFAULT utc_now_text(),
+  created_at    TEXT NOT NULL DEFAULT utc_now_text()
+);
+CREATE INDEX IF NOT EXISTS idx_feishu_appr_oareq ON feishu_approvals(oa_request_id);
+
+-- ==================== ลงบัญชี: ตรวจเอกสาร OA → โพสต์เข้า ONEBOOK ====================
+-- พนักงานบัญชีตรวจเอกสาร (เทียบยอดที่ AI อ่าน) แล้วกดโพสต์เข้า ONEBOOK · ย้อนสถานะได้
+-- 1 แถว = 1 เอกสาร OA (ผูกด้วย oa_key จาก feishu_records)
+CREATE TABLE IF NOT EXISTS oa_accounting (
+  oa_key      TEXT PRIMARY KEY,
+  form_code   TEXT NOT NULL,
+  status      TEXT NOT NULL DEFAULT 'new',   -- new | checked | posted | reversed | skipped
+  amount      DOUBLE PRECISION,              -- ยอดที่ยืนยัน (ค่าเริ่มจาก AI แก้ได้)
+  onebook_ref TEXT NOT NULL DEFAULT '',      -- id ฝั่ง ONEBOOK เมื่อโพสต์สำเร็จ
+  note        TEXT NOT NULL DEFAULT '',
+  checked_by  TEXT NOT NULL DEFAULT '',
+  checked_at  TEXT NOT NULL DEFAULT '',
+  posted_at   TEXT NOT NULL DEFAULT '',
+  updated_at  TEXT NOT NULL DEFAULT utc_now_text()
+);
+CREATE INDEX IF NOT EXISTS idx_oa_acc_form ON oa_accounting(form_code, status);
