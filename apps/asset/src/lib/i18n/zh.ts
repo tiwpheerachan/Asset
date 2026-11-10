@@ -16,6 +16,7 @@ const zh: Dict = {
     locations: '存放地点',
     verify: '资产盘点',
     reports: '报表',
+    peakReconcile: 'PEAK 对账',
     knowledge: '知识库',
     documents: '附件文档',
     users: '用户与权限',
