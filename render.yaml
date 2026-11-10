@@ -43,6 +43,15 @@ services:
       # URL จริงของเว็บนี้ (ใส่หลัง deploy ครั้งแรก ถ้าชื่อไม่ชนจะเป็นค่านี้)
       - key: APP_BASE_URL
         value: https://shd-oa.onrender.com
+      # ---------- ดึงเอกสาร OA จาก Export API อัตโนมัติ (prod ซิงก์เอง) ----------
+      # Export API URL (ไม่ลับ) · KEY + SYNC_SECRET ต้องวางค่าเองใน Render (sync: false)
+      - key: OA_EXPORT_URL
+        value: https://34-21-223-128.sslip.io
+      - key: OA_EXPORT_KEY
+        sync: false
+      # กุญแจป้องกัน endpoint /api/oa-export/sync (ให้ตัวตั้งเวลา เช่น cron-job.org ยิงเข้ามาได้)
+      - key: OA_SYNC_SECRET
+        sync: false
 
   # ---------- เว็บที่ 2: Asset (ระบบทรัพย์สินถาวร) ----------
   - type: web
