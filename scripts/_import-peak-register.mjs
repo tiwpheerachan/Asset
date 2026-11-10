@@ -38,6 +38,20 @@ function pickSub(code, name) {
 const data = JSON.parse(readFileSync(SRC, 'utf8'));
 const now = new Date().toISOString();
 const r2 = (x) => Math.round((Number(x) || 0) * 100) / 100;
+
+// งวดปัจจุบันที่ดึงค่ายกมา (ค่าเสื่อมสะสม ณ วันนี้)
+const ASOF = '2026-10';
+const addMo = (p, n) => { let [y, m] = p.split('-').map(Number); m += n; y += Math.floor((m - 1) / 12); m = ((m - 1) % 12 + 12) % 12 + 1; return `${y}-${String(m).padStart(2, '0')}`; };
+// คำนวณ "วันเริ่มคิดค่าเสื่อมย้อนหลัง" จากค่าเสื่อมสะสม: accum ÷ อัตราต่อเดือน = ใช้งานมาแล้วกี่เดือน
+// → engine จะมีตารางค่าเสื่อมเต็มไทม์ไลน์ + ค่าเสื่อมเดินในงวดปัจจุบัน และ NBV ใกล้ PEAK
+function derivedReady(cost, residual, lifeMonths, accum) {
+  const base = cost - residual;
+  const monthly = base > 0 ? r2(base / lifeMonths) : 0;
+  let elapsed = monthly > 0 ? Math.round(accum / monthly) : 0;
+  elapsed = Math.max(0, Math.min(lifeMonths, elapsed));
+  const period = elapsed === 0 ? addMo(ASOF, 1) : addMo(ASOF, -(elapsed - 1));
+  return period + '-01';
+}
 let inserted = 0;
 const unmapped = [];
 const catCount = {};
@@ -52,6 +66,9 @@ try {
     const cost = r2(a.cost);
     const accum = r2(a.accum);
     const nbv = r2(a.nbv != null ? a.nbv : cost - accum);
+    const residual = sub.defaultResidual || 1;
+    const lifeMonths = (sub.defaultLifeYears || 5) * 12;
+    const ready = derivedReady(cost, residual, lifeMonths, accum); // วันซื้อย้อนหลังจาก accum
     const id = 'A-PK-' + a.code;
     const asset = {
       id, code: a.code,
@@ -61,10 +78,10 @@ try {
       locationId: null, holderId: null, serialNumber: '', brand: '', model: '',
       unit: sub.defaultUnit || 'unit', quantity: Math.max(1, Number(a.qty) || 1),
       originalCost: cost, additionalCost: 0,
-      residual: sub.defaultResidual || 1, lifeMonths: (sub.defaultLifeYears || 5) * 12,
+      residual, lifeMonths,
       method: sub.method || 'SL', policyId: 'P-' + sub.parentId,
-      // readyDate = วันโอนย้ายทะเบียนจาก PEAK (งวดปัจจุบัน) — ค่าเสื่อมสะสมที่ยกมาถือ ณ งวดนี้
-      acquisitionDate: '2026-10-01', readyDate: '2026-10-01',
+      // วันซื้อ/วันเริ่มคิดค่าเสื่อม = ย้อนหลังจากค่าเสื่อมสะสม → มีประวัติค่าเสื่อมเต็ม + งวดนี้มีค่าเสื่อมเดิน
+      acquisitionDate: ready, readyDate: ready,
       status: 'ACTIVE', hasPhoto: false,
       source: { sourceSystem: 'PEAK', peakCode: a.code, glAccountCode: sub.assetAccount },
       legacy: {

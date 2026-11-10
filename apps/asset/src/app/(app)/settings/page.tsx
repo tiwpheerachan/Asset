@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Check, Info, Minus, Pencil, Plug, Plus, ShieldAlert } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { TODAY, useStore } from '@/lib/store';
@@ -65,6 +66,13 @@ export default function SettingsPage() {
           />
         </div>
         <div className="p-4">
+          {tab === 'company' && (
+            <div className="mb-3">
+              <Link href="/settings/company" className="inline-flex items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-sm font-medium text-brand-700 hover:bg-brand-100">
+                🏢 ตั้งค่าข้อมูลกิจการเต็มรูป + โลโก้ / ตราประทับ →
+              </Link>
+            </div>
+          )}
           {masters[tab] && <MasterTable key={tab} cfg={masters[tab]!} editable={admin} />}
           {tab === 'running' && <RunningTab editable={admin} />}
           {tab === 'oa' && <OATab editable={admin} />}
@@ -158,6 +166,7 @@ function RunningTab({ editable }: { editable: boolean }) {
   const { state, updateRunning } = useStore();
   const [cfg, setCfg] = useState(state.running[0]);
   const [y, m, d] = TODAY.split('-');
+  if (!cfg) return <Notice tone="amber" icon={<Info size={14} />}>ยังไม่มีการตั้งค่าเลขที่เอกสาร — รีโหลดหน้าอีกครั้ง หรือติดต่อผู้ดูแลระบบ</Notice>;
   const preview = `${cfg.prefix}${cfg.includeYear ? y.slice(2) : ''}${cfg.includeMonth ? m : ''}${cfg.includeDay ? d : ''}${String(cfg.nextSeq).padStart(cfg.seqDigits, '0')}`;
   return (
     <div className="grid gap-6 lg:grid-cols-2">

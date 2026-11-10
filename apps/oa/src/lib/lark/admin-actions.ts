@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "../auth";
 import { listActiveUsers } from "../queries";
 import { larkConfig, larkReady } from "./config";
-import { resolveLarkIds, sendCard, testConnection } from "./client";
+import { resolveLarkIds, sendCard, syncLarkAvatars, testConnection } from "./client";
 import { testCard } from "./card";
 import { flush } from "./notify";
 import { isLocale } from "../i18n/locales";
@@ -43,10 +43,12 @@ export async function syncLarkIdsAction(): Promise<IntegrationState> {
 
   const users = await listActiveUsers();
   try {
-    const ids = await resolveLarkIds((await users));
+    const ids = await resolveLarkIds(users);
+    // ดึงรูปโปรไฟล์จาก Lark ด้วย open_id ที่เพิ่งจับคู่ได้ (โหลด users ใหม่ให้มี lark_user_id ล่าสุด)
+    const photos = await syncLarkAvatars(await listActiveUsers());
     revalidatePath("/admin/integrations");
     revalidatePath("/admin/users");
-    return { ok: `จับคู่ได้ ${ids.size} คน จากผู้ใช้ทั้งหมด ${users.length} คน` };
+    return { ok: `จับคู่บัญชี Lark ได้ ${ids.size} คน · ดึงรูปโปรไฟล์ ${photos} คน (จากทั้งหมด ${users.length})` };
   } catch (e) {
     return { error: (e as Error).message };
   }

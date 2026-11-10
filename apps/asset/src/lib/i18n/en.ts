@@ -14,6 +14,7 @@ const en = {
     locations: 'Locations',
     verify: 'Verification',
     reports: 'Reports',
+    peakReconcile: 'PEAK Reconcile',
     knowledge: 'Knowledge',
     documents: 'Documents',
     users: 'Users & Roles',

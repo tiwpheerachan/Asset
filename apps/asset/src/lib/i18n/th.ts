@@ -16,6 +16,7 @@ const th: Dict = {
     locations: 'สถานที่',
     verify: 'ตรวจนับทรัพย์สิน',
     reports: 'รายงาน',
+    peakReconcile: 'กระทบยอด PEAK',
     knowledge: 'คลังความรู้',
     documents: 'เอกสาร',
     users: 'ผู้ใช้และสิทธิ์',

@@ -8,6 +8,8 @@ import { larkConfig } from "@/lib/lark/config";
 import { translator } from "@/lib/i18n";
 import { isLocale } from "@/lib/i18n/locales";
 import { cardReply, parseCardCallback } from "@/lib/lark/callback";
+import { handleApprovalEvent } from "@/lib/lark/approval";
+import { applyLarkStatusToRequest } from "@/lib/lark/approval-bridge";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +33,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ challenge: body.challenge });
   }
 
-  // 2) ผู้ใช้กดปุ่มบนการ์ด — รับได้ทั้ง payload แบบเดิมและแบบ card.action.trigger
+  // 2) event สถานะอนุมัติเปลี่ยนจาก Lark Approval → ซิงก์กลับเข้า OA
+  //    (เอกสารที่ "สร้างจากเว็บ OA" อนุมัติใน Lark แล้วสถานะเด้งกลับมาที่นี่)
+  try {
+    const appr = await handleApprovalEvent(body);
+    if (appr.handled) {
+      await applyLarkStatusToRequest(appr.oaRequestId, appr.status);
+      return NextResponse.json({ ok: true });
+    }
+  } catch {
+    // อย่าให้ event อนุมัติที่พังทำให้ Lark ยิงซ้ำไม่หยุด — ตอบ ok แล้วค่อยตามแก้
+    return NextResponse.json({ ok: true });
+  }
+
+  // 3) ผู้ใช้กดปุ่มบนการ์ด — รับได้ทั้ง payload แบบเดิมและแบบ card.action.trigger
   const hit = parseCardCallback(body);
   if (!hit) {
     // event อื่นๆ ที่เรายังไม่ได้ใช้ — ตอบ 200 ไม่งั้น Lark จะยิงซ้ำ

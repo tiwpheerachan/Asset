@@ -157,7 +157,7 @@ function ready(): Promise<void> {
 
 /* ---------- แปลงรูปแบบตัวแปรจาก SQLite เป็น Postgres ---------- */
 
-const NO_ID_TABLES = new Set(["app_meta", "sessions"]);
+const NO_ID_TABLES = new Set(["app_meta", "sessions", "doc_counters", "feishu_tables", "feishu_records", "feishu_approvals", "oa_accounting", "oa_people", "oa_approval_bridge"]);
 
 type Converted = { text: string; names: string[]; insertInto: string };
 
