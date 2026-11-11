@@ -79,4 +79,6 @@ try {
     `INSERT INTO oa_sync_log (source, pages, fetched, changed, total, ms, ok) VALUES ('cron',$1,$2,$3,$4,$5,true)`,
     [pages, count, chg.rows[0]?.n ?? 0, tot.rows[0].n, Date.now() - started]);
 } catch (e) { console.error('log err', e.message); }
+// บำรุง DB: รีเฟรชสถิติเมื่อมีข้อมูลใหม่ → planner ใช้ index ถูก หน้าโหลดเร็ว
+if (count > 0) { try { await client.query('ANALYZE feishu_records'); console.log('🧹 ANALYZE feishu_records แล้ว'); } catch (e) { console.error('analyze err', e.message); } }
 await client.end();

@@ -90,6 +90,8 @@ export async function syncOa(opts: { reset?: boolean; maxPages?: number; source?
     await db.prepare(`INSERT INTO oa_sync_log (source, pages, fetched, changed, total, ms, ok) VALUES (?, ?, ?, ?, ?, ?, true)`)
       .run(opts.source ?? "manual", pages, count, chg?.n ?? 0, total, Date.now() - started);
   } catch { /* ไม่สำคัญพอที่จะทำให้ซิงก์ล้ม */ }
+  // บำรุง DB อัตโนมัติ: รีเฟรชสถิติหลังมีข้อมูลใหม่ → planner ใช้ index ถูก หน้าโหลดเร็วตลอด
+  if (count > 0) { try { await db.prepare("ANALYZE feishu_records").run(); } catch { /* ไม่สำคัญ */ } }
   return { pages, count, cursor: after, done: !more };
 }
 
