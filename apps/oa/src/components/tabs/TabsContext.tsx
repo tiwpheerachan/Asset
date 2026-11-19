@@ -25,18 +25,18 @@ export const useTabs = () => useContext(TabsCtx);
 const KEY = "oa-tabs-v2";
 const MAX = 12;
 
-/** ตั้งชื่อแท็บจาก path — ยึดเมนูใน catalog ก่อน แล้วเดาจากกรณีพิเศษ */
+/** ตั้งชื่อแท็บจาก path — เช็กกรณีเฉพาะ (หน้าย่อย) ก่อน แล้วค่อยยึดเมนูใน catalog */
 function labelFor(pathname: string): string {
+  if (pathname === "/") return "ส่งคำขอ";
+  if (/^\/admin\/users\/\d+/.test(pathname)) return "โปรไฟล์ผู้ใช้";
+  if (pathname.startsWith("/requests/new")) return "สร้างคำขอ";
+  if (/^\/requests\/\d+/.test(pathname)) return `คำขอ ${pathname.split("/")[2]}`;
+  if (pathname.startsWith("/profile")) return "โปรไฟล์ของฉัน";
+  if (pathname.startsWith("/help")) return "คู่มือ";
   const hit = [...MENU_CATALOG]
     .filter((m) => m.href !== "/" && pathname.startsWith(m.href))
     .sort((a, b) => b.href.length - a.href.length)[0];
   if (hit) return hit.label[0];
-  if (pathname === "/") return "ส่งคำขอ";
-  if (/^\/admin\/users\/\d+/.test(pathname)) return "โปรไฟล์ผู้ใช้";
-  if (/^\/requests\/\d+/.test(pathname)) return `คำขอ ${pathname.split("/")[2]}`;
-  if (pathname.startsWith("/requests/new")) return "สร้างคำขอ";
-  if (pathname.startsWith("/profile")) return "โปรไฟล์ของฉัน";
-  if (pathname.startsWith("/help")) return "คู่มือ";
   return pathname;
 }
 
