@@ -980,6 +980,33 @@ export async function listAllUsers(): Promise<User[]> {
 }
 
 /**
+ * เติมรูปโปรไฟล์ให้ผู้ใช้ที่ยังไม่มี avatar_url จากไดเรกทอรี Lark กลาง (ยึดอีเมล)
+ * ใช้ตอนแสดงหน้าจัดการผู้ใช้ — เพราะบาง provider ไม่ส่ง claim `picture` ตอน SSO login
+ * จึงดึงจากไดเรกทอรีซึ่งมีรูปครบ แล้ว cache กลับลง DB (ครั้งถัดไปไม่ต้องดึงซ้ำ)
+ * mutate อ็อบเจกต์ใน users ให้มีรูปเลย เพื่อ render รอบนี้ได้ทันที
+ */
+export async function fillMissingAvatarsFromDirectory(users: User[]): Promise<void> {
+  const { directoryConfigured, searchDirectory } = await import("./directory");
+  if (!directoryConfigured()) return;
+  const targets = users.filter((u) => u.active && u.email && !u.avatar_url).slice(0, 50);
+  await Promise.all(
+    targets.map(async (u) => {
+      try {
+        const r = await searchDirectory(u.email, AbortSignal.timeout(3000));
+        if (!r.ok) return;
+        const p = r.items.find((i) => i.email?.toLowerCase() === u.email.toLowerCase());
+        if (p?.avatar_url) {
+          u.avatar_url = p.avatar_url;
+          await db.prepare("UPDATE users SET avatar_url = ? WHERE id = ?").run(p.avatar_url, u.id);
+        }
+      } catch {
+        /* เงียบไว้ — รูปไม่ขึ้นก็แค่เป็นอักษรย่อ */
+      }
+    }),
+  );
+}
+
+/**
  * หา/สร้างผู้ใช้ในระบบจากคนใน Central Login directory
  *
  * ใช้ตอนตั้งผู้อนุมัติด้วยชื่อ Lark: คนที่เลือกอาจยังไม่เคยล็อกอินแอปนี้ จึงยังไม่มีแถวใน users

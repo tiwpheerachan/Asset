@@ -1,5 +1,5 @@
 import { requireAdmin } from "@/lib/auth";
-import { listAllUsers } from "@/lib/queries";
+import { listAllUsers, fillMissingAvatarsFromDirectory } from "@/lib/queries";
 import { updateUserAccessAction, addUserFromDirectoryAction } from "@/lib/actions";
 import { rolesAreLocal } from "@/lib/sso/config";
 import { PageShell, PageTitle, SectionCard, EmptyState } from "@/components/layout-bits";
@@ -23,6 +23,7 @@ export default async function UsersAdminPage({
   const t = await getT();
   const sp = await searchParams;
   const users = await listAllUsers();
+  await fillMissingAvatarsFromDirectory(users); // เติมรูปจากไดเรกทอรีให้คนที่ SSO ไม่ส่งรูปมา
   const canEdit = rolesAreLocal();
 
   const flash =
