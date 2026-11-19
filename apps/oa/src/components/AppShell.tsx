@@ -1,15 +1,10 @@
 "use client";
 
 import { Suspense, useEffect, useRef, useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import { useT } from "@/components/I18nProvider";
 import TopBar from "@/components/TopBar";
 import HelpAssistant from "@/components/HelpAssistant";
-import { TabsProvider } from "@/components/tabs/TabsContext";
-import TabBar from "@/components/tabs/TabBar";
-import TabWorkspace from "@/components/tabs/TabWorkspace";
-import EmbedReporter from "@/components/tabs/EmbedReporter";
 import type { Role } from "@/lib/types";
 import type { MenuKey } from "@/lib/menu-access";
 
@@ -31,16 +26,6 @@ export default function AppShell({
   const [mobileOpen, setMobileOpen] = useState(false);
   const t = useT();
   const contentRef = useRef<HTMLDivElement>(null);
-  const search = useSearchParams();
-  const pathname = usePathname();
-  // โหมด embed = หน้าลูกที่ถูกโหลดใน iframe ของแท็บ → แสดงเฉพาะเนื้อหา ไม่มี sidebar/topbar/แท็บ
-  const embed = search.get("embed") === "1";
-  const initialUrl = (() => {
-    const sp = new URLSearchParams(search.toString());
-    sp.delete("embed"); sp.delete("_tab");
-    const qs = sp.toString();
-    return pathname + (qs ? `?${qs}` : "");
-  })();
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -79,16 +64,6 @@ export default function AppShell({
     };
   }, [mobileOpen]);
 
-  // หน้าลูกใน iframe: เนื้อหาล้วน + ตัวรายงานชื่อแท็บกลับไปฝั่งพ่อ (ไม่ซ้อน shell)
-  if (embed) {
-    return (
-      <>
-        {children}
-        <EmbedReporter />
-      </>
-    );
-  }
-
   return (
     <div className="flex min-h-screen bg-bg">
       <a href="#main" className="skip-link btn-primary">{t("workspace.skip")}</a>
@@ -113,15 +88,12 @@ export default function AppShell({
         />
       </Suspense>
 
-      <TabsProvider initialUrl={initialUrl}>
-        <div ref={contentRef} className="flex h-screen min-w-0 flex-1 flex-col overflow-hidden">
-          <TopBar user={user} onMenu={() => setMobileOpen(true)} mobileOpen={mobileOpen} />
-          <main id="main" tabIndex={-1} className="flex min-h-0 min-w-0 flex-1 flex-col">
-            <TabBar />
-            <TabWorkspace />
-          </main>
-        </div>
-      </TabsProvider>
+      <div ref={contentRef} className="flex min-h-screen min-w-0 flex-1 flex-col">
+        <TopBar user={user} onMenu={() => setMobileOpen(true)} mobileOpen={mobileOpen} />
+        <main id="main" tabIndex={-1} className="min-w-0 flex-1">
+          {children}
+        </main>
+      </div>
       <HelpAssistant />
     </div>
   );
