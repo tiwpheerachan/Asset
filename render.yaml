@@ -34,6 +34,10 @@ services:
       # เปิดให้ล็อกอินด้วยอีเมล/รหัสผ่านในแอป (ค่า default ของโค้ดคือ false = SSO อย่างเดียว)
       - key: SSO_ALLOW_LOCAL_LOGIN
         value: "true"
+      # ให้ OA คุมสิทธิ์ (role) เองในแอป — ไม่ให้ SSO/GoodHR เขียนทับทุก login
+      # ผล: ปลดล็อกช่องแก้ role ในหน้าจัดการผู้ใช้ และตั้ง admin ใน OA ได้ถาวร
+      - key: SSO_CENTRAL_ROLES
+        value: "false"
       # รหัสผ่านของ user ที่ seed ครั้งแรก (เปลี่ยนเป็นค่าของคุณ)
       - key: SEED_PASSWORD
         sync: false
