@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireMenuAccess } from "@/lib/auth";
+import { requireSuperAdmin } from "@/lib/auth";
 import { getUser, getUserActivity, fillMissingAvatarsFromDirectory } from "@/lib/queries";
 import { updateUserMenuAccessAction, updateUserDataScopeAction } from "@/lib/actions";
 import { rolesAreLocal } from "@/lib/sso/config";
@@ -32,7 +32,7 @@ export default async function UserProfilePage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ ok?: string; err?: string }>;
 }) {
-  await requireMenuAccess("users");
+  await requireSuperAdmin();
   const { id } = await params;
   const uid = Number(id);
   if (!Number.isInteger(uid) || uid <= 0) notFound();

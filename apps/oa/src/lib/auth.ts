@@ -99,6 +99,29 @@ export async function requireAdmin(): Promise<User> {
   return user;
 }
 
+/** อีเมลของ "แอดมินสูงสุด" (super admin) จาก env OA_SUPERADMIN_EMAILS (คั่นด้วย comma) */
+export function superAdminEmails(): string[] {
+  return (process.env.OA_SUPERADMIN_EMAILS || "")
+    .split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+}
+
+/**
+ * เป็นแอดมินสูงสุดไหม — คนเดียวที่จัดการผู้ใช้/สิทธิ์ได้
+ * ไม่ตั้ง OA_SUPERADMIN_EMAILS → ถือว่า ADMIN ทุกคนเป็นสูงสุด (เข้ากันได้กับของเดิม ไม่ล็อกเอาต์)
+ */
+export function isSuperAdmin(user: { email: string; role: string }): boolean {
+  const list = superAdminEmails();
+  if (list.length === 0) return user.role === "ADMIN";
+  return list.includes(user.email.trim().toLowerCase());
+}
+
+/** กั้นเฉพาะแอดมินสูงสุด (หน้า/แอ็กชันจัดการผู้ใช้) */
+export async function requireSuperAdmin(): Promise<User> {
+  const user = await requireUser();
+  if (!isSuperAdmin(user)) redirect("/");
+  return user;
+}
+
 /**
  * กั้นหน้าตามสิทธิ์เห็นเมนูรายคน (menu_access) แทน requireAdmin
  * - menu_access ไม่ตั้ง → ใช้ค่าตามบทบาท: ADMIN เข้าได้ทุกเมนู อื่น ๆ เข้าไม่ได้ (เท่าเดิม)

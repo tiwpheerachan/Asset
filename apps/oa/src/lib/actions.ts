@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 import { db, USER_SELECT } from "./db";
 import { putFile, deleteFile } from "./storage";
 import {
-  createSession, destroySession, hashPassword, requireAdmin, requireMenuAccess, requireUser, verifyPassword,
+  createSession, destroySession, hashPassword, requireAdmin, requireMenuAccess, requireSuperAdmin, requireUser, verifyPassword,
 } from "./auth";
 import { ALL_MENU_KEYS } from "./menu-access";
 import {
@@ -2069,7 +2069,7 @@ function tempPassword(): string {
  * การแก้ที่นี่จะถูกเขียนทับตอน login ครั้งถัดไป จึงปิดไว้กันเข้าใจผิด
  */
 export async function updateUserAccessAction(form: FormData): Promise<void> {
-  const me = await requireAdmin();
+  const me = await requireSuperAdmin();
   if (!rolesAreLocal()) redirect("/admin/users?err=central");
 
   const id = Number(form.get("user_id"));
@@ -2097,7 +2097,7 @@ export async function updateUserAccessAction(form: FormData): Promise<void> {
  * กันแอดมินตัดสิทธิ์หน้า "ผู้ใช้และสิทธิ์" ของตัวเองจนกลับมาแก้ไม่ได้
  */
 export async function updateUserMenuAccessAction(form: FormData): Promise<void> {
-  const me = await requireMenuAccess("users");
+  const me = await requireSuperAdmin();
   if (!rolesAreLocal()) redirect("/admin/users?err=central");
 
   const id = Number(form.get("user_id"));
@@ -2126,7 +2126,7 @@ export async function updateUserMenuAccessAction(form: FormData): Promise<void> 
  * ''/role → null (ตามบทบาท) · SELF/DEPT/COMPANY → ทับค่าตามบทบาท
  */
 export async function updateUserDataScopeAction(form: FormData): Promise<void> {
-  await requireMenuAccess("users");
+  await requireSuperAdmin();
   if (!rolesAreLocal()) redirect("/admin/users?err=central");
 
   const id = Number(form.get("user_id"));
@@ -2146,7 +2146,7 @@ export async function updateUserDataScopeAction(form: FormData): Promise<void> {
  * ช่องที่เว้นว่าง (= "ไม่เปลี่ยน") จะไม่แตะ · กันลดสิทธิ์/ปิดใช้งานตัวเอง
  */
 export async function bulkUpdateUsersAction(form: FormData): Promise<void> {
-  const me = await requireMenuAccess("users");
+  const me = await requireSuperAdmin();
   if (!rolesAreLocal()) redirect("/admin/users?err=central");
 
   const ids = form.getAll("ids").map((v) => Number(v)).filter((n) => Number.isInteger(n) && n > 0);
@@ -2185,7 +2185,7 @@ export async function bulkUpdateUsersAction(form: FormData): Promise<void> {
  * พอคนนั้นล็อกอินผ่านระบบกลางภายหลัง provisionFromClaims จะจับคู่ด้วยอีเมลเดิม ไม่เกิดบัญชีซ้ำ
  */
 export async function addUserFromDirectoryAction(form: FormData): Promise<void> {
-  await requireAdmin();
+  await requireSuperAdmin();
   if (!rolesAreLocal()) redirect("/admin/users?err=central");
 
   const email = String(form.get("email") ?? "").trim().toLowerCase();

@@ -1,4 +1,4 @@
-import { requireUser } from "@/lib/auth";
+import { requireUser, isSuperAdmin } from "@/lib/auth";
 import { listAwaitingMe } from "@/lib/queries";
 import AppShell from "@/components/AppShell";
 import { effectiveMenuKeys } from "@/lib/menu-access";
@@ -6,7 +6,8 @@ import { effectiveMenuKeys } from "@/lib/menu-access";
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
   const pending = (await listAwaitingMe(user.id)).length;
-  const visibleKeys = [...effectiveMenuKeys(user)];
+  // เมนู "ผู้ใช้และสิทธิ์" เห็นเฉพาะแอดมินสูงสุด (จัดการผู้ใช้ได้คนเดียว)
+  const visibleKeys = [...effectiveMenuKeys(user)].filter((k) => k !== "users" || isSuperAdmin(user));
 
   return (
     <AppShell

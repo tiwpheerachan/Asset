@@ -38,6 +38,10 @@ services:
       # ผล: ปลดล็อกช่องแก้ role ในหน้าจัดการผู้ใช้ และตั้ง admin ใน OA ได้ถาวร
       - key: SSO_CENTRAL_ROLES
         value: "false"
+      # แอดมินสูงสุด — จัดการผู้ใช้/สิทธิ์ได้เฉพาะอีเมลเหล่านี้ (คั่น comma)
+      # เว้นว่าง = ADMIN ทุกคนจัดการได้ (ค่าเดิม) · ใส่อีเมลเพื่อล็อกให้เฉพาะคุณ
+      - key: OA_SUPERADMIN_EMAILS
+        sync: false
       # รหัสผ่านของ user ที่ seed ครั้งแรก (เปลี่ยนเป็นค่าของคุณ)
       - key: SEED_PASSWORD
         sync: false

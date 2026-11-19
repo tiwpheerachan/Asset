@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireMenuAccess } from "@/lib/auth";
+import { requireSuperAdmin } from "@/lib/auth";
 import { listAllUsers, fillMissingAvatarsFromDirectory } from "@/lib/queries";
 import { updateUserAccessAction, addUserFromDirectoryAction, bulkUpdateUsersAction } from "@/lib/actions";
 import { rolesAreLocal } from "@/lib/sso/config";
@@ -21,7 +21,7 @@ export default async function UsersAdminPage({
 }: {
   searchParams: Promise<{ ok?: string; err?: string }>;
 }) {
-  await requireMenuAccess("users");
+  await requireSuperAdmin();
   const t = await getT();
   const sp = await searchParams;
   const users = await listAllUsers();
