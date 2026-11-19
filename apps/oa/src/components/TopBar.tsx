@@ -10,6 +10,7 @@ import { useT } from "@/components/I18nProvider";
 import { Avatar } from "@/components/ui";
 import { IconSearch, IconChevron, IconLogout, IconUsers } from "@/components/icons";
 import { logoutAction } from "@/lib/actions";
+import { useTabs } from "@/components/tabs/TabsContext";
 import type { Role } from "@/lib/types";
 
 type User = { name: string; position: string; email: string; role: Role; avatar_url?: string };
@@ -22,6 +23,7 @@ type User = { name: string; position: string; email: string; role: Role; avatar_
 export default function TopBar({ user, onMenu, mobileOpen }: { user: User; onMenu?: () => void; mobileOpen?: boolean }) {
   const t = useT();
   const router = useRouter();
+  const tabs = useTabs();
   const [q, setQ] = useState("");
 
   return (
@@ -48,7 +50,9 @@ export default function TopBar({ user, onMenu, mobileOpen }: { user: User; onMen
           className="relative max-w-xl flex-1"
           onSubmit={(e) => {
             e.preventDefault();
-            router.push(`/requests?q=${encodeURIComponent(q)}`);
+            const url = `/requests?q=${encodeURIComponent(q)}`;
+            if (tabs) tabs.open(url, q ? `ค้นหา: ${q}` : "ค้นหา");
+            else router.push(url);
           }}
         >
           <IconSearch className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
