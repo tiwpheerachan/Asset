@@ -250,6 +250,11 @@ async function migrateAddMenuAccess(): Promise<void> {
   await db.prepare("ALTER TABLE users ADD COLUMN IF NOT EXISTS menu_access TEXT").run();
 }
 
+/** เพิ่มคอลัมน์ data_scope (ขอบเขตการเห็นข้อมูลรายคน) · NULL = ตามบทบาท */
+async function migrateAddDataScope(): Promise<void> {
+  await db.prepare("ALTER TABLE users ADD COLUMN IF NOT EXISTS data_scope TEXT").run();
+}
+
 // ลงทะเบียนไว้ให้ pg.ts เรียกหลังสร้างตารางเสร็จ ก่อนคำสั่งแรกของแอปจะได้ทำงาน
 onSchemaReady(async () => {
   await seedForms();
@@ -257,6 +262,7 @@ onSchemaReady(async () => {
   await migrateSelectToDropdown();
   await migrateAmountAutoTotal();
   await migrateAddMenuAccess();
+  await migrateAddDataScope();
 });
 
 /**

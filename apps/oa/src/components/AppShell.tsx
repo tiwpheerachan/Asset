@@ -5,6 +5,8 @@ import Sidebar from "@/components/Sidebar";
 import { useT } from "@/components/I18nProvider";
 import TopBar from "@/components/TopBar";
 import HelpAssistant from "@/components/HelpAssistant";
+import { TabsProvider } from "@/components/tabs/TabsContext";
+import TabBar from "@/components/tabs/TabBar";
 import type { Role } from "@/lib/types";
 import type { MenuKey } from "@/lib/menu-access";
 
@@ -88,12 +90,15 @@ export default function AppShell({
         />
       </Suspense>
 
-      <div ref={contentRef} className="flex min-h-screen min-w-0 flex-1 flex-col">
-        <TopBar user={user} onMenu={() => setMobileOpen(true)} mobileOpen={mobileOpen} />
-        <main id="main" tabIndex={-1} className="min-w-0 flex-1">
-          {children}
-        </main>
-      </div>
+      <TabsProvider>
+        <div ref={contentRef} className="flex min-h-screen min-w-0 flex-1 flex-col">
+          <TopBar user={user} onMenu={() => setMobileOpen(true)} mobileOpen={mobileOpen} />
+          <TabBar />
+          <main id="main" tabIndex={-1} className="min-w-0 flex-1">
+            {children}
+          </main>
+        </div>
+      </TabsProvider>
       <HelpAssistant />
     </div>
   );

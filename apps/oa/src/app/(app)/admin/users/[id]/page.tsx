@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireMenuAccess } from "@/lib/auth";
 import { getUser, getUserActivity, fillMissingAvatarsFromDirectory } from "@/lib/queries";
-import { updateUserMenuAccessAction } from "@/lib/actions";
+import { updateUserMenuAccessAction, updateUserDataScopeAction } from "@/lib/actions";
 import { rolesAreLocal } from "@/lib/sso/config";
 import { PageShell, PageTitle, SectionCard } from "@/components/layout-bits";
 import { Avatar } from "@/components/ui";
@@ -49,9 +49,20 @@ export default async function UserProfilePage({
 
   const flash =
     sp.ok === "perm" ? { tone: "ok", msg: "บันทึกสิทธิ์เมนูแล้ว" }
+    : sp.ok === "scope" ? { tone: "ok", msg: "บันทึกขอบเขตข้อมูลแล้ว" }
     : sp.err === "self" ? { tone: "err", msg: "ปรับสิทธิ์ตัวเองไม่ได้: ต้องคงเมนู “ผู้ใช้และสิทธิ์” ไว้เสมอ" }
     : sp.err ? { tone: "err", msg: "บันทึกไม่สำเร็จ" }
     : null;
+
+  // ค่าเริ่มต้นตามบทบาท (ไว้โชว์ว่า "ตามบทบาท" แปลว่าอะไรสำหรับคนนี้)
+  const roleScope = user.role === "ADMIN" || user.can_audit === 1 ? "ทั้งบริษัท"
+    : user.role === "MANAGER" ? "ทั้งแผนก" : "เฉพาะตัวเอง";
+  const scopeOptions: { value: string; label: string; hint: string }[] = [
+    { value: "", label: `ตามบทบาท (${roleScope})`, hint: "ปรับอัตโนมัติตาม role" },
+    { value: "COMPANY", label: "ทั้งบริษัท", hint: "เห็นเอกสารทุกใบ (สิทธิ์สูงสุด)" },
+    { value: "DEPT", label: "ทั้งแผนก", hint: "เห็นของทั้งแผนกตัวเอง + ลูกน้อง" },
+    { value: "SELF", label: "เฉพาะตัวเอง", hint: "เห็นเฉพาะของตัวเอง + ที่อยู่ในสายอนุมัติ" },
+  ];
 
   return (
     <PageShell>
@@ -102,6 +113,38 @@ export default async function UserProfilePage({
                 </li>
               ))}
             </ul>
+          )}
+        </SectionCard>
+
+        {/* ขอบเขตการเห็นข้อมูล */}
+        <SectionCard
+          title="ขอบเขตการเห็นข้อมูล (เอกสาร/คำขอ)"
+          hint="คนนี้เห็นเอกสารของใครบ้าง · ค่าเริ่มต้นปรับตามบทบาทให้อัตโนมัติ"
+        >
+          {canEdit ? (
+            <form action={updateUserDataScopeAction} className="space-y-3">
+              <input type="hidden" name="user_id" value={user.id} />
+              <div className="grid gap-2 sm:grid-cols-2">
+                {scopeOptions.map((o) => {
+                  const current = (user.data_scope ?? "") === o.value;
+                  return (
+                    <label
+                      key={o.value || "role"}
+                      className={`flex cursor-pointer items-start gap-2 rounded-xl border p-3 transition ${current ? "border-primary bg-primary/5" : "border-border hover:bg-surface-2"}`}
+                    >
+                      <input type="radio" name="data_scope" value={o.value} defaultChecked={current} className="mt-0.5 h-4 w-4 accent-blue-600" />
+                      <span>
+                        <span className="block text-sm font-medium text-text">{o.label}</span>
+                        <span className="block text-[11px] text-muted">{o.hint}</span>
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+              <button type="submit" className="btn-primary h-10 px-5">บันทึกขอบเขตข้อมูล</button>
+            </form>
+          ) : (
+            <p className="text-sm text-muted">ระบบกลางคุมสิทธิ์อยู่ — แก้ที่นี่ไม่ได้</p>
           )}
         </SectionCard>
 

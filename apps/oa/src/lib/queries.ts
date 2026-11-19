@@ -62,21 +62,28 @@ export async function subordinatesOf(userId: number): Promise<number[]> {
  * บางองค์กรคุมด้วยแผนก บางที่คุมด้วยสายบังคับบัญชา และของจริงมักปนกันทั้งสองแบบ
  */
 async function visibilityWhere(user: User): Promise<string> {
-  if (user.role === "ADMIN" || user.can_audit === 1) return "";
+  // ขอบเขตข้อมูลรายคน (data_scope) ทับค่าตามบทบาทได้ · null = ใช้ตามบทบาทเดิมทุกประการ
+  const scope = user.data_scope; // 'SELF' | 'DEPT' | 'COMPANY' | null
+
+  // เห็นทั้งบริษัท: ตั้ง COMPANY ชัดเจน หรือ (ไม่ตั้ง + เป็น ADMIN/ผู้ตรวจสอบ)
+  if (scope === "COMPANY" || (scope == null && (user.role === "ADMIN" || user.can_audit === 1))) return "";
 
   const parts = [
     "r.requester_id = @uid",
     "EXISTS (SELECT 1 FROM request_approvers a WHERE a.request_id = r.id AND a.user_id = @uid)",
   ];
 
-  if (user.role === "MANAGER" && user.department_id !== null) {
-    parts.push(
-      "EXISTS (SELECT 1 FROM users ru WHERE ru.id = r.requester_id AND ru.department_id = @dept)",
-    );
+  // เห็นเฉพาะตัวเอง (SELF) = หยุดแค่ ของตัวเอง + ที่อยู่ในสายอนุมัติ/สำเนา (ไม่รวมแผนก/ลูกน้อง)
+  if (scope !== "SELF") {
+    // ทั้งแผนก: ตั้ง DEPT ชัดเจน หรือ (ไม่ตั้ง + เป็น MANAGER)
+    if ((scope === "DEPT" || (scope == null && user.role === "MANAGER")) && user.department_id !== null) {
+      parts.push(
+        "EXISTS (SELECT 1 FROM users ru WHERE ru.id = r.requester_id AND ru.department_id = @dept)",
+      );
+    }
+    const under = await subordinatesOf(user.id);
+    if (under.length > 0) parts.push(`r.requester_id IN (${under.join(",")})`);
   }
-
-  const under = await subordinatesOf(user.id);
-  if (under.length > 0) parts.push(`r.requester_id IN (${under.join(",")})`);
 
   return `WHERE ${parts.join("\n      OR ")}`;
 }

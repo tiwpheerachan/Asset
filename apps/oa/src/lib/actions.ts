@@ -2122,6 +2122,26 @@ export async function updateUserMenuAccessAction(form: FormData): Promise<void> 
 }
 
 /**
+ * บันทึกขอบเขตการเห็นข้อมูลรายคน (data_scope)
+ * ''/role → null (ตามบทบาท) · SELF/DEPT/COMPANY → ทับค่าตามบทบาท
+ */
+export async function updateUserDataScopeAction(form: FormData): Promise<void> {
+  await requireMenuAccess("users");
+  if (!rolesAreLocal()) redirect("/admin/users?err=central");
+
+  const id = Number(form.get("user_id"));
+  if (!Number.isInteger(id) || id <= 0) redirect("/admin/users?err=bad");
+
+  const raw = String(form.get("data_scope") ?? "");
+  const scope = raw === "SELF" || raw === "DEPT" || raw === "COMPANY" ? raw : null;
+
+  await db.prepare("UPDATE users SET data_scope=? WHERE id=?").run(scope, id);
+
+  revalidatePath(`/admin/users/${id}`);
+  redirect(`/admin/users/${id}?ok=scope`);
+}
+
+/**
  * เพิ่มผู้ใช้จากไดเรกทอรี Lark กลาง — แอดมินค้นชื่อแล้วกดเพิ่มไว้ล่วงหน้า
  * พอคนนั้นล็อกอินผ่านระบบกลางภายหลัง provisionFromClaims จะจับคู่ด้วยอีเมลเดิม ไม่เกิดบัญชีซ้ำ
  */

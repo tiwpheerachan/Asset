@@ -121,7 +121,9 @@ CREATE TABLE IF NOT EXISTS users (
   avatar_url    TEXT    NOT NULL DEFAULT '',  -- รูปโปรไฟล์จากระบบกลาง (ว่าง = ใช้วงกลมตัวอักษร)
   must_change_password INTEGER NOT NULL DEFAULT 0,
   -- สิทธิ์เห็นเมนูรายคน (JSON array ของ menu-key) · NULL = ใช้ค่าเริ่มต้นตามบทบาท (role)
-  menu_access   TEXT
+  menu_access   TEXT,
+  -- ขอบเขตการเห็นข้อมูลรายคน: SELF/DEPT/COMPANY · NULL = ใช้ค่าตามบทบาท (role)
+  data_scope    TEXT CHECK (data_scope IN ('SELF','DEPT','COMPANY'))
 );
 CREATE INDEX IF NOT EXISTS idx_users_dept ON users(department_id);
 
