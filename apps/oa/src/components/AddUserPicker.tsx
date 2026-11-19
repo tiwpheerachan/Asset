@@ -1,12 +1,22 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Avatar } from "@/components/ui";
 
 /**
  * ค้นหาคนจากไดเรกทอรี Lark กลาง แล้วเพิ่มเป็นผู้ใช้ในแอป (ตั้งบทบาทได้เลย)
  * API key อยู่ฝั่งเซิร์ฟเวอร์ (/api/directory/search) เบราว์เซอร์ไม่เคยเห็น
+ * ผลลัพธ์โชว์ รูปโปรไฟล์ + ชื่อ (ไทย/อังกฤษ) + ตำแหน่ง + แผนก เพื่อระบุคนให้ชัด
  */
-type Person = { union_id: string; name: string; email: string | null; job_title: string | null; departments: string[] };
+type Person = {
+  union_id: string;
+  name: string;
+  en_name?: string | null;
+  email: string | null;
+  job_title: string | null;
+  departments: string[];
+  avatar_url?: string | null;
+};
 type Labels = {
   heading: string; placeholder: string; searching: string; noResult: string;
   tooShort: string; notConfigured: string; failed: string; stale: string;
@@ -26,7 +36,7 @@ export default function AddUserPicker({
   const [loading, setLoading] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [stale, setStale] = useState(false);
-  const [picked, setPicked] = useState<{ email: string; name: string } | null>(null);
+  const [picked, setPicked] = useState<{ email: string; name: string; avatar_url?: string | null } | null>(null);
   const boxRef = useRef<HTMLDivElement>(null);
 
   // ปิด dropdown เมื่อคลิกนอกกล่อง
@@ -70,7 +80,7 @@ export default function AddUserPicker({
 
   const choose = (p: Person) => {
     if (!p.email) return;
-    setPicked({ email: p.email, name: p.name });
+    setPicked({ email: p.email, name: p.name, avatar_url: p.avatar_url });
     setQ(p.name);
     setOpen(false);
   };
@@ -101,13 +111,19 @@ export default function AddUserPicker({
                 type="button"
                 onClick={() => choose(p)}
                 disabled={!p.email}
-                className="flex w-full flex-col items-start gap-0.5 px-3 py-2 text-left hover:bg-surface-2 disabled:opacity-40"
+                className="flex w-full items-center gap-2.5 px-3 py-2 text-left hover:bg-surface-2 disabled:opacity-40"
               >
-                <span className="text-sm font-medium text-text">{p.name}</span>
-                <span className="text-[11px] text-muted">
-                  {p.email || "— ไม่มีอีเมล —"}
-                  {p.job_title ? ` · ${p.job_title}` : ""}
-                  {p.departments?.[0] ? ` · ${p.departments[0]}` : ""}
+                <Avatar name={p.name} size={34} src={p.avatar_url ?? undefined} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium text-text">
+                    {p.name}
+                    {p.en_name && p.en_name !== p.name ? <span className="font-normal text-muted"> · {p.en_name}</span> : null}
+                  </span>
+                  <span className="block truncate text-[11.5px] text-text-soft">
+                    {p.job_title || "— ไม่ระบุตำแหน่ง —"}
+                    {p.departments?.[0] ? ` · ${p.departments[0]}` : ""}
+                  </span>
+                  <span className="block truncate text-[11px] text-muted">{p.email || "— ไม่มีอีเมล —"}</span>
                 </span>
               </button>
             ))}
@@ -129,7 +145,11 @@ export default function AddUserPicker({
         {labels.add}
       </button>
       {picked && (
-        <span className="text-xs text-muted">{labels.picked}: <b className="text-text">{picked.name}</b></span>
+        <span className="flex items-center gap-1.5 text-xs text-muted">
+          {labels.picked}:
+          <Avatar name={picked.name} size={20} src={picked.avatar_url ?? undefined} />
+          <b className="text-text">{picked.name}</b>
+        </span>
       )}
     </form>
   );
