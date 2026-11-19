@@ -245,12 +245,18 @@ async function migrateAmountAutoTotal(): Promise<void> {
   await setMeta("amount_autototal", "1");
 }
 
+/** เพิ่มคอลัมน์ menu_access (สิทธิ์เห็นเมนูรายคน) ให้ฐานข้อมูลเดิมที่สร้างตารางไปแล้ว */
+async function migrateAddMenuAccess(): Promise<void> {
+  await db.prepare("ALTER TABLE users ADD COLUMN IF NOT EXISTS menu_access TEXT").run();
+}
+
 // ลงทะเบียนไว้ให้ pg.ts เรียกหลังสร้างตารางเสร็จ ก่อนคำสั่งแรกของแอปจะได้ทำงาน
 onSchemaReady(async () => {
   await seedForms();
   await mergeStages();
   await migrateSelectToDropdown();
   await migrateAmountAutoTotal();
+  await migrateAddMenuAccess();
 });
 
 /**

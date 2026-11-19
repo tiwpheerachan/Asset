@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth";
+import { requireMenuAccess } from "@/lib/auth";
 import { backupStatus } from "@/lib/backup";
 import { getLocale, getT } from "@/lib/i18n/server";
 import { PageShell, PageTitle, SectionCard, EmptyState } from "@/components/layout-bits";
@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic";
  * กดสำรองเดี๋ยวนี้ก่อนทำอะไรเสี่ยง ๆ · ส่วนค่าตั้งกับวิธีกู้คืนพับเก็บไว้ข้างล่าง
  */
 export default async function BackupPage() {
-  await requireAdmin();
+  await requireMenuAccess("backup");
   const t = await getT();
   const locale = await getLocale();
   const st = await backupStatus();

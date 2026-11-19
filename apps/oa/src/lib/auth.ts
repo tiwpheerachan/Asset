@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { db, USER_SELECT } from "./db";
 import type { User } from "./types";
+import { canAccessMenu, type MenuKey } from "./menu-access";
 
 const COOKIE = "ia_session";
 const SESSION_DAYS = 7;
@@ -95,5 +96,17 @@ export async function requireUser(
 export async function requireAdmin(): Promise<User> {
   const user = await requireUser();
   if (user.role !== "ADMIN") redirect("/");
+  return user;
+}
+
+/**
+ * กั้นหน้าตามสิทธิ์เห็นเมนูรายคน (menu_access) แทน requireAdmin
+ * - menu_access ไม่ตั้ง → ใช้ค่าตามบทบาท: ADMIN เข้าได้ทุกเมนู อื่น ๆ เข้าไม่ได้ (เท่าเดิม)
+ * - menu_access ตั้งไว้ → เข้าได้เฉพาะเมนูที่ได้รับสิทธิ์ (admin อาจถูกจำกัด / user อาจได้เพิ่ม)
+ * หมายเหตุ: นี่คุม "การเห็น/เปิดหน้า" ส่วนการแก้ไข (mutation) ยังกันด้วย requireAdmin ใน action
+ */
+export async function requireMenuAccess(key: MenuKey): Promise<User> {
+  const user = await requireUser();
+  if (!canAccessMenu(user, key)) redirect("/");
   return user;
 }

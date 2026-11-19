@@ -119,7 +119,9 @@ CREATE TABLE IF NOT EXISTS users (
   created_at    TEXT    NOT NULL DEFAULT utc_now_text(),
   signature     TEXT    NOT NULL DEFAULT '',  -- ชื่อไฟล์รูปลายเซ็นในโฟลเดอร์อัปโหลด
   avatar_url    TEXT    NOT NULL DEFAULT '',  -- รูปโปรไฟล์จากระบบกลาง (ว่าง = ใช้วงกลมตัวอักษร)
-  must_change_password INTEGER NOT NULL DEFAULT 0
+  must_change_password INTEGER NOT NULL DEFAULT 0,
+  -- สิทธิ์เห็นเมนูรายคน (JSON array ของ menu-key) · NULL = ใช้ค่าเริ่มต้นตามบทบาท (role)
+  menu_access   TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_users_dept ON users(department_id);
 

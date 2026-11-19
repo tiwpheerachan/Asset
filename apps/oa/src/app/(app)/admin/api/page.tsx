@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth";
+import { requireMenuAccess } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
 import { PageShell, PageTitle, SectionCard } from "@/components/layout-bits";
 import { listApiKeys } from "@/lib/api-keys";
@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
  * ไม่ใช่ต้องเปิดเอกสารคนละที่กับหน้าตั้งค่า
  */
 export default async function ApiPage() {
-  await requireAdmin();
+  await requireMenuAccess("api");
   const t = await getT();
   const keys = await listApiKeys();
   const hook = await integrationStatus();

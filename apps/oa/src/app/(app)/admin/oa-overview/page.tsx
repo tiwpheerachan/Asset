@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireAdmin } from "@/lib/auth";
+import { requireMenuAccess } from "@/lib/auth";
 import { PageShell, PageTitle, SectionCard, StatTile } from "@/components/layout-bits";
 import { totals, byMonth, byStatus, byForm, recent } from "@/lib/oa-export/stats";
 
@@ -17,7 +17,7 @@ const statusMeta = (s: string): { label: string; cls: string } => {
 };
 
 export default async function OaOverviewPage() {
-  await requireAdmin();
+  await requireMenuAccess("oaOverview");
   const [t, months, statuses, forms, recentDocs] = await Promise.all([totals(), byMonth(), byStatus(), byForm(), recent(12)]);
   const maxM = Math.max(1, ...months.map((m) => m.n));
   const totalForStatus = statuses.reduce((a, b) => a + b.n, 0) || 1;

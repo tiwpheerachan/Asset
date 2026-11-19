@@ -1,4 +1,5 @@
-import { requireAdmin } from "@/lib/auth";
+import Link from "next/link";
+import { requireMenuAccess } from "@/lib/auth";
 import { listAllUsers, fillMissingAvatarsFromDirectory } from "@/lib/queries";
 import { updateUserAccessAction, addUserFromDirectoryAction } from "@/lib/actions";
 import { rolesAreLocal } from "@/lib/sso/config";
@@ -19,7 +20,7 @@ export default async function UsersAdminPage({
 }: {
   searchParams: Promise<{ ok?: string; err?: string }>;
 }) {
-  await requireAdmin();
+  await requireMenuAccess("users");
   const t = await getT();
   const sp = await searchParams;
   const users = await listAllUsers();
@@ -98,13 +99,13 @@ export default async function UsersAdminPage({
                   {users.map((u) => (
                     <tr key={u.id} className="row-hover align-middle">
                       <td className="px-3 py-2">
-                        <div className="flex items-center gap-2.5">
+                        <Link href={`/admin/users/${u.id}`} className="flex items-center gap-2.5 hover:opacity-80">
                           <Avatar name={u.name} size={34} src={u.avatar_url || undefined} />
                           <div className="min-w-0">
-                            <div className="truncate font-medium text-text">{u.name}</div>
+                            <div className="truncate font-medium text-text hover:underline">{u.name}</div>
                             <div className="truncate text-[11px] text-muted">{u.email}</div>
                           </div>
-                        </div>
+                        </Link>
                       </td>
                       <td className="whitespace-nowrap px-3 py-2 text-text-soft">
                         {u.department || <span className="text-muted">—</span>}

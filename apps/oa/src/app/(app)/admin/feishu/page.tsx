@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth";
+import { requireMenuAccess } from "@/lib/auth";
 import { PageShell, PageTitle, SectionCard } from "@/components/layout-bits";
 import { bitableReady } from "@/lib/lark/bitable";
 import { baseAppToken, enabledTables, syncReady } from "@/lib/lark/base-sync";
@@ -7,7 +7,7 @@ import FeishuBasePanel from "./FeishuBasePanel";
 export const dynamic = "force-dynamic";
 
 export default async function FeishuBaseSettingsPage() {
-  await requireAdmin();
+  await requireMenuAccess("feishu");
   const tables = await enabledTables().catch(() => []);
   const ready = syncReady() && bitableReady();
 

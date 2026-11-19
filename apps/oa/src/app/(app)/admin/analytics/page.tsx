@@ -1,5 +1,5 @@
 import TemplateGlyph from "@/components/TemplateGlyph";
-import { requireAdmin } from "@/lib/auth";
+import { requireMenuAccess } from "@/lib/auth";
 import {
   aging, bottlenecks, byTemplate, defaultRange, humanHours, overview, weekly,
 } from "@/lib/analytics";
@@ -13,7 +13,7 @@ export default async function AnalyticsPage({
 }: {
   searchParams: Promise<{ from?: string; to?: string }>;
 }) {
-  await requireAdmin();
+  await requireMenuAccess("analytics");
   const t = await getT();
   const sp = await searchParams;
   const def = defaultRange();

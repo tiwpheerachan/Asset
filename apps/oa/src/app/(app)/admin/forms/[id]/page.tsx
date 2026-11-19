@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { requireAdmin } from "@/lib/auth";
+import { requireMenuAccess } from "@/lib/auth";
 import {
   getActiveFieldsByTemplate,
   getFields,
@@ -18,7 +18,7 @@ export default async function TemplateBuilderPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireAdmin();
+  await requireMenuAccess("forms");
   const { id } = await params;
   const template = await getTemplate(Number(id));
   if (!template) notFound();

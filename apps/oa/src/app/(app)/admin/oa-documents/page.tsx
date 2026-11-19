@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth";
+import { requireMenuAccess } from "@/lib/auth";
 import { PageShell, PageTitle, SectionCard } from "@/components/layout-bits";
 import { oaForms, oaTotal, oaExportReady, oaDepts } from "@/lib/oa-export/sync";
 import { getLocale } from "@/lib/i18n/server";
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 type SP = { status?: string; dept?: string; form?: string; node?: string; files?: string; from?: string; to?: string };
 
 export default async function OaDocumentsPage({ searchParams }: { searchParams: Promise<SP> }) {
-  await requireAdmin();
+  await requireMenuAccess("oaDocuments");
   const sp = await searchParams;
   const locale = await getLocale();
   const [forms, total, depts] = await Promise.all([oaForms().catch(() => []), oaTotal().catch(() => 0), oaDepts().catch(() => [])]);

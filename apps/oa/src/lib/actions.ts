@@ -8,8 +8,9 @@ import { redirect } from "next/navigation";
 import { db, USER_SELECT } from "./db";
 import { putFile, deleteFile } from "./storage";
 import {
-  createSession, destroySession, hashPassword, requireAdmin, requireUser, verifyPassword,
+  createSession, destroySession, hashPassword, requireAdmin, requireMenuAccess, requireUser, verifyPassword,
 } from "./auth";
+import { ALL_MENU_KEYS } from "./menu-access";
 import {
   canView, currentStepApprovers, drawdownFor, getActiveFields, getApprovers, getFlowNodes,
   getRequest, getTemplate, getUser, listActiveUsers, logAudit, nextDocNo, upsertDirectoryUser,
@@ -2088,6 +2089,36 @@ export async function updateUserAccessAction(form: FormData): Promise<void> {
 
   revalidatePath("/admin/users");
   redirect("/admin/users?ok=1");
+}
+
+/**
+ * บันทึกสิทธิ์เห็นเมนูรายคน (menu_access)
+ * mode=role → ล้าง override (ใช้ตามบทบาท) · mode=custom → เก็บรายการ key ที่ติ๊ก
+ * กันแอดมินตัดสิทธิ์หน้า "ผู้ใช้และสิทธิ์" ของตัวเองจนกลับมาแก้ไม่ได้
+ */
+export async function updateUserMenuAccessAction(form: FormData): Promise<void> {
+  const me = await requireMenuAccess("users");
+  if (!rolesAreLocal()) redirect("/admin/users?err=central");
+
+  const id = Number(form.get("user_id"));
+  if (!Number.isInteger(id) || id <= 0) redirect("/admin/users?err=bad");
+
+  const mode = String(form.get("mode") ?? "role");
+  let menuAccess: string | null = null;
+  if (mode === "custom") {
+    const picked = form.getAll("keys").map(String);
+    const valid = new Set<string>(ALL_MENU_KEYS);
+    const keys = picked.filter((k) => valid.has(k));
+    // กันล็อกตัวเองออกจากหน้าแก้สิทธิ์
+    if (id === me.id && !keys.includes("users")) redirect(`/admin/users/${id}?err=self`);
+    menuAccess = JSON.stringify(keys);
+  }
+
+  await db.prepare("UPDATE users SET menu_access=? WHERE id=?").run(menuAccess, id);
+
+  revalidatePath("/admin/users");
+  revalidatePath(`/admin/users/${id}`);
+  redirect(`/admin/users/${id}?ok=perm`);
 }
 
 /**

@@ -11,6 +11,7 @@ import TabBar from "@/components/tabs/TabBar";
 import TabWorkspace from "@/components/tabs/TabWorkspace";
 import EmbedReporter from "@/components/tabs/EmbedReporter";
 import type { Role } from "@/lib/types";
+import type { MenuKey } from "@/lib/menu-access";
 
 /**
  * เปลือกของแอป — คุมเมนูข้างบนมือถือ (drawer สไลด์)
@@ -19,10 +20,12 @@ import type { Role } from "@/lib/types";
 export default function AppShell({
   user,
   pending,
+  visibleKeys,
   children,
 }: {
   user: { name: string; position: string; email: string; role: Role; avatar_url?: string };
   pending: number;
+  visibleKeys?: MenuKey[];
   children: React.ReactNode;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -103,6 +106,7 @@ export default function AppShell({
       >
         <Sidebar
           isAdmin={user.role === "ADMIN"}
+          visibleKeys={visibleKeys}
           pending={pending}
           mobileOpen={mobileOpen}
           onNavigate={() => setMobileOpen(false)}

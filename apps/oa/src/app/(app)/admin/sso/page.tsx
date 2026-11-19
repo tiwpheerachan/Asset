@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth";
+import { requireMenuAccess } from "@/lib/auth";
 import { db, USER_SELECT } from "@/lib/db";
 import { redirectUri, rolesAreLocal, ssoConfig, ssoReady } from "@/lib/sso/config";
 import { getT } from "@/lib/i18n/server";
@@ -13,7 +13,7 @@ import { CENTRAL_CAPABILITY_DEFS, CENTRAL_RESOURCES } from "@/lib/central/schema
 export const dynamic = "force-dynamic";
 
 export default async function SsoPage() {
-  await requireAdmin();
+  await requireMenuAccess("sso");
   const t = await getT();
   const locale = await getLocale();
   const cfg = ssoConfig();

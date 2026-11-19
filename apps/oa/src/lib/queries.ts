@@ -1045,6 +1045,31 @@ export async function getUser(id: number): Promise<User | null> {
   return ((await db.prepare(`${USER_SELECT} WHERE u.id = ?`).get(id)) as User) ?? null;
 }
 
+export type UserActivity = {
+  submitted: number;
+  acted: number;
+  recent: { id: number; doc_no: string; title: string; status: string; created_at: string }[];
+};
+
+/** สรุปกิจกรรมของผู้ใช้ — ยื่นกี่ใบ, อนุมัติ/ดำเนินการกี่ครั้ง, และรายการล่าสุด (สำหรับหน้าโปรไฟล์) */
+export async function getUserActivity(userId: number): Promise<UserActivity> {
+  const submitted = Number(
+    ((await db.prepare("SELECT COUNT(*) AS n FROM requests WHERE requester_id=?").get(userId)) as { n: number })?.n ?? 0,
+  );
+  const acted = Number(
+    ((await db
+      .prepare("SELECT COUNT(*) AS n FROM request_approvers WHERE acted_by=? AND status <> 'PENDING'")
+      .get(userId)) as { n: number })?.n ?? 0,
+  );
+  const recent = (await db
+    .prepare(
+      `SELECT id, doc_no, title, status, created_at
+         FROM requests WHERE requester_id=? ORDER BY created_at DESC LIMIT 8`,
+    )
+    .all(userId)) as UserActivity["recent"];
+  return { submitted, acted, recent };
+}
+
 
 export async function listDepartments(): Promise<(Department & { members: number })[]> {
   return (await db

@@ -42,6 +42,8 @@ export type User = {
   /** URL รูปโปรไฟล์จากระบบกลาง — ว่าง = ใช้วงกลมตัวอักษร */
   avatar_url: string;
   must_change_password: number;
+  /** สิทธิ์เห็นเมนูรายคน (JSON array ของ menu-key) · null = ใช้ค่าเริ่มต้นตามบทบาท */
+  menu_access: string | null;
 };
 
 export const ROLE_LABEL: Record<Role, string> = {

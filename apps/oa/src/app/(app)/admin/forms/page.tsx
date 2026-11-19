@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth";
+import { requireMenuAccess } from "@/lib/auth";
 import { PageTitle, PageShell } from "@/components/layout-bits";
 import { getT } from "@/lib/i18n/server";
 import { flowRolesMissingHolders, listCategories, listTemplates, templateReadiness } from "@/lib/queries";
@@ -11,7 +11,7 @@ import CreateTemplateButton from "./CreateTemplateButton";
 export const dynamic = "force-dynamic";
 
 export default async function AdminFormsPage() {
-  await requireAdmin();
+  await requireMenuAccess("forms");
   const t = await getT();
   const missing = (await flowRolesMissingHolders()) as JobRole[];
   const categories = await listCategories();

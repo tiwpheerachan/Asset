@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth";
+import { requireMenuAccess } from "@/lib/auth";
 import { PageShell, PageTitle, SectionCard } from "@/components/layout-bits";
 import { oaForms } from "@/lib/oa-export/sync";
 import { getConfig } from "@/lib/accounting/store";
@@ -7,7 +7,7 @@ import AccountingView from "./AccountingView";
 export const dynamic = "force-dynamic";
 
 export default async function AccountingPage() {
-  await requireAdmin();
+  await requireMenuAccess("accounting");
   const [forms, cfg] = await Promise.all([oaForms().catch(() => []), getConfig().catch(() => ({ accounting: [] as string[], asset: [] as string[] }))]);
   const withKind = forms.map((f) => ({
     form_code: f.form_code, name: f.name, local_count: f.local_count,

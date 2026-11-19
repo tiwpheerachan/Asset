@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireAdmin } from "@/lib/auth";
+import { requireMenuAccess } from "@/lib/auth";
 import { reminderStatus } from "@/lib/reminders";
 import { larkReady } from "@/lib/lark/config";
 import { getLocale, getT } from "@/lib/i18n/server";
@@ -11,7 +11,7 @@ import SweepButton from "./SweepButton";
 export const dynamic = "force-dynamic";
 
 export default async function RemindersPage() {
-  await requireAdmin();
+  await requireMenuAccess("reminders");
   const t = await getT();
   const locale = await getLocale();
   const st = await reminderStatus();

@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth";
+import { requireMenuAccess } from "@/lib/auth";
 import { PageShell, PageTitle } from "@/components/layout-bits";
 import { oaSyncHistory, oaChangeHistory, oaHistoryCounts } from "@/lib/oa-export/sync";
 import { getLocale } from "@/lib/i18n/server";
@@ -8,7 +8,7 @@ import OaHistoryView from "./OaHistoryView";
 export const dynamic = "force-dynamic";
 
 export default async function OaHistoryPage() {
-  await requireAdmin();
+  await requireMenuAccess("oaHistory");
   const locale = await getLocale();
   const [syncs, changes, counts] = await Promise.all([
     oaSyncHistory(50, 0).catch(() => []),

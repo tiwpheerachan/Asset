@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth";
+import { requireMenuAccess } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { PageShell, PageTitle, SectionCard } from "@/components/layout-bits";
 import CompanyForm from "./CompanyForm";
@@ -6,7 +6,7 @@ import CompanyForm from "./CompanyForm";
 export const dynamic = "force-dynamic";
 
 export default async function CompanySettingsPage() {
-  await requireAdmin();
+  await requireMenuAccess("company");
   const row = await db
     .prepare("SELECT value FROM app_meta WHERE key = 'company_profile'")
     .get<{ value: string }>();
