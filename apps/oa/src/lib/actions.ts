@@ -2142,6 +2142,45 @@ export async function updateUserDataScopeAction(form: FormData): Promise<void> {
 }
 
 /**
+ * ตั้งบทบาท/ขอบเขตข้อมูล/สถานะ ให้ผู้ใช้หลายคนพร้อมกัน
+ * ช่องที่เว้นว่าง (= "ไม่เปลี่ยน") จะไม่แตะ · กันลดสิทธิ์/ปิดใช้งานตัวเอง
+ */
+export async function bulkUpdateUsersAction(form: FormData): Promise<void> {
+  const me = await requireMenuAccess("users");
+  if (!rolesAreLocal()) redirect("/admin/users?err=central");
+
+  const ids = form.getAll("ids").map((v) => Number(v)).filter((n) => Number.isInteger(n) && n > 0);
+  if (ids.length === 0) redirect("/admin/users?err=bad");
+
+  const roleRaw = String(form.get("role") ?? "");
+  const role = isRole(roleRaw) ? roleRaw : null; // null = ไม่เปลี่ยน
+
+  const scopeRaw = String(form.get("data_scope") ?? "");
+  const scopeSet = scopeRaw !== ""; // "" = ไม่เปลี่ยน
+  const scope = scopeRaw === "SELF" || scopeRaw === "DEPT" || scopeRaw === "COMPANY" ? scopeRaw : null; // ROLE/อื่น = null
+
+  const activeRaw = String(form.get("active") ?? "");
+  const activeSet = activeRaw === "1" || activeRaw === "0";
+  const active = activeRaw === "1" ? 1 : 0;
+
+  for (const id of ids) {
+    const isSelf = id === me.id;
+    if (role && !(isSelf && role !== "ADMIN")) {
+      await db.prepare("UPDATE users SET role=? WHERE id=?").run(role, id);
+    }
+    if (scopeSet) {
+      await db.prepare("UPDATE users SET data_scope=? WHERE id=?").run(scope, id);
+    }
+    if (activeSet && !(isSelf && active === 0)) {
+      await db.prepare("UPDATE users SET active=? WHERE id=?").run(active, id);
+    }
+  }
+
+  revalidatePath("/admin/users");
+  redirect("/admin/users?ok=bulk");
+}
+
+/**
  * เพิ่มผู้ใช้จากไดเรกทอรี Lark กลาง — แอดมินค้นชื่อแล้วกดเพิ่มไว้ล่วงหน้า
  * พอคนนั้นล็อกอินผ่านระบบกลางภายหลัง provisionFromClaims จะจับคู่ด้วยอีเมลเดิม ไม่เกิดบัญชีซ้ำ
  */
@@ -2157,11 +2196,15 @@ export async function addUserFromDirectoryAction(form: FormData): Promise<void> 
     redirect("/admin/users?err=bad");
   }
 
+  const rawScope = String(form.get("data_scope") ?? "");
+  const scope = rawScope === "SELF" || rawScope === "DEPT" || rawScope === "COMPANY" ? rawScope : null;
+
   const { upsertDirectoryUser } = await import("./queries");
   const u = await upsertDirectoryUser({ email, name: name || email, avatar_url: avatar_url || null });
   if (u.role !== role) {
     await db.prepare("UPDATE users SET role=? WHERE id=?").run(role, u.id);
   }
+  await db.prepare("UPDATE users SET data_scope=? WHERE id=?").run(scope, u.id);
 
   revalidatePath("/admin/users");
   redirect("/admin/users?ok=added");

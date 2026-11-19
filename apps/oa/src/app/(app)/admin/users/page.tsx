@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { requireMenuAccess } from "@/lib/auth";
 import { listAllUsers, fillMissingAvatarsFromDirectory } from "@/lib/queries";
-import { updateUserAccessAction, addUserFromDirectoryAction } from "@/lib/actions";
+import { updateUserAccessAction, addUserFromDirectoryAction, bulkUpdateUsersAction } from "@/lib/actions";
 import { rolesAreLocal } from "@/lib/sso/config";
 import { PageShell, PageTitle, SectionCard, EmptyState } from "@/components/layout-bits";
 import AddUserPicker from "@/components/AddUserPicker";
+import BulkUserActions from "@/components/BulkUserActions";
 import { Avatar } from "@/components/ui";
 import { ROLES, JOB_ROLES } from "@/lib/types";
 import { getT } from "@/lib/i18n/server";
@@ -76,6 +77,13 @@ export default async function UsersAdminPage({
               }}
             />
           </SectionCard>
+        )}
+
+        {canEdit && users.length > 0 && (
+          <BulkUserActions
+            users={users.map((u) => ({ id: u.id, name: u.name, email: u.email, avatar_url: u.avatar_url }))}
+            action={bulkUpdateUsersAction}
+          />
         )}
 
         <SectionCard title={t("users.cardTitle")} hint={t("users.cardHint", { n: String(users.length) })}>

@@ -142,6 +142,16 @@ export default function AddUserPicker({
         </select>
       </div>
 
+      <div>
+        <label className="label">ขอบเขตข้อมูล</label>
+        <select name="data_scope" defaultValue="" className="bar-field w-36">
+          <option value="">ตามบทบาท</option>
+          <option value="COMPANY">ทั้งบริษัท</option>
+          <option value="DEPT">ทั้งแผนก</option>
+          <option value="SELF">เฉพาะตัวเอง</option>
+        </select>
+      </div>
+
       <button type="submit" disabled={!picked} className="btn-primary h-11 px-4 disabled:opacity-40">
         {labels.add}
       </button>
