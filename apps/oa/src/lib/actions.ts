@@ -2101,12 +2101,13 @@ export async function addUserFromDirectoryAction(form: FormData): Promise<void> 
   const email = String(form.get("email") ?? "").trim().toLowerCase();
   const name = String(form.get("name") ?? "").trim();
   const role = String(form.get("role") ?? "USER");
+  const avatar_url = String(form.get("avatar_url") ?? "").trim();
   if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || !isRole(role)) {
     redirect("/admin/users?err=bad");
   }
 
   const { upsertDirectoryUser } = await import("./queries");
-  const u = await upsertDirectoryUser({ email, name: name || email });
+  const u = await upsertDirectoryUser({ email, name: name || email, avatar_url: avatar_url || null });
   if (u.role !== role) {
     await db.prepare("UPDATE users SET role=? WHERE id=?").run(role, u.id);
   }

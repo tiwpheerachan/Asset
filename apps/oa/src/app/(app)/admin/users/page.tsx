@@ -4,6 +4,7 @@ import { updateUserAccessAction, addUserFromDirectoryAction } from "@/lib/action
 import { rolesAreLocal } from "@/lib/sso/config";
 import { PageShell, PageTitle, SectionCard, EmptyState } from "@/components/layout-bits";
 import AddUserPicker from "@/components/AddUserPicker";
+import { Avatar } from "@/components/ui";
 import { ROLES, JOB_ROLES } from "@/lib/types";
 import { getT } from "@/lib/i18n/server";
 
@@ -96,8 +97,13 @@ export default async function UsersAdminPage({
                   {users.map((u) => (
                     <tr key={u.id} className="row-hover align-middle">
                       <td className="px-3 py-2">
-                        <div className="font-medium text-text">{u.name}</div>
-                        <div className="text-[11px] text-muted">{u.email}</div>
+                        <div className="flex items-center gap-2.5">
+                          <Avatar name={u.name} size={34} src={u.avatar_url || undefined} />
+                          <div className="min-w-0">
+                            <div className="truncate font-medium text-text">{u.name}</div>
+                            <div className="truncate text-[11px] text-muted">{u.email}</div>
+                          </div>
+                        </div>
                       </td>
                       <td className="whitespace-nowrap px-3 py-2 text-text-soft">
                         {u.department || <span className="text-muted">—</span>}

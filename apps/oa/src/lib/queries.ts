@@ -989,22 +989,27 @@ export async function listAllUsers(): Promise<User[]> {
  * รหัสผ่านตั้งเป็นค่าที่ verifyPassword ไม่มีทางผ่าน (ล็อกอินผ่านระบบกลางเท่านั้น)
  * การแจ้งเตือน Lark ใช้ resolveLarkIds แปลงอีเมล→open_id ให้เองตอนส่ง จึงไม่ต้องเก็บ id Lark ที่นี่
  */
-export async function upsertDirectoryUser(person: { email: string; name: string }): Promise<User> {
+export async function upsertDirectoryUser(person: { email: string; name: string; avatar_url?: string | null }): Promise<User> {
   const email = person.email.trim().toLowerCase();
   const name = person.name.trim() || email;
+  const avatar = person.avatar_url?.trim() || null;
 
   const existing = (await db.prepare(`${USER_SELECT} WHERE u.email = ?`).get(email)) as User | undefined;
   if (existing) {
     if (!existing.active) (await db.prepare("UPDATE users SET active = 1 WHERE id = ?").run(existing.id));
+    // เติมรูปให้ถ้ายังไม่มี (เขายังไม่เคยล็อกอิน SSO) — ไม่ทับรูปที่ SSO เซ็ตไว้แล้ว
+    if (avatar && !existing.avatar_url) {
+      await db.prepare("UPDATE users SET avatar_url = ? WHERE id = ?").run(avatar, existing.id);
+    }
     return (await db.prepare(`${USER_SELECT} WHERE u.id = ?`).get(existing.id)) as User;
   }
 
   const info = (await db
     .prepare(
-      `INSERT INTO users (email, password, name, role, active, must_change_password)
-       VALUES (?,?,?,?,1,0)`,
+      `INSERT INTO users (email, password, name, role, active, must_change_password, avatar_url)
+       VALUES (?,?,?,?,1,0,?)`,
     )
-    .run(email, `sso$${crypto.randomBytes(16).toString("hex")}`, name, "USER"));
+    .run(email, `sso$${crypto.randomBytes(16).toString("hex")}`, name, "USER", avatar));
 
   return (await db.prepare(`${USER_SELECT} WHERE u.id = ?`).get(Number(info.lastInsertRowid))) as User;
 }

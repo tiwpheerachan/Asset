@@ -133,6 +133,7 @@ export default function AddUserPicker({
 
       {picked && <input type="hidden" name="email" value={picked.email} />}
       {picked && <input type="hidden" name="name" value={picked.name} />}
+      {picked && <input type="hidden" name="avatar_url" value={picked.avatar_url ?? ""} />}
 
       <div>
         <label className="label">{labels.role}</label>
